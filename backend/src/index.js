@@ -144,13 +144,13 @@ app.use(cors({
 app.use(express.json({ limit: '10mb' }));
 
 app.get('/api', (req, res) => {
-  res.json({ status: 'ok', message: 'MyAccounts Backend is Running...' });
+  res.json({ status: 'ok', message: 'V Cabanas HMS Backend is Running...' });
 });
 
 app.get('/api/health', async (req, res) => {
   try {
     await pool.query('SELECT 1');
-    res.json({ status: 'ok', message: 'MyAccounts API', database: 'connected' });
+    res.json({ status: 'ok', message: 'V Cabanas HMS API', database: 'connected' });
   } catch (err) {
     res.status(503).json({
       status: 'error',
@@ -188,6 +188,6 @@ initDb()
   })
   .then(() => {
     app.listen(PORT, HOST, () => {
-      console.log(`MyAccounts API running on ${HOST}:${PORT}`);
+      console.log(`V Cabanas HMS API running on ${HOST}:${PORT}`);
     });
   });

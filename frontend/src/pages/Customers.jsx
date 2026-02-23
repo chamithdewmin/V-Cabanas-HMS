@@ -144,7 +144,7 @@ const Customers = () => {
   return (
     <>
       <Helmet>
-        <title>Clients - MyAccounts</title>
+        <title>Clients - V Cabanas HMS</title>
         <meta name="description" content="Manage your client database and payment history" />
       </Helmet>
 

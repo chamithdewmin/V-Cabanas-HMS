@@ -1,6 +1,6 @@
-# MyAccounts Backend
+# V Cabanas HMS Backend
 
-Node.js + Express + PostgreSQL API for MyAccounts.
+Node.js + Express + PostgreSQL API for V Cabanas HMS.
 
 ## Setup
 

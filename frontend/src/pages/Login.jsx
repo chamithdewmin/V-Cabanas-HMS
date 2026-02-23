@@ -41,8 +41,8 @@ const Login = () => {
   return (
     <>
       <Helmet>
-        <title>Login - MyAccounts</title>
-        <meta name="description" content="Login to MyAccounts business management system" />
+        <title>Login - V Cabanas HMS</title>
+        <meta name="description" content="Login to V Cabanas HMS business management system" />
       </Helmet>
 
       <div
@@ -57,7 +57,7 @@ const Login = () => {
         >
           <div className="bg-[#1e1e1e] rounded-3xl shadow-xl p-8 sm:p-10">
             <div className="flex justify-center mb-6">
-              <img src={loginLogo} alt="MyAccounts" className="h-10 object-contain" />
+              <img src={loginLogo} alt="V Cabanas HMS" className="h-10 object-contain" />
             </div>
             <h2 className="text-xl font-bold text-[#D3D3D3] mb-8 text-center">Login to your Account</h2>
 
@@ -125,7 +125,7 @@ const Login = () => {
             </form>
 
             <p className="text-center text-[#D3D3D3] mt-6 text-sm">
-              New to MyAccounts?{' '}
+              New to V Cabanas HMS?{' '}
               <a href="#" className="text-[#6A6FF7] hover:text-[#8b8ff9] font-medium">
                 Sign Up
               </a>

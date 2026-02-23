@@ -123,7 +123,7 @@ const Calendar = () => {
   return (
     <>
       <Helmet>
-        <title>Calendar - MyAccounts</title>
+        <title>Calendar - V Cabanas HMS</title>
         <meta name="description" content="View your financial transactions in a calendar view" />
       </Helmet>
 

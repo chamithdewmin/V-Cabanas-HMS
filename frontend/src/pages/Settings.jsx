@@ -68,7 +68,7 @@ const Settings = () => {
   return (
     <>
       <Helmet>
-        <title>Settings - MyAccounts</title>
+        <title>Settings - V Cabanas HMS</title>
         <meta name="description" content="Organize and manage business settings, invoices, tax, bank, and preferences" />
       </Helmet>
 

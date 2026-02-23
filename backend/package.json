@@ -1,7 +1,7 @@
 {
-  "name": "myaccounts-backend",
+  "name": "v-cabanas-hms-backend",
   "version": "1.1.0",
-  "description": "MyAccounts API Backend",
+  "description": "V Cabanas HMS API Backend",
   "main": "src/index.js",
   "type": "module",
   "scripts": {

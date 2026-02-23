@@ -228,7 +228,7 @@ const Inventory = () => {
   return (
     <>
       <Helmet>
-        <title>Expenses - MyAccounts</title>
+        <title>Expenses - V Cabanas HMS</title>
         <meta name="description" content="Track and manage all business expenses" />
       </Helmet>
 

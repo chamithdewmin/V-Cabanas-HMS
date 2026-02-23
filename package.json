@@ -1,5 +1,5 @@
 {
-  "name": "myaccounts",
+  "name": "v-cabanas-hms",
   "private": true,
   "scripts": {
     "dev": "npm run dev --prefix frontend",

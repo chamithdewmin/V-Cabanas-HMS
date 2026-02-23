@@ -2,7 +2,7 @@ import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
 /**
- * Wraps report/print content with logo (top-left), optional business name, and "Generated from MyAccounts" footer.
+ * Wraps report/print content with logo (top-left), optional business name, and "Generated from V Cabanas HMS" footer.
  * Uses the invoice/company logo uploaded in Settings.
  * @param {string} innerContent - The main HTML content
  * @param {{ logo?: string | null, businessName?: string }} options
@@ -16,7 +16,7 @@ export function getPrintHtml(innerContent, options = {}) {
   </div>`
     : '';
   const titleHtml = businessName ? `<h1 style="font-size:18px; font-weight:700; margin:0 0 16px; color:#111;">${escapeHtml(businessName)}</h1>` : '';
-  const footer = '<p style="font-size:10px; color:#666; margin-top:16px; padding-top:12px; border-top:1px solid #ddd;">Generated from MyAccounts</p>';
+  const footer = '<p style="font-size:10px; color:#666; margin-top:16px; padding-top:12px; border-top:1px solid #ddd;">Generated from V Cabanas HMS</p>';
   return `<div style="padding:24px; font-family:'Inter',-apple-system,sans-serif; color:#111; background:#fff; font-size:14px; line-height:1.5; max-width:100%; min-height:200px;">${logoHtml}${titleHtml}${innerContent}${footer}</div>`;
 }
 

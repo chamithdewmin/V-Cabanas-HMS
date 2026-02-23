@@ -189,7 +189,7 @@ const POS = () => {
   return (
     <>
       <Helmet>
-        <title>Income - MyAccounts</title>
+        <title>Income - V Cabanas HMS</title>
         <meta name="description" content="Manage all money coming into your business" />
       </Helmet>
 

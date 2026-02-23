@@ -107,7 +107,7 @@ const ReportIncome = () => {
   return (
     <>
       <Helmet>
-        <title>Income Reports - MyAccounts</title>
+        <title>Income Reports - V Cabanas HMS</title>
         <meta name="description" content="Income by client, Income by service" />
       </Helmet>
 

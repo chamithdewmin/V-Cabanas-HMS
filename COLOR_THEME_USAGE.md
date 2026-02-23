@@ -1,6 +1,6 @@
 # Color Theme Usage Documentation
 
-This document lists all color theme definitions and their usages throughout the MyAccounts application.
+This document lists all color theme definitions and their usages throughout the V Cabanas HMS application.
 
 ## 📋 Table of Contents
 1. [CSS Variables (index.css)](#css-variables)

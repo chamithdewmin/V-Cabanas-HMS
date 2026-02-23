@@ -1,6 +1,6 @@
 # Changelog
 
-All notable changes to MyAccounts will be documented in this file.
+All notable changes to V Cabanas HMS will be documented in this file.
 
 ## [1.1.0] - 2025-02-15
 

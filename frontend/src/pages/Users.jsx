@@ -173,7 +173,7 @@ const Users = () => {
   return (
     <>
       <Helmet>
-        <title>Users - MyAccounts</title>
+        <title>Users - V Cabanas HMS</title>
         <meta name="description" content="Manage app users and add new users" />
       </Helmet>
 

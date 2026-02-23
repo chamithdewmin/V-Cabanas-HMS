@@ -1,5 +1,5 @@
 /**
- * MyAccounts API client
+ * V Cabanas HMS API client
  * Base URL: same domain /api when deployed, or VITE_API_URL env
  */
 const API_BASE = import.meta.env.VITE_API_URL || '/api';

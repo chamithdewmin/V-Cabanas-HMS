@@ -59,8 +59,8 @@ const sendOtpSms = async (phone, otp, purpose = 'password change') => {
     const p = String(phone).trim();
     const normalized = p.startsWith('+') ? p : `+94${p.replace(/^0/, '')}`;
     const msg = purpose === 'reset_data'
-      ? `Your reset data OTP is ${otp}. MyAccounts - valid for ${OTP_EXPIRY_MINUTES} min.`
-      : `Your password change OTP is ${otp}. MyAccounts - valid for ${OTP_EXPIRY_MINUTES} minutes.`;
+      ? `Your reset data OTP is ${otp}. V Cabanas HMS - valid for ${OTP_EXPIRY_MINUTES} min.`
+      : `Your password change OTP is ${otp}. V Cabanas HMS - valid for ${OTP_EXPIRY_MINUTES} minutes.`;
     const url = `${config.baseUrl.replace(/\/$/, '')}/send-sms`;
     const params = new URLSearchParams({
       user_id: config.userId,

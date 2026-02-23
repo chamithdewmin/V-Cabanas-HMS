@@ -13,10 +13,10 @@ const GROQ_MODEL = process.env.GROQ_MODEL || 'llama-3.1-8b-instant';
 /** Privacy: never send to AI. Only aggregated numbers and this app guide are allowed. */
 const PRIVACY_RULE = `IMPORTANT: You never receive and must never ask for or reveal: bank account numbers, client names/emails/phones, passwords, API keys, or any secret/sensitive data. You only receive aggregated financial numbers (totals, counts, categories) and the app feature guide below. If the user asks for something that would require secret data, explain you don't have access to that and suggest they check the relevant section in the app (e.g. Settings for bank, Clients for client list).`;
 
-/** Comprehensive app feature guide - train AI to be an expert on MyAccounts. No secret data. */
+/** Comprehensive app feature guide - train AI to be an expert on V Cabanas HMS. No secret data. */
 const APP_FEATURES_GUIDE = `
 ═══════════════════════════════════════════════════════════════════════════════
-MYACCOUNTS – COMPREHENSIVE SYSTEM GUIDE
+V CABANAS HMS – COMPREHENSIVE SYSTEM GUIDE
 Your role: Be an expert advisor who knows every feature, benefit, and best practice.
 ═══════════════════════════════════════════════════════════════════════════════
 
@@ -360,7 +360,7 @@ WHEN THE USER ASKS ABOUT BUYING ITEMS OR A PURCHASE:
 2. Calculate impact: New expense = total cost. New profit (for period) = Current income - Current expenses - New expense. Or: New profit = Current profit - Total cost.
 3. Compare to their data: Use the financial summary (monthlyIncome, monthlyExpenses, monthlyProfit, totalLiquid, runwayMonths). Say whether the purchase is affordable (e.g. total cost vs cash in hand, or impact on profit).
 4. Give a clear, step-by-step answer: Show each calculation with numbers. Use their currency from the summary.
-5. Recommend recording: Tell them to add it in MyAccounts under Expenses (category e.g. "Other" or the best match), so their reports stay accurate.
+5. Recommend recording: Tell them to add it in V Cabanas HMS under Expenses (category e.g. "Other" or the best match), so their reports stay accurate.
 
 WHEN THE USER ASKS ABOUT INCOME, EXPENSES, OR PROFIT:
 • Always use the aggregated numbers from the financial summary. Never invent figures.
@@ -561,12 +561,12 @@ router.post('/suggestions', async (req, res) => {
     const uid = req.user.id;
     const summary = await getFinancialSummary(uid);
 
-    const systemPrompt = `You are an expert financial advisor and MyAccounts system specialist. You help small business owners make smart financial decisions and master the MyAccounts platform.
+    const systemPrompt = `You are an expert financial advisor and V Cabanas HMS system specialist. You help small business owners make smart financial decisions and master the V Cabanas HMS platform.
 
 ${PRIVACY_RULE}
 
 YOUR EXPERTISE:
-• Deep knowledge of MyAccounts features (see guide below)
+• Deep knowledge of V Cabanas HMS features (see guide below)
 • Financial analysis and business strategy
 • Clear, actionable advice that users can implement immediately
 
@@ -627,14 +627,14 @@ router.post('/ask', async (req, res) => {
 
     const summary = await getFinancialSummary(uid);
 
-    const systemPrompt = `You are an expert MyAccounts advisor and financial consultant. You're deeply trained on every feature, benefit, and best practice of the MyAccounts system. Your goal: help users master the platform and make excellent financial decisions with clear, step-by-step answers and accurate calculations.
+    const systemPrompt = `You are an expert V Cabanas HMS advisor and financial consultant. You're deeply trained on every feature, benefit, and best practice of the V Cabanas HMS system. Your goal: help users master the platform and make excellent financial decisions with clear, step-by-step answers and accurate calculations.
 
 ${PRIVACY_RULE}
 
 YOUR EXPERTISE AREAS:
 1. FINANCIAL ANALYSIS: Use ONLY the aggregated summary (totals, counts, categories, formulas). Never invent numbers or reference client/bank details you don't have. When explaining profit, income, or expenses, use the exact formulas and numbers from the summary.
 2. FEATURE GUIDANCE: You know every feature inside-out. Give clear, numbered step-by-step instructions when asked "how to" (e.g. "how to send SMS", "how to set up SMS gateway", "how to create an invoice", "how to add bank details").
-3. PURCHASES & COST IMPACT: When the user asks about buying items or a purchase, follow the BUSINESS LOGIC below: calculate total cost (quantity × price), impact on profit (current profit - cost), compare to their cash/runway, and recommend recording the expense in MyAccounts.
+3. PURCHASES & COST IMPACT: When the user asks about buying items or a purchase, follow the BUSINESS LOGIC below: calculate total cost (quantity × price), impact on profit (current profit - cost), compare to their cash/runway, and recommend recording the expense in V Cabanas HMS.
 4. BEST PRACTICES: Share tips and benefits that make users feel they're using the best system.
 
 YOUR RESPONSE STYLE:

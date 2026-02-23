@@ -86,7 +86,7 @@ const AIInsights = () => {
   return (
     <>
       <Helmet>
-        <title>AI Insights - MyAccounts</title>
+        <title>AI Insights - V Cabanas HMS</title>
         <meta name="description" content="AI-powered financial analysis, suggestions, and Q&A from your data" />
       </Helmet>
 

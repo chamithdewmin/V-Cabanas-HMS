@@ -98,8 +98,8 @@ const ForgotPassword = () => {
   return (
     <>
       <Helmet>
-        <title>Forgot Password - MyAccounts</title>
-        <meta name="description" content="Reset your MyAccounts password via OTP" />
+        <title>Forgot Password - V Cabanas HMS</title>
+        <meta name="description" content="Reset your V Cabanas HMS password via OTP" />
       </Helmet>
 
       <div
@@ -114,7 +114,7 @@ const ForgotPassword = () => {
         >
           <div className="bg-[#1e1e1e] rounded-3xl shadow-xl p-8 sm:p-10">
             <div className="flex justify-center mb-6">
-              <img src={loginLogo} alt="MyAccounts" className="h-10 object-contain" />
+              <img src={loginLogo} alt="V Cabanas HMS" className="h-10 object-contain" />
             </div>
             <h2 className="text-xl font-bold text-[#D3D3D3] mb-2 text-center">Forgot Password</h2>
             <p className="text-sm text-[#a0a0a0] text-center mb-6">

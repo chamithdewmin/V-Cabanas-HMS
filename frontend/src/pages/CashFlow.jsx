@@ -582,7 +582,7 @@ const CashFlow = () => {
   return (
     <>
       <Helmet>
-        <title>Cash Flow - MyAccounts</title>
+        <title>Cash Flow - V Cabanas HMS</title>
         <meta name="description" content="Track money in, money out, and running cash balance" />
       </Helmet>
 
