@@ -1,0 +1,151 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "email": "admin@gmail.com",
+      "password": "admin123",
+      "name": "Admin"
+    }
+  ],
+  "cars": [
+    {
+      "id": "C-0001",
+      "make": "Toyota",
+      "model": "Corolla",
+      "year": 2021,
+      "price": 19900,
+      "colors": ["red", "black", "white"],
+      "stock": 3,
+      "images": ["https://images.unsplash.com/photo-1623869675781-80aa31012a5a?w=800", "https://images.unsplash.com/photo-1621007947382-bb3c3994e3fb?w=800"],
+      "vin": "VIN0001",
+      "condition": "new",
+      "mileage": 0,
+      "transmission": "Automatic",
+      "fuelType": "Gasoline"
+    },
+    {
+      "id": "C-0002",
+      "make": "Honda",
+      "model": "Civic",
+      "year": 2022,
+      "price": 21950,
+      "colors": ["blue", "black"],
+      "stock": 2,
+      "images": ["https://images.unsplash.com/photo-1590362891991-f776e747a588?w=800"],
+      "vin": "VIN0002",
+      "condition": "new",
+      "mileage": 0,
+      "transmission": "Automatic",
+      "fuelType": "Gasoline"
+    },
+    {
+      "id": "C-0003",
+      "make": "Ford",
+      "model": "Mustang",
+      "year": 2023,
+      "price": 45900,
+      "colors": ["red", "blue", "black"],
+      "stock": 1,
+      "images": ["https://images.unsplash.com/photo-1584345604476-8ec5f5d3e0c0?w=800"],
+      "vin": "VIN0003",
+      "condition": "new",
+      "mileage": 0,
+      "transmission": "Manual",
+      "fuelType": "Gasoline"
+    },
+    {
+      "id": "C-0004",
+      "make": "Tesla",
+      "model": "Model 3",
+      "year": 2023,
+      "price": 42990,
+      "colors": ["white", "black", "blue"],
+      "stock": 4,
+      "images": ["https://images.unsplash.com/photo-1560958089-b8a1929cea89?w=800"],
+      "vin": "VIN0004",
+      "condition": "new",
+      "mileage": 0,
+      "transmission": "Automatic",
+      "fuelType": "Electric"
+    },
+    {
+      "id": "C-0005",
+      "make": "BMW",
+      "model": "3 Series",
+      "year": 2022,
+      "price": 41250,
+      "colors": ["black", "white", "silver"],
+      "stock": 2,
+      "images": ["https://images.unsplash.com/photo-1555215695-3004980ad54e?w=800"],
+      "vin": "VIN0005",
+      "condition": "new",
+      "mileage": 0,
+      "transmission": "Automatic",
+      "fuelType": "Gasoline"
+    },
+    {
+      "id": "C-0006",
+      "make": "Mercedes-Benz",
+      "model": "C-Class",
+      "year": 2021,
+      "price": 43500,
+      "colors": ["silver", "black"],
+      "stock": 1,
+      "images": ["https://images.unsplash.com/photo-1618843479313-40f8afb4b4d8?w=800"],
+      "vin": "VIN0006",
+      "condition": "used",
+      "mileage": 15000,
+      "transmission": "Automatic",
+      "fuelType": "Gasoline"
+    },
+    {
+      "id": "C-0007",
+      "make": "Audi",
+      "model": "A4",
+      "year": 2022,
+      "price": 39900,
+      "colors": ["white", "black", "gray"],
+      "stock": 3,
+      "images": ["https://images.unsplash.com/photo-1606664515524-ed2f786a0bd6?w=800"],
+      "vin": "VIN0007",
+      "condition": "new",
+      "mileage": 0,
+      "transmission": "Automatic",
+      "fuelType": "Gasoline"
+    },
+    {
+      "id": "C-0008",
+      "make": "Chevrolet",
+      "model": "Camaro",
+      "year": 2023,
+      "price": 34995,
+      "colors": ["yellow", "red", "black"],
+      "stock": 2,
+      "images": ["https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800"],
+      "vin": "VIN0008",
+      "condition": "new",
+      "mileage": 0,
+      "transmission": "Manual",
+      "fuelType": "Gasoline"
+    }
+  ],
+  "customers": [
+    {
+      "id": "CU-1",
+      "name": "Jane Doe",
+      "email": "jane@example.com",
+      "phone": "0771234567",
+      "address": "123 Main St, City",
+      "purchaseHistory": []
+    },
+    {
+      "id": "CU-2",
+      "name": "John Smith",
+      "email": "john@example.com",
+      "phone": "0779876543",
+      "address": "456 Oak Ave, Town",
+      "purchaseHistory": []
+    }
+  ],
+  "orders": []
+}

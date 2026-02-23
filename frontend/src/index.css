@@ -1,0 +1,346 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Light theme: using #0c0e14 background for all pages */
+    --background: 225 25% 6%; /* #0c0e14 */
+    --foreground: 210 40% 96%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222 47% 11%;
+
+    --primary: 217 91% 60%; /* blue */
+    --primary-foreground: 0 0% 100%;
+
+    /* Slightly darker so border-secondary and bg-secondary are visible vs white */
+    --secondary: 214 20% 90%;
+    --secondary-foreground: 222 47% 11%;
+
+    --muted: 214 20% 92%;
+    --muted-foreground: 215 15% 35%;
+
+    --accent: 217 91% 60%; /* blue */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    /* Visible borders for cards, inputs, dividers */
+    --border: 214 20% 86%;
+    --input: 214 20% 88%;
+    --ring: 222 84% 56%;
+
+    /* Sidebar active state: dark blue with blue accent */
+    --sidebar-active-bg: 217 55% 22%;
+    --sidebar-active-accent: 217 91% 60%;
+  }
+
+  .dark {
+    /* Dark theme with custom background colors */
+    --background: 225 25% 6%; /* #0c0e14 for page background */
+    --foreground: 210 40% 96%;
+
+    --card: 224 22% 10%; /* #13161e for sidebar and cards */
+    --card-foreground: 210 40% 96%;
+
+    --primary: 217 91% 60%; /* blue */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 25% 18%;
+    --secondary-foreground: 210 30% 80%;
+
+    --muted: 210 25% 18%;
+    --muted-foreground: 210 30% 80%;
+
+    --accent: 217 91% 60%; /* blue */
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 216 19% 15%;
+    --input: 216 19% 15%;
+    --ring: 222 84% 56%;
+
+    --sidebar-active-bg: 217 55% 22%;
+    --sidebar-active-accent: 217 91% 60%;
+
+    /* Table color scheme */
+    --table-header-bg: #0f1117;
+    --table-row-odd: #111419;
+    --table-row-even: #13161e;
+    --table-row-hover: #1a1d27;
+    --table-divider: #1e2433;
+    --table-border: #2a3347;
+    --text-primary: #fff;
+    --text-body: #d1d9e6;
+    --text-label: #8b9ab0;
+    --text-muted: #6b7a99;
+    --text-placeholder: #4a5568;
+  }
+
+  * {
+    @apply border-border;
+  }
+
+  /* Scrollbar: light theme (default) */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(214 20% 75%) hsl(214 20% 94%);
+  }
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  *::-webkit-scrollbar-track {
+    background: hsl(214 20% 94%);
+  }
+  *::-webkit-scrollbar-thumb {
+    background: hsl(214 20% 75%);
+    border-radius: 5px;
+  }
+  *::-webkit-scrollbar-thumb:hover {
+    background: hsl(214 20% 65%);
+  }
+  *::-webkit-scrollbar-button {
+    display: none;
+  }
+
+  /* Scrollbar: dark theme */
+  .dark * {
+    scrollbar-color: #333 #111;
+  }
+  .dark *::-webkit-scrollbar-track {
+    background: #111;
+  }
+  .dark *::-webkit-scrollbar-thumb {
+    background: #333;
+  }
+  .dark *::-webkit-scrollbar-thumb:hover {
+    background: #444;
+  }
+  .dark *::-webkit-scrollbar-button {
+    background: #111;
+  }
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+      'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+      sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
+    /* Safe area for notched devices */
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+
+  /* Hide scrollbar on dashboard only */
+  body.dashboard-page,
+  body.dashboard-page main {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  body.dashboard-page::-webkit-scrollbar,
+  body.dashboard-page main::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+
+  /* Responsive: thinner scrollbar on small screens */
+  @media (max-width: 768px) {
+    *::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+  }
+}
+
+/* Prevent horizontal overflow on mobile */
+#root {
+  overflow-x: hidden;
+  min-width: 0;
+  background-color: hsl(var(--background));
+}
+
+@layer utilities {
+  .glass-effect {
+    backdrop-filter: blur(10px);
+    background-color: hsl(var(--card) / 0.9);
+  }
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top, 0);
+  }
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0);
+  }
+}
+
+/* ─── TABLE STYLES ──────────────────────────────────────────────────────────── */
+/* Apply consistent color scheme to all tables */
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Report PDF preview: force light theme (white/light gray tables, black text only) */
+.report-preview-content table,
+.report-preview-content thead,
+.report-preview-content tbody tr,
+.report-preview-content tbody tr:nth-child(odd),
+.report-preview-content tbody tr:hover,
+.report-preview-content th,
+.report-preview-content td {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  color: #000000 !important;
+  border-color: #ddd !important;
+}
+.report-preview-content thead th {
+  background: #f5f5f5 !important;
+  background-color: #f5f5f5 !important;
+  color: #000000 !important;
+}
+.report-preview-content h1,
+.report-preview-content h2,
+.report-preview-content h3,
+.report-preview-content p {
+  color: #111 !important;
+}
+.report-preview-content p.text-gray-500,
+.report-preview-content .text-muted {
+  color: #666 !important;
+}
+
+.dark table {
+  border-color: var(--table-divider);
+}
+
+/* Table header */
+.dark thead {
+  background-color: var(--table-header-bg) !important;
+}
+
+.dark thead th {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--table-divider);
+}
+
+/* Table body - even rows */
+.dark tbody tr {
+  background-color: var(--table-row-even);
+  border-bottom: 1px solid var(--table-divider);
+  transition: background-color 0.2s ease;
+}
+
+/* Alternating rows (odd) */
+.dark tbody tr:nth-child(odd) {
+  background-color: var(--table-row-odd);
+}
+
+/* Row hover state */
+.dark tbody tr:hover {
+  background-color: var(--table-row-hover) !important;
+}
+
+/* Table cells - body text */
+.dark tbody td {
+  color: var(--text-body);
+  padding: 12px 16px;
+  font-size: 0.875rem;
+}
+
+/* Primary headings & values in cells */
+.dark tbody td strong,
+.dark tbody td .font-bold,
+.dark tbody td .font-semibold,
+.dark tbody td[class*="font-semibold"],
+.dark tbody td[class*="font-bold"] {
+  color: var(--text-primary);
+}
+
+/* Labels and secondary text */
+.dark tbody td .text-muted-foreground,
+.dark tbody td .text-xs,
+.dark tbody td[class*="text-muted"] {
+  color: var(--text-label);
+}
+
+/* Muted text, notes */
+.dark tbody td .text-gray-500,
+.dark tbody td .text-gray-600,
+.dark tbody td[class*="text-gray-500"],
+.dark tbody td[class*="text-gray-600"] {
+  color: var(--text-muted);
+}
+
+/* Placeholder text */
+.dark tbody td .text-gray-400,
+.dark tbody td::placeholder,
+.dark tbody input::placeholder,
+.dark tbody textarea::placeholder {
+  color: var(--text-placeholder);
+}
+
+/* Borders and dividers */
+.dark table {
+  border-color: var(--table-divider);
+}
+
+.dark table tbody tr {
+  border-bottom-color: var(--table-divider);
+}
+
+/* Dropdowns in tables */
+.dark tbody select,
+.dark tbody .dropdown,
+.dark tbody [role="combobox"] {
+  background-color: var(--table-row-even);
+  border-color: var(--table-border);
+  color: var(--text-body);
+}
+
+.dark tbody select:hover,
+.dark tbody .dropdown:hover,
+.dark tbody [role="combobox"]:hover {
+  border-color: var(--table-divider);
+  background-color: var(--table-row-hover);
+}
+
+/* Override Tailwind classes for table backgrounds */
+.dark thead.bg-secondary {
+  background-color: var(--table-header-bg) !important;
+}
+
+.dark tbody tr.bg-secondary,
+.dark tbody tr.hover\:bg-secondary\/50:hover {
+  background-color: var(--table-row-hover) !important;
+}
+
+.dark tbody tr.border-secondary {
+  border-color: var(--table-divider) !important;
+}
+
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .print-area, .print-area *,
+  .invoice-a4, .invoice-a4 * {
+    visibility: visible;
+  }
+  .print-area, .invoice-a4 {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    max-width: 210mm;
+  }
+}
