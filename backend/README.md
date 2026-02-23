@@ -26,8 +26,8 @@ Node.js + Express + PostgreSQL API for V Cabanas HMS.
 
 ## API Base URL
 
-- **Same domain** (production): `https://myaccounts.logozodev.com/api`
-- **Different URL**: Set `VITE_API_URL` in frontend (e.g. `https://api.myaccounts.logozodev.com`)
+- **Same domain** (production): `https://app.vcabanasyala.com/api`
+- **Different URL**: Set `VITE_API_URL` in frontend (e.g. `https://api.vcabanasyala.com`)
 
 Configure your reverse proxy (e.g. Nginx, Caddy) to route `/api` to the backend.
 

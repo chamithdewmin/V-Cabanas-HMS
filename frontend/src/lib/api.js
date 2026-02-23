@@ -126,4 +126,4 @@ export const api = {
   },
 };
 
-export const useApi = () => !!import.meta.env.VITE_API_URL || window.location.origin.includes('myaccounts.logozodev.com');
+export const useApi = () => !!import.meta.env.VITE_API_URL || window.location.origin.includes('app.vcabanasyala.com');
