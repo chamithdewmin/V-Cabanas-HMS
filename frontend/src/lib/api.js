@@ -3,9 +3,12 @@
  * Base URL: VITE_API_URL at build time, or production API when on app.vcabanasyala.com, else /api
  */
 function getApiBase() {
-  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL.replace(/\/$/, '');
+  if (import.meta.env.VITE_API_URL) {
+    const base = import.meta.env.VITE_API_URL.replace(/\/$/, '');
+    return base.endsWith('/api') ? base : `${base}/api`;
+  }
   if (typeof window !== 'undefined' && window.location.origin.includes('app.vcabanasyala.com')) {
-    return 'https://api.vcabanasyala.com';
+    return 'https://api.vcabanasyala.com/api';
   }
   return '/api';
 }
