@@ -143,6 +143,10 @@ app.use(cors({
 }));
 app.use(express.json({ limit: '10mb' }));
 
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'V Cabanas HMS API', api: '/api', health: '/api/health' });
+});
+
 app.get('/api', (req, res) => {
   res.json({ status: 'ok', message: 'V Cabanas HMS Backend is Running...' });
 });
