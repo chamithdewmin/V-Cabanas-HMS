@@ -1,13 +1,20 @@
 /**
  * V Cabanas HMS API client
- * Base URL: same domain /api when deployed, or VITE_API_URL env
+ * Base URL: VITE_API_URL at build time, or production API when on app.vcabanasyala.com, else /api
  */
-const API_BASE = import.meta.env.VITE_API_URL || '/api';
+function getApiBase() {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL.replace(/\/$/, '');
+  if (typeof window !== 'undefined' && window.location.origin.includes('app.vcabanasyala.com')) {
+    return 'https://api.vcabanasyala.com';
+  }
+  return '/api';
+}
 
 const getToken = () => localStorage.getItem('token');
 
 const request = async (path, options = {}) => {
-  const url = `${API_BASE}${path}`;
+  const base = getApiBase();
+  const url = `${base}${path}`;
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,
@@ -127,3 +134,4 @@ export const api = {
 };
 
 export const useApi = () => !!import.meta.env.VITE_API_URL || window.location.origin.includes('app.vcabanasyala.com');
+export { getApiBase };
