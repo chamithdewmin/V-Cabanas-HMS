@@ -19,10 +19,10 @@ import {
   ChevronRight,
   ChevronsUpDown,
   CreditCard,
-  Sparkles,
   LogOut,
   LayoutDashboard,
   Calendar,
+  BookOpen,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -62,7 +62,6 @@ const ADMIN_EMAIL = 'logozodev@gmail.com';
 /** Nav config with dividers (demo-style). Use href for links, items[] for expandable sections. */
 const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-  { label: 'AI Insights', href: '/ai-insights', icon: Sparkles },
   { divider: true },
   { label: 'Payments', href: '/income', icon: CreditCard },
   { label: 'Invoices', href: '/invoices', icon: FileText },
@@ -71,6 +70,7 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Expenses', href: '/expenses', icon: Receipt },
   { label: 'Cash Flow', href: '/cash-flow', icon: TrendingUp },
   { label: 'Calendar', href: '/calendar', icon: Calendar },
+  { label: 'Booking', href: '/booking', icon: BookOpen },
   { label: 'Reports', icon: BarChart3, href: '/reports/overview', items: reportSubItems },
   { divider: true },
   { label: 'Reminders', href: '/reminders', icon: Bell },

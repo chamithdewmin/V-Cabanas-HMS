@@ -21,9 +21,9 @@ import Profile from './pages/Profile';
 import Users from './pages/Users';
 import SMS from './pages/SMS';
 import Reminders from './pages/Reminders';
-import AIInsights from './pages/AIInsights';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
+import Booking from './pages/Booking';
 import Layout from './components/Layout';
 
 function App() {
@@ -54,13 +54,13 @@ function App() {
       <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
         <Route index element={<Navigate to="/dashboard" />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="ai-insights" element={<AIInsights />} />
         <Route path="income" element={<POS />} />
         <Route path="expenses" element={<Inventory />} />
         <Route path="invoices" element={<Orders />} />
         <Route path="clients" element={<Customers />} />
         <Route path="cash-flow" element={<CashFlow />} />
         <Route path="calendar" element={<Calendar />} />
+        <Route path="booking" element={<Booking />} />
         <Route path="reports" element={<Navigate to="/reports/overview" replace />} />
         <Route path="reports/overview" element={<ReportOverview />} />
         <Route path="reports/profit-loss" element={<ReportProfitLoss />} />
@@ -70,7 +70,7 @@ function App() {
         <Route path="reports/tax" element={<ReportTax />} />
         <Route path="reports/balance-sheet" element={<BalanceSheet />} />
         <Route path="cash-flow" element={<CashFlow />} />
-        <Route path="users" element={user?.email === 'logozodev@gmail.com' ? <Users /> : <Navigate to="/ai-insights" replace />} />
+        <Route path="users" element={user?.email === 'logozodev@gmail.com' ? <Users /> : <Navigate to="/dashboard" replace />} />
         <Route path="sms" element={<SMS />} />
         <Route path="reminders" element={<Reminders />} />
         <Route path="profile" element={<Profile />} />
