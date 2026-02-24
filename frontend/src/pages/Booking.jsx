@@ -156,7 +156,7 @@ const Booking = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Price</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Booking.com</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
+                  <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>

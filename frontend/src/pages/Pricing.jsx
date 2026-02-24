@@ -174,7 +174,7 @@ const Pricing = () => {
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">
                     Price
                   </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold uppercase min-w-[6rem] w-28">
+                  <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold uppercase min-w-[6rem] w-28">
                     Actions
                   </th>
                 </tr>
