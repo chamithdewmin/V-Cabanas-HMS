@@ -171,7 +171,9 @@ const Pricing = () => {
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Price</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">
+                    Price
+                  </th>
                   <th className="px-4 py-3 text-center text-sm font-semibold uppercase">
                     Actions
                   </th>
@@ -206,7 +208,7 @@ const Pricing = () => {
                       <td className="px-4 py-3 text-sm text-left text-muted-foreground">
                         {item.notes || '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right">
+                      <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[5rem] w-24">
                         {item.price.toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-center">
