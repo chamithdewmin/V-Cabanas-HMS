@@ -129,6 +129,18 @@ export const api = {
     create: (data) => request('/reminders', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id) => request(`/reminders/${id}`, { method: 'DELETE' }),
   },
+  bookings: {
+    list: () => request('/bookings'),
+    create: (data) => request('/bookings', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => request(`/bookings/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => request(`/bookings/${id}`, { method: 'DELETE' }),
+  },
+  pricing: {
+    list: () => request('/pricing'),
+    create: (data) => request('/pricing', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => request(`/pricing/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => request(`/pricing/${id}`, { method: 'DELETE' }),
+  },
   ai: {
     getSummary: () => request('/ai/summary'),
     getSuggestions: () => request('/ai/suggestions', { method: 'POST', body: JSON.stringify({}) }),

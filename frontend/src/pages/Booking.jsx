@@ -1,16 +1,20 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { BookOpen, Plus } from 'lucide-react';
+import { BookOpen, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { api } from '@/lib/api';
 
 const Booking = () => {
   const { toast } = useToast();
   const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [editingBooking, setEditingBooking] = useState(null);
   const [form, setForm] = useState({
     customerName: '',
     roomNumber: '',
@@ -23,11 +27,28 @@ const Booking = () => {
     roomCategory: 'ac',
   });
 
+  const loadBookings = async () => {
+    setLoading(true);
+    try {
+      const list = await api.bookings.list();
+      setBookings(Array.isArray(list) ? list : []);
+    } catch (err) {
+      toast({ title: 'Failed to load bookings', description: err.message || 'Could not fetch bookings', variant: 'destructive' });
+      setBookings([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!form.customerName.trim() || !form.roomNumber.trim()) {
@@ -39,30 +60,62 @@ const Booking = () => {
       return;
     }
 
-    const newBooking = {
-      id: Date.now().toString(),
-      ...form,
-    };
+    setSaving(true);
+    try {
+      const payload = {
+        customerName: form.customerName.trim(),
+        roomNumber: form.roomNumber.trim(),
+        adults: form.adults ? Number(form.adults) : 0,
+        children: form.children ? Number(form.children) : 0,
+        roomCategory: form.roomCategory || 'ac',
+        checkIn: form.checkIn || null,
+        checkOut: form.checkOut || null,
+        price: form.price ? Number(form.price) : 0,
+        bookingComCommission: form.bookingComCommission ? Number(form.bookingComCommission) : 0,
+      };
+      if (editingBooking) {
+        await api.bookings.update(editingBooking.id, payload);
+        toast({ title: 'Booking updated', description: 'Booking has been updated.' });
+      } else {
+        await api.bookings.create(payload);
+        toast({ title: 'Booking saved', description: 'Booking has been saved.' });
+      }
+      setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomCategory: 'ac' });
+      setEditingBooking(null);
+      setIsDialogOpen(false);
+      loadBookings();
+    } catch (err) {
+      toast({ title: editingBooking ? 'Update failed' : 'Save failed', description: err.message || 'Could not save booking', variant: 'destructive' });
+    } finally {
+      setSaving(false);
+    }
+  };
 
-    setBookings((prev) => [newBooking, ...prev]);
-
-    toast({
-      title: 'Booking saved',
-      description: 'Booking details have been captured (UI only, no backend yet).',
-    });
-
+  const openEdit = (b) => {
+    setEditingBooking(b);
     setForm({
-      customerName: '',
-      roomNumber: '',
-      adults: '',
-      children: '',
-      checkIn: '',
-      checkOut: '',
-      price: '',
-      bookingComCommission: '',
-      roomCategory: 'ac',
+      customerName: b.customerName || '',
+      roomNumber: b.roomNumber || '',
+      adults: b.adults ?? '',
+      children: b.children ?? '',
+      checkIn: b.checkIn || '',
+      checkOut: b.checkOut || '',
+      price: b.price ?? '',
+      bookingComCommission: b.bookingComCommission ?? '',
+      roomCategory: b.roomCategory || 'ac',
     });
-    setIsDialogOpen(false);
+    setIsDialogOpen(true);
+  };
+
+  const handleDelete = async (b) => {
+    if (!window.confirm(`Delete booking for ${b.customerName}?`)) return;
+    try {
+      await api.bookings.delete(b.id);
+      toast({ title: 'Booking deleted', description: 'Booking has been removed.' });
+      loadBookings();
+    } catch (err) {
+      toast({ title: 'Delete failed', description: err.message || 'Could not delete booking', variant: 'destructive' });
+    }
   };
 
   return (
@@ -80,7 +133,11 @@ const Booking = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button variant="outline" onClick={loadBookings} disabled={loading}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+            <Button onClick={() => { setEditingBooking(null); setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomCategory: 'ac' }); setIsDialogOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" />
               Add Booking
             </Button>
@@ -99,13 +156,20 @@ const Booking = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold">Price</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold">Booking.com</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {bookings.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                      Loading bookings...
+                    </td>
+                  </tr>
+                ) : bookings.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={7}
+                      colSpan={8}
                       className="px-4 py-8 text-center text-muted-foreground text-sm"
                     >
                       No bookings yet. Click &quot;Add Booking&quot; to create one.
@@ -113,7 +177,7 @@ const Booking = () => {
                   </tr>
                 ) : (
                   bookings.map((b) => (
-                    <tr key={b.id} className="border-b border-secondary">
+                    <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
                       <td className="px-4 py-3 text-sm">{b.customerName}</td>
                       <td className="px-4 py-3 text-sm">{b.roomNumber}</td>
                       <td className="px-4 py-3 text-sm">
@@ -122,12 +186,22 @@ const Booking = () => {
                       <td className="px-4 py-3 text-sm">{b.checkIn || '—'}</td>
                       <td className="px-4 py-3 text-sm">{b.checkOut || '—'}</td>
                       <td className="px-4 py-3 text-sm text-right">
-                        {b.price ? Number(b.price).toLocaleString() : '—'}
+                        {b.price != null ? Number(b.price).toLocaleString() : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm text-right">
-                        {b.bookingComCommission
+                        {b.bookingComCommission != null
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <button type="button" onClick={() => openEdit(b)} className="p-2 hover:bg-secondary rounded-lg text-green-500 hover:text-green-400" title="Edit">
+                            <Pencil className="w-4 h-4" />
+                          </button>
+                          <button type="button" onClick={() => handleDelete(b)} className="p-2 hover:bg-secondary rounded-lg text-red-500 hover:text-red-400" title="Delete">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -144,23 +218,14 @@ const Booking = () => {
         onOpenChange={(open) => {
           setIsDialogOpen(open);
           if (!open) {
-            setForm({
-              customerName: '',
-              roomNumber: '',
-              adults: '',
-              children: '',
-              checkIn: '',
-              checkOut: '',
-              price: '',
-              bookingComCommission: '',
-              roomCategory: 'ac',
-            });
+            setEditingBooking(null);
+            setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomCategory: 'ac' });
           }
         }}
       >
         <DialogContent className="max-w-xl">
           <DialogHeader>
-            <DialogTitle>New Booking</DialogTitle>
+            <DialogTitle>{editingBooking ? 'Edit Booking' : 'New Booking'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -302,7 +367,7 @@ const Booking = () => {
               >
                 Clear
               </Button>
-              <Button type="submit">Save booking</Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (editingBooking ? 'Update booking' : 'Save booking')}</Button>
             </div>
           </form>
         </DialogContent>

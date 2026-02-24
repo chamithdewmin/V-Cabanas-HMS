@@ -11,7 +11,7 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, email, name, created_at FROM users ORDER BY created_at DESC'
+      'SELECT id, email, name, created_at, COALESCE(role, \'receptionist\') AS role FROM users ORDER BY created_at DESC'
     );
     res.json(rows);
   } catch (err) {
@@ -22,16 +22,17 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const { email, password, name } = req.body;
+    const { email, password, name, role } = req.body;
     if (!email || !password || !name) {
       return res.status(400).json({ error: 'Email, password, and name are required' });
     }
+    const r = (role && ['admin', 'manager', 'receptionist'].includes(role)) ? role : 'receptionist';
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      `INSERT INTO users (email, password_hash, name)
-       VALUES ($1, $2, $3)
-       RETURNING id, email, name, created_at`,
-      [email.trim(), hash, name.trim()]
+      `INSERT INTO users (email, password_hash, name, role)
+       VALUES ($1, $2, $3, $4)
+       RETURNING id, email, name, created_at, role`,
+      [email.trim(), hash, name.trim(), r]
     );
     res.status(201).json(rows[0]);
   } catch (err) {
@@ -46,18 +47,24 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password } = req.body;
+    const { name, email, password, role } = req.body;
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required' });
     }
+    const r = (role && ['admin', 'manager', 'receptionist'].includes(role)) ? role : null;
     let query = 'UPDATE users SET name = $2, email = $3';
     const params = [id, name.trim(), email.trim()];
+    if (r) {
+      query += ', role = $4';
+      params.push(r);
+    }
     if (password && password.trim()) {
       const hash = await bcrypt.hash(password, 10);
-      query += ', password_hash = $4';
+      const idx = params.length + 1;
+      query += `, password_hash = $${idx}`;
       params.push(hash);
     }
-    query += ' WHERE id = $1 RETURNING id, email, name, created_at';
+    query += ` WHERE id = $1 RETURNING id, email, name, created_at, COALESCE(role, 'receptionist') AS role`;
     const { rows } = await pool.query(query, params);
     if (!rows[0]) return res.status(404).json({ error: 'User not found' });
     res.json(rows[0]);
@@ -83,7 +90,7 @@ router.delete('/:id', async (req, res) => {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      const tables = ['orders', 'incomes', 'invoices', 'clients', 'customers', 'expenses', 'cars', 'assets', 'loans', 'transfers', 'reminders', 'settings'];
+      const tables = ['orders', 'incomes', 'invoices', 'clients', 'customers', 'expenses', 'cars', 'assets', 'loans', 'transfers', 'reminders', 'settings', 'bookings', 'pricing'];
       for (const table of tables) {
         await client.query('SAVEPOINT del_user');
         try {

@@ -9,7 +9,6 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { api } from '@/lib/api';
 
 const PROTECTED_EMAIL = 'logozodev@gmail.com';
-const ROLE_KEY = 'vcabanas_user_roles';
 const ROLE_ADMIN = 'admin';
 const ROLE_MANAGER = 'manager';
 const ROLE_RECEPTIONIST = 'receptionist';
@@ -32,36 +31,12 @@ const Users = () => {
   });
   const { toast } = useToast();
 
-  const loadStoredRoles = () => {
-    try {
-      const raw = localStorage.getItem(ROLE_KEY);
-      if (!raw) return {};
-      const parsed = JSON.parse(raw);
-      return typeof parsed === 'object' && parsed !== null ? parsed : {};
-    } catch {
-      return {};
-    }
-  };
-
-  const saveRoleForUser = (email, role) => {
-    try {
-      const roles = loadStoredRoles();
-      roles[email] = role;
-      localStorage.setItem(ROLE_KEY, JSON.stringify(roles));
-    } catch {
-      // ignore storage errors
-    }
-  };
-
   const loadUsers = async () => {
     try {
       const list = await api.users.list();
-      const roles = loadStoredRoles();
       const withRoles = (Array.isArray(list) ? list : []).map((u) => ({
         ...u,
-        role:
-          roles[u.email] ||
-          (u.email === PROTECTED_EMAIL ? ROLE_ADMIN : ROLE_RECEPTIONIST),
+        role: u.role || (u.email === PROTECTED_EMAIL ? ROLE_ADMIN : ROLE_RECEPTIONIST),
       }));
       setUsers(withRoles);
     } catch (err) {
@@ -121,18 +96,17 @@ const Users = () => {
     setSaving(true);
     try {
       if (editingUser) {
-        const payload = { name: form.name.trim(), email: form.email.trim() };
+        const payload = { name: form.name.trim(), email: form.email.trim(), role: form.role };
         if (form.password) payload.password = form.password;
         await api.users.update(editingUser.id, payload);
-        saveRoleForUser(form.email.trim(), form.role);
         toast({ title: 'User updated', description: `${form.name} has been updated.` });
       } else {
         await api.users.create({
           name: form.name.trim(),
           email: form.email.trim(),
           password: form.password,
+          role: form.role,
         });
-        saveRoleForUser(form.email.trim(), form.role);
         toast({ title: 'User added', description: `${form.name} can now log in.` });
       }
       setForm({ name: '', email: '', password: '', role: ROLE_RECEPTIONIST });

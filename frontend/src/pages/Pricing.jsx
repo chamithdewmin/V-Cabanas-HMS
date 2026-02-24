@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Plus, Tag, RefreshCw, Pencil, Trash2 } from 'lucide-react';
@@ -7,10 +7,13 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
+import { api } from '@/lib/api';
 
 const Pricing = () => {
   const { toast } = useToast();
   const [items, setItems] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
@@ -20,11 +23,28 @@ const Pricing = () => {
     notes: '',
   });
 
+  const loadItems = async () => {
+    setLoading(true);
+    try {
+      const list = await api.pricing.list();
+      setItems(Array.isArray(list) ? list : []);
+    } catch (err) {
+      toast({ title: 'Failed to load pricing', description: err.message || 'Could not fetch pricing', variant: 'destructive' });
+      setItems([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    loadItems();
+  }, []);
+
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim() || !form.price) {
       toast({
@@ -35,40 +55,46 @@ const Pricing = () => {
       return;
     }
 
-    const payload = {
-      id: editingItem?.id || Date.now().toString(),
-      name: form.name.trim(),
-      price: Number(form.price),
-      notes: form.notes.trim(),
-    };
-
-    if (editingItem) {
-      setItems((prev) => prev.map((i) => (i.id === editingItem.id ? payload : i)));
-      toast({ title: 'Pricing updated', description: 'Pricing item has been updated (UI only).' });
-    } else {
-      setItems((prev) => [payload, ...prev]);
-      toast({ title: 'Pricing added', description: 'New pricing item has been saved (UI only).' });
+    setSaving(true);
+    try {
+      const payload = { name: form.name.trim(), price: Number(form.price), notes: (form.notes || '').trim() };
+      if (editingItem) {
+        await api.pricing.update(editingItem.id, payload);
+        toast({ title: 'Pricing updated', description: 'Pricing item has been updated.' });
+      } else {
+        await api.pricing.create(payload);
+        toast({ title: 'Pricing added', description: 'New pricing item has been saved.' });
+      }
+      setForm({ name: '', price: '', notes: '' });
+      setEditingItem(null);
+      setIsDialogOpen(false);
+      loadItems();
+    } catch (err) {
+      toast({ title: editingItem ? 'Update failed' : 'Save failed', description: err.message || 'Could not save', variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
-
-    setForm({ name: '', price: '', notes: '' });
-    setEditingItem(null);
-    setIsDialogOpen(false);
   };
 
   const openEdit = (item) => {
     setEditingItem(item);
     setForm({
       name: item.name,
-      price: String(item.price),
+      price: String(item.price ?? ''),
       notes: item.notes || '',
     });
     setIsDialogOpen(true);
   };
 
-  const handleDelete = (item) => {
+  const handleDelete = async (item) => {
     if (!window.confirm(`Delete pricing item "${item.name}"?`)) return;
-    setItems((prev) => prev.filter((i) => i.id !== item.id));
-    toast({ title: 'Pricing deleted', description: `"${item.name}" has been removed.` });
+    try {
+      await api.pricing.delete(item.id);
+      toast({ title: 'Pricing deleted', description: `"${item.name}" has been removed.` });
+      loadItems();
+    } catch (err) {
+      toast({ title: 'Delete failed', description: err.message || 'Could not delete', variant: 'destructive' });
+    }
   };
 
   const filteredItems = items.filter((i) => {
@@ -93,16 +119,7 @@ const Pricing = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button
-              variant="outline"
-              onClick={() => {
-                // Placeholder refresh for future backend wiring
-                toast({
-                  title: 'Refreshed',
-                  description: 'Pricing list refreshed (no backend connected yet).',
-                });
-              }}
-            >
+            <Button variant="outline" onClick={loadItems} disabled={loading}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
@@ -161,7 +178,13 @@ const Pricing = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredItems.length === 0 ? (
+                {loading ? (
+                  <tr>
+                    <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                      Loading...
+                    </td>
+                  </tr>
+                ) : filteredItems.length === 0 ? (
                   <tr>
                     <td
                       colSpan={4}
@@ -269,8 +292,8 @@ const Pricing = () => {
               >
                 Cancel
               </Button>
-              <Button type="submit">
-                {editingItem ? 'Update Pricing' : 'Save Pricing'}
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Saving...' : (editingItem ? 'Update Pricing' : 'Save Pricing')}
               </Button>
             </div>
           </form>

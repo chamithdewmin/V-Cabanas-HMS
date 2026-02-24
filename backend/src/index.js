@@ -21,6 +21,8 @@ import transfersRoutes from './routes/transfers.js';
 import remindersRoutes from './routes/reminders.js';
 import bankDetailsRoutes from './routes/bankDetails.js';
 import aiRoutes from './routes/ai.js';
+import bookingsRoutes from './routes/bookings.js';
+import pricingRoutes from './routes/pricing.js';
 import pool from './config/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -132,6 +134,14 @@ async function initDb() {
   } catch (e) {
     console.warn('Reminders migration:', e.message);
   }
+  try {
+    const addPath = path.join(__dirname, '..', 'scripts', 'add-bookings-pricing-role.sql');
+    const addSql = fs.readFileSync(addPath, 'utf8');
+    await pool.query(addSql);
+    console.log('Bookings, pricing tables and users.role ready.');
+  } catch (e) {
+    console.warn('Bookings/pricing/role migration:', e.message);
+  }
 }
 
 const app = express();
@@ -181,6 +191,8 @@ app.use('/api/users', usersRoutes);
 app.use('/api/sms', smsRoutes);
 app.use('/api/transfers', transfersRoutes);
 app.use('/api/reminders', remindersRoutes);
+app.use('/api/bookings', bookingsRoutes);
+app.use('/api/pricing', pricingRoutes);
 app.use('/api/ai', aiRoutes);
 
 const HOST = '0.0.0.0'; // Required for Docker: listen on all interfaces

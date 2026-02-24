@@ -10,6 +10,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   name VARCHAR(255) NOT NULL,
   token_version INT DEFAULT 0,
+  role VARCHAR(50) DEFAULT 'receptionist',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
@@ -232,12 +233,38 @@ CREATE TABLE IF NOT EXISTS reset_data_otps (
   expires_at TIMESTAMPTZ NOT NULL
 );
 
--- 18) Settings sequence (for multiple settings rows per user)
+-- 18) Bookings (room reservations)
+CREATE TABLE IF NOT EXISTS bookings (
+  id VARCHAR(50) PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  customer_name VARCHAR(255) NOT NULL DEFAULT '',
+  room_number VARCHAR(50) NOT NULL DEFAULT '',
+  adults INT NOT NULL DEFAULT 0,
+  children INT NOT NULL DEFAULT 0,
+  room_category VARCHAR(50) NOT NULL DEFAULT 'ac',
+  check_in DATE,
+  check_out DATE,
+  price DECIMAL(15,2) DEFAULT 0,
+  booking_com_commission DECIMAL(15,2) DEFAULT 0,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 19) Pricing (service/room price list)
+CREATE TABLE IF NOT EXISTS pricing (
+  id VARCHAR(50) PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  name VARCHAR(255) NOT NULL DEFAULT '',
+  price DECIMAL(15,2) NOT NULL DEFAULT 0,
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 20) Settings sequence (for multiple settings rows per user)
 CREATE SEQUENCE IF NOT EXISTS settings_id_seq;
 SELECT setval('settings_id_seq', (SELECT COALESCE(MAX(id), 1) FROM settings));
 ALTER TABLE settings ALTER COLUMN id SET DEFAULT nextval('settings_id_seq');
 
--- 19) Ensure columns exist (idempotent for existing DBs)
+-- 21) Ensure columns exist (idempotent for existing DBs)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INT DEFAULT 0;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
 ALTER TABLE incomes ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
@@ -260,6 +287,7 @@ ALTER TABLE invoices ADD COLUMN IF NOT EXISTS bank_details_encrypted TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS show_signature_area BOOLEAN DEFAULT false;
 ALTER TABLE reminders ADD COLUMN IF NOT EXISTS reason VARCHAR(255) DEFAULT '';
 ALTER TABLE reminders ADD COLUMN IF NOT EXISTS amount DECIMAL(15,2) DEFAULT 0;
+ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'receptionist';
 
 -- Migrate existing rows to user 1 (safe if no users yet)
 UPDATE clients SET user_id = 1 WHERE user_id IS NULL AND EXISTS (SELECT 1 FROM users WHERE id = 1);
