@@ -24,6 +24,7 @@ import Reminders from './pages/Reminders';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
 import Booking from './pages/Booking';
+import Pricing from './pages/Pricing';
 import Layout from './components/Layout';
 
 function App() {
@@ -61,6 +62,7 @@ function App() {
         <Route path="cash-flow" element={<CashFlow />} />
         <Route path="calendar" element={<Calendar />} />
         <Route path="booking" element={<Booking />} />
+        <Route path="pricing" element={<Pricing />} />
         <Route path="reports" element={<Navigate to="/reports/overview" replace />} />
         <Route path="reports/overview" element={<ReportOverview />} />
         <Route path="reports/profit-loss" element={<ReportProfitLoss />} />
