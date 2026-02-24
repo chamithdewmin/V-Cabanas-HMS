@@ -78,7 +78,7 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Reminders', href: '/reminders', icon: Bell },
   { label: 'Messages', href: '/sms', icon: MessageSquare },
   { divider: true },
-  { label: 'Users', href: '/users', icon: UserPlus, adminOnly: true },
+  { label: 'User Management', href: '/users', icon: UserPlus, adminOnly: true },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
