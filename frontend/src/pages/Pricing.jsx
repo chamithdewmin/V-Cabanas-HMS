@@ -211,12 +211,12 @@ const Pricing = () => {
                       <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[5rem] w-24">
                         {item.price.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-center min-w-[6rem] w-28">
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="px-4 py-3 text-center min-w-[6rem] w-28 align-middle">
+                        <div className="inline-flex items-center justify-center gap-1">
                           <button
                             type="button"
                             onClick={() => openEdit(item)}
-                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-green-500 hover:text-green-400"
+                            className="p-1.5 hover:bg-secondary rounded-md transition-colors text-green-500 hover:text-green-400"
                             title="Edit"
                           >
                             <Pencil className="w-4 h-4" />
@@ -224,7 +224,7 @@ const Pricing = () => {
                           <button
                             type="button"
                             onClick={() => handleDelete(item)}
-                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-red-500 hover:text-red-400"
+                            className="p-1.5 hover:bg-secondary rounded-md transition-colors text-red-500 hover:text-red-400"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />

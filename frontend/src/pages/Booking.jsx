@@ -197,12 +197,12 @@ const Booking = () => {
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
-                          <button type="button" onClick={() => openEdit(b)} className="p-2 hover:bg-secondary rounded-lg text-green-500 hover:text-green-400" title="Edit">
+                      <td className="px-4 py-3 text-center align-middle">
+                        <div className="inline-flex items-center justify-center gap-1">
+                          <button type="button" onClick={() => openEdit(b)} className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400" title="Edit">
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button type="button" onClick={() => handleDelete(b)} className="p-2 hover:bg-secondary rounded-lg text-red-500 hover:text-red-400" title="Delete">
+                          <button type="button" onClick={() => handleDelete(b)} className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400" title="Delete">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
