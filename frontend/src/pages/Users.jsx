@@ -211,14 +211,14 @@ const Users = () => {
     <>
       <Helmet>
         <title>User Management - V Cabanas HMS</title>
-        <meta name="description" content="User management for app logins and roles" />
+        <meta name="description" content="User management: add, edit, and remove users" />
       </Helmet>
 
       <div className="space-y-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-foreground">User Management</h1>
-            <p className="text-muted-foreground">Add and manage users, roles, and login access.</p>
+            <p className="text-muted-foreground">Add and manage users who can log in to the app.</p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" onClick={loadUsers} disabled={loading}>
@@ -245,7 +245,7 @@ const Users = () => {
           {/* Header */}
           <div className="flex items-center justify-between px-6 py-4 border-b border-border">
             <div className="flex items-center gap-3">
-              <span className="text-foreground font-semibold text-lg">User Management</span>
+              <span className="text-foreground font-semibold text-lg">Users</span>
               <span className="bg-primary/20 text-primary text-xs font-medium px-2.5 py-0.5 rounded-full border border-primary/40">
                 {filteredUsers.length} users
               </span>
