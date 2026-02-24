@@ -178,13 +178,17 @@ const Booking = () => {
                 ) : (
                   bookings.map((b) => (
                     <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
-                      <td className="px-4 py-3 text-sm">{b.customerName}</td>
-                      <td className="px-4 py-3 text-sm">{b.roomNumber}</td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-3 text-sm text-left">{b.customerName}</td>
+                      <td className="px-4 py-3 text-sm text-left">{b.roomNumber}</td>
+                      <td className="px-4 py-3 text-sm text-left">
                         {b.adults || 0} adults, {b.children || 0} children
                       </td>
-                      <td className="px-4 py-3 text-sm">{b.checkIn || '—'}</td>
-                      <td className="px-4 py-3 text-sm">{b.checkOut || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-left">
+                        {b.checkIn ? (typeof b.checkIn === 'string' && b.checkIn.includes('T') ? b.checkIn.slice(0, 10) : b.checkIn) : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-left">
+                        {b.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '—'}
+                      </td>
                       <td className="px-4 py-3 text-sm text-right">
                         {b.price != null ? Number(b.price).toLocaleString() : '—'}
                       </td>
@@ -193,7 +197,7 @@ const Booking = () => {
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button type="button" onClick={() => openEdit(b)} className="p-2 hover:bg-secondary rounded-lg text-green-500 hover:text-green-400" title="Edit">
                             <Pencil className="w-4 h-4" />

@@ -202,14 +202,14 @@ const Pricing = () => {
                       transition={{ delay: index * 0.02 }}
                       className="border-b border-secondary hover:bg-secondary/50 transition-colors"
                     >
-                      <td className="px-4 py-3 text-sm">{item.name}</td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="px-4 py-3 text-sm text-left">{item.name}</td>
+                      <td className="px-4 py-3 text-sm text-left text-muted-foreground">
                         {item.notes || '—'}
                       </td>
                       <td className="px-4 py-3 text-sm font-semibold text-right">
                         {item.price.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             type="button"
