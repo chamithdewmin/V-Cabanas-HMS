@@ -154,8 +154,8 @@ const Booking = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold">Guests</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Check-in</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Price</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Booking.com</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Price</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Booking.com</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
@@ -189,10 +189,10 @@ const Booking = () => {
                       <td className="px-4 py-3 text-sm text-left">
                         {b.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right">
+                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-24">
                         {b.price != null ? Number(b.price).toLocaleString() : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right">
+                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28">
                         {b.bookingComCommission != null
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
