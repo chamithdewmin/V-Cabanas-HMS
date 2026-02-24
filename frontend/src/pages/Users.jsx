@@ -10,6 +10,7 @@ import { api } from '@/lib/api';
 
 const PROTECTED_EMAIL = 'logozodev@gmail.com';
 const ROLE_KEY = 'vcabanas_user_roles';
+const ROLE_ADMIN = 'admin';
 const ROLE_MANAGER = 'manager';
 const ROLE_RECEPTIONIST = 'receptionist';
 const PER_PAGE = 10;
@@ -58,7 +59,9 @@ const Users = () => {
       const roles = loadStoredRoles();
       const withRoles = (Array.isArray(list) ? list : []).map((u) => ({
         ...u,
-        role: roles[u.email] || (u.email === PROTECTED_EMAIL ? ROLE_MANAGER : ROLE_RECEPTIONIST),
+        role:
+          roles[u.email] ||
+          (u.email === PROTECTED_EMAIL ? ROLE_ADMIN : ROLE_RECEPTIONIST),
       }));
       setUsers(withRoles);
     } catch (err) {
@@ -153,7 +156,9 @@ const Users = () => {
       name: user.name,
       email: user.email,
       password: '',
-      role: user.role || (user.email === PROTECTED_EMAIL ? ROLE_MANAGER : ROLE_RECEPTIONIST),
+      role:
+        user.role ||
+        (user.email === PROTECTED_EMAIL ? ROLE_ADMIN : ROLE_RECEPTIONIST),
     });
     setIsDialogOpen(true);
   };
@@ -304,12 +309,18 @@ const Users = () => {
                       <td className="px-4 py-3">
                         <span
                           className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
-                            user.role === ROLE_MANAGER
+                            user.role === ROLE_ADMIN
+                              ? 'bg-red-500/20 text-red-400 border border-red-500/60'
+                              : user.role === ROLE_MANAGER
                               ? 'bg-primary/20 text-primary border border-primary/60'
                               : 'bg-secondary text-foreground border border-border'
                           }`}
                         >
-                          {user.role === ROLE_MANAGER ? 'Manager' : 'Receptionist'}
+                          {user.role === ROLE_ADMIN
+                            ? 'Admin'
+                            : user.role === ROLE_MANAGER
+                            ? 'Manager'
+                            : 'Receptionist'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground text-sm">{formatDate(user.created_at)}</td>
@@ -433,30 +444,15 @@ const Users = () => {
               </div>
               <div className="space-y-2">
                 <label className="text-sm font-medium">Role</label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => handleChange('role', ROLE_MANAGER)}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                      form.role === ROLE_MANAGER
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-secondary hover:border-primary/60'
-                    }`}
-                  >
-                    Manager
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleChange('role', ROLE_RECEPTIONIST)}
-                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
-                      form.role === ROLE_RECEPTIONIST
-                        ? 'border-primary bg-primary/10 text-primary'
-                        : 'border-border bg-secondary hover:border-primary/60'
-                    }`}
-                  >
-                    Receptionist
-                  </button>
-                </div>
+                <select
+                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                  value={form.role}
+                  onChange={(e) => handleChange('role', e.target.value)}
+                >
+                  <option value={ROLE_ADMIN}>Admin</option>
+                  <option value={ROLE_MANAGER}>Manager</option>
+                  <option value={ROLE_RECEPTIONIST}>Receptionist</option>
+                </select>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button
