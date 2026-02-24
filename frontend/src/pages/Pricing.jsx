@@ -174,7 +174,7 @@ const Pricing = () => {
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">
                     Price
                   </th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold uppercase">
+                  <th className="px-4 py-3 text-center text-sm font-semibold uppercase min-w-[6rem] w-28">
                     Actions
                   </th>
                 </tr>
@@ -211,7 +211,7 @@ const Pricing = () => {
                       <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[5rem] w-24">
                         {item.price.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-center">
+                      <td className="px-4 py-3 text-center min-w-[6rem] w-28">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             type="button"
