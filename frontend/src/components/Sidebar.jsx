@@ -58,8 +58,6 @@ const reportSubItems = [
   { to: '/reports/balance-sheet', label: 'Balance Sheet' },
 ];
 
-const ADMIN_EMAIL = 'logozodev@gmail.com';
-
 /** Nav config with dividers (demo-style). Use href for links, items[] for expandable sections. */
 const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -78,7 +76,7 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Reminders', href: '/reminders', icon: Bell },
   { label: 'Messages', href: '/sms', icon: MessageSquare },
   { divider: true },
-  { label: 'User Management', href: '/users', icon: UserPlus, adminOnly: true },
+  { label: 'User Management', href: '/users', icon: UserPlus },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -184,7 +182,6 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const { settings } = useFinance();
   const { open, setOpen, collapsed, toggleCollapsed } = useSidebar();
-  const canManageUsers = user?.email === ADMIN_EMAIL;
 
   const handleLogout = () => {
     logout();

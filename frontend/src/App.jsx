@@ -72,7 +72,7 @@ function App() {
         <Route path="reports/tax" element={<ReportTax />} />
         <Route path="reports/balance-sheet" element={<BalanceSheet />} />
         <Route path="cash-flow" element={<CashFlow />} />
-        <Route path="users" element={user?.email === 'logozodev@gmail.com' ? <Users /> : <Navigate to="/dashboard" replace />} />
+        <Route path="users" element={<Users />} />
         <Route path="sms" element={<SMS />} />
         <Route path="reminders" element={<Reminders />} />
         <Route path="profile" element={<Profile />} />
