@@ -1,13 +1,16 @@
 import React, { useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { BookOpen } from 'lucide-react';
+import { BookOpen, Plus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 const Booking = () => {
   const { toast } = useToast();
+  const [bookings, setBookings] = useState([]);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [form, setForm] = useState({
     customerName: '',
     roomNumber: '',
@@ -36,9 +39,16 @@ const Booking = () => {
       return;
     }
 
+    const newBooking = {
+      id: Date.now().toString(),
+      ...form,
+    };
+
+    setBookings((prev) => [newBooking, ...prev]);
+
     toast({
       title: 'Booking saved',
-      description: 'Booking details have been captured (no backend yet).',
+      description: 'Booking details have been captured (UI only, no backend yet).',
     });
 
     setForm({
@@ -52,6 +62,7 @@ const Booking = () => {
       bookingComCommission: '',
       roomCategory: 'ac',
     });
+    setIsDialogOpen(false);
   };
 
   return (
@@ -68,19 +79,89 @@ const Booking = () => {
               Capture guest booking details for your rooms.
             </p>
           </div>
+          <div className="flex gap-3">
+            <Button onClick={() => setIsDialogOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Add Booking
+            </Button>
+          </div>
         </div>
 
-        <div className="bg-card rounded-lg border border-secondary p-8 max-w-3xl">
-          <div className="flex items-center gap-3 mb-6">
-            <BookOpen className="w-8 h-8 text-primary" />
-            <div>
-              <h2 className="text-xl font-semibold">New Booking</h2>
-              <p className="text-sm text-muted-foreground">
-                Fill in the booking details below.
-              </p>
-            </div>
+        <div className="bg-card rounded-lg border border-secondary overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-secondary">
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Customer</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Room</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Guests</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Check-in</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold">Price</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold">Booking.com</th>
+                </tr>
+              </thead>
+              <tbody>
+                {bookings.length === 0 ? (
+                  <tr>
+                    <td
+                      colSpan={7}
+                      className="px-4 py-8 text-center text-muted-foreground text-sm"
+                    >
+                      No bookings yet. Click &quot;Add Booking&quot; to create one.
+                    </td>
+                  </tr>
+                ) : (
+                  bookings.map((b) => (
+                    <tr key={b.id} className="border-b border-secondary">
+                      <td className="px-4 py-3 text-sm">{b.customerName}</td>
+                      <td className="px-4 py-3 text-sm">{b.roomNumber}</td>
+                      <td className="px-4 py-3 text-sm">
+                        {b.adults || 0} adults, {b.children || 0} children
+                      </td>
+                      <td className="px-4 py-3 text-sm">{b.checkIn || '—'}</td>
+                      <td className="px-4 py-3 text-sm">{b.checkOut || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        {b.price ? Number(b.price).toLocaleString() : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right">
+                        {b.bookingComCommission
+                          ? Number(b.bookingComCommission).toLocaleString()
+                          : '—'}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
           </div>
+        </div>
+      </div>
 
+      {/* Add booking dialog */}
+      <Dialog
+        open={isDialogOpen}
+        onOpenChange={(open) => {
+          setIsDialogOpen(open);
+          if (!open) {
+            setForm({
+              customerName: '',
+              roomNumber: '',
+              adults: '',
+              children: '',
+              checkIn: '',
+              checkOut: '',
+              price: '',
+              bookingComCommission: '',
+              roomCategory: 'ac',
+            });
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl">
+          <DialogHeader>
+            <DialogTitle>New Booking</DialogTitle>
+          </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -224,8 +305,8 @@ const Booking = () => {
               <Button type="submit">Save booking</Button>
             </div>
           </form>
-        </div>
-      </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

@@ -9,6 +9,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { api } from '@/lib/api';
 
 const PROTECTED_EMAIL = 'logozodev@gmail.com';
+const ROLE_KEY = 'vcabanas_user_roles';
+const ROLE_MANAGER = 'manager';
+const ROLE_RECEPTIONIST = 'receptionist';
 const PER_PAGE = 10;
 
 const Users = () => {
@@ -24,13 +27,40 @@ const Users = () => {
     name: '',
     email: '',
     password: '',
+    role: ROLE_RECEPTIONIST,
   });
   const { toast } = useToast();
+
+  const loadStoredRoles = () => {
+    try {
+      const raw = localStorage.getItem(ROLE_KEY);
+      if (!raw) return {};
+      const parsed = JSON.parse(raw);
+      return typeof parsed === 'object' && parsed !== null ? parsed : {};
+    } catch {
+      return {};
+    }
+  };
+
+  const saveRoleForUser = (email, role) => {
+    try {
+      const roles = loadStoredRoles();
+      roles[email] = role;
+      localStorage.setItem(ROLE_KEY, JSON.stringify(roles));
+    } catch {
+      // ignore storage errors
+    }
+  };
 
   const loadUsers = async () => {
     try {
       const list = await api.users.list();
-      setUsers(Array.isArray(list) ? list : []);
+      const roles = loadStoredRoles();
+      const withRoles = (Array.isArray(list) ? list : []).map((u) => ({
+        ...u,
+        role: roles[u.email] || (u.email === PROTECTED_EMAIL ? ROLE_MANAGER : ROLE_RECEPTIONIST),
+      }));
+      setUsers(withRoles);
     } catch (err) {
       toast({
         title: 'Failed to load users',
@@ -91,6 +121,7 @@ const Users = () => {
         const payload = { name: form.name.trim(), email: form.email.trim() };
         if (form.password) payload.password = form.password;
         await api.users.update(editingUser.id, payload);
+        saveRoleForUser(form.email.trim(), form.role);
         toast({ title: 'User updated', description: `${form.name} has been updated.` });
       } else {
         await api.users.create({
@@ -98,9 +129,10 @@ const Users = () => {
           email: form.email.trim(),
           password: form.password,
         });
+        saveRoleForUser(form.email.trim(), form.role);
         toast({ title: 'User added', description: `${form.name} can now log in.` });
       }
-      setForm({ name: '', email: '', password: '' });
+      setForm({ name: '', email: '', password: '', role: ROLE_RECEPTIONIST });
       setEditingUser(null);
       setIsDialogOpen(false);
       loadUsers();
@@ -117,7 +149,12 @@ const Users = () => {
 
   const openEdit = (user) => {
     setEditingUser(user);
-    setForm({ name: user.name, email: user.email, password: '' });
+    setForm({
+      name: user.name,
+      email: user.email,
+      password: '',
+      role: user.role || (user.email === PROTECTED_EMAIL ? ROLE_MANAGER : ROLE_RECEPTIONIST),
+    });
     setIsDialogOpen(true);
   };
 
@@ -225,6 +262,7 @@ const Users = () => {
                 <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wide">
                   <th className="px-4 py-3 text-left font-medium">Name</th>
                   <th className="px-4 py-3 text-left font-medium">Status</th>
+                  <th className="px-4 py-3 text-left font-medium">Role</th>
                   <th className="px-4 py-3 text-left font-medium">Created</th>
                   <th className="px-4 py-3 text-left font-medium">Email address</th>
                   <th className="px-4 py-3 w-24" />
@@ -261,6 +299,17 @@ const Users = () => {
                         <span className="inline-flex items-center gap-1.5 bg-secondary border border-border text-green-400 text-xs font-medium px-2.5 py-1 rounded-full">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
                           Active
+                        </span>
+                      </td>
+                      <td className="px-4 py-3">
+                        <span
+                          className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium ${
+                            user.role === ROLE_MANAGER
+                              ? 'bg-primary/20 text-primary border border-primary/60'
+                              : 'bg-secondary text-foreground border border-border'
+                          }`}
+                        >
+                          {user.role === ROLE_MANAGER ? 'Manager' : 'Receptionist'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground text-sm">{formatDate(user.created_at)}</td>
@@ -381,6 +430,33 @@ const Users = () => {
                   placeholder={editingUser ? 'Leave blank to keep current' : 'Password'}
                   required={!editingUser}
                 />
+              </div>
+              <div className="space-y-2">
+                <label className="text-sm font-medium">Role</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => handleChange('role', ROLE_MANAGER)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      form.role === ROLE_MANAGER
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-secondary hover:border-primary/60'
+                    }`}
+                  >
+                    Manager
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange('role', ROLE_RECEPTIONIST)}
+                    className={`rounded-lg border px-3 py-2 text-sm font-medium transition-colors ${
+                      form.role === ROLE_RECEPTIONIST
+                        ? 'border-primary bg-primary/10 text-primary'
+                        : 'border-border bg-secondary hover:border-primary/60'
+                    }`}
+                  >
+                    Receptionist
+                  </button>
+                </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button
