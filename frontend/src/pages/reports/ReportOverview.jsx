@@ -145,7 +145,6 @@ const MiniRow = ({ label, value, color, Icon, sub }) => (
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
 export default function OverviewReports() {
   const { incomes, expenses, assets, loans, invoices, settings, totals } = useFinance();
-  const [activeInsight, setActiveInsight] = useState(null);
   const [reportPreview, setReportPreview] = useState({ open: false, html: "", filename: "" });
 
   // Calculate monthly P&L data (last 7 months)
@@ -313,20 +312,6 @@ export default function OverviewReports() {
     return Math.min(100, Math.round(marginScore + debtScore + cashScore + 20));
   }, [profitMargin, totalAssets, totalLiab, cashBalance]);
 
-  // Insights
-  const insights = useMemo(() => {
-    const maxIncomeMonth = plMonthly.reduce((a, b) => a.income > b.income ? a : b, plMonthly[0] || {});
-    const largestInflow = incomes.length > 0 ? Math.max(...incomes.map(i => i.amount || 0)) : 0;
-    return [
-      { Icon: I.TrendingUp, color: C.green, bg: "rgba(34,197,94,0.08)", border: "rgba(34,197,94,0.2)", tag: "P&L", title: "Revenue Overview", desc: `Total revenue of LKR ${totalIncome.toLocaleString()} across ${plMonthly.length} months. ${maxIncomeMonth.month} had the highest income.` },
-      { Icon: I.AlertTriangle, color: C.yellow, bg: "rgba(234,179,8,0.08)", border: "rgba(234,179,8,0.2)", tag: "P&L", title: "Profit Analysis", desc: worstMonth.profit < 0 ? `${worstMonth.month} had a loss of LKR ${Math.abs(worstMonth.profit).toLocaleString()}. Monitor expenses closely.` : `Lowest profit month was ${worstMonth.month} with LKR ${worstMonth.profit.toLocaleString()}.` },
-      { Icon: I.Wallet, color: C.blue, bg: "rgba(59,130,246,0.08)", border: "rgba(59,130,246,0.2)", tag: "Cash Flow", title: "Cash Position", desc: `Current cash balance is LKR ${cashBalance.toLocaleString()}. ${largestInflow > 0 ? `Largest single inflow was LKR ${largestInflow.toLocaleString()}.` : 'Monitor cash flow regularly.'}` },
-      { Icon: I.AlertCircle, color: C.red, bg: "rgba(239,68,68,0.08)", border: "rgba(239,68,68,0.2)", tag: "Cash Flow", title: "Payment Status", desc: invoices.filter(i => i.status !== 'paid').length > 0 ? `${invoices.filter(i => i.status !== 'paid').length} unpaid invoices totaling LKR ${invoices.filter(i => i.status !== 'paid').reduce((s, i) => s + (i.total || 0), 0).toLocaleString()}.` : 'All invoices are paid.' },
-      { Icon: I.ShieldCheck, color: C.purple, bg: "rgba(167,139,250,0.08)", border: "rgba(167,139,250,0.2)", tag: "Balance Sheet", title: "Financial Stability", desc: `Debt ratio is ${debtRatio}%. Equity stands at LKR ${equity.toLocaleString()}. ${parseFloat(debtRatio) < 40 ? 'Healthy financial position.' : 'Consider reducing debt.'}` },
-      { Icon: I.Clock, color: C.orange, bg: "rgba(249,115,22,0.08)", border: "rgba(249,115,22,0.2)", tag: "Tax Reports", title: "Tax Status", desc: settings.taxEnabled ? `Estimated tax liability: LKR ${totalTax.toLocaleString()}. ${pendingTax > 0 ? `LKR ${pendingTax.toLocaleString()} pending.` : 'All tax obligations met.'}` : 'Tax calculations disabled in settings.' },
-    ];
-  }, [plMonthly, totalIncome, worstMonth, cashBalance, incomes, invoices, debtRatio, equity, settings, totalTax, pendingTax]);
-
   const openReportPreview = () => {
     const cur = settings?.currency || "LKR";
     let body = `<h2 style="margin:0 0 16px; font-size:18px; border-bottom:2px solid #111; padding-bottom:8px;">Business Overview Report</h2>`;
@@ -356,8 +341,6 @@ export default function OverviewReports() {
         ::-webkit-scrollbar { width:4px; }
         ::-webkit-scrollbar-thumb { background:${C.border2}; border-radius:99px; }
         @keyframes fi { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        .ins { transition:transform .2s, box-shadow .2s, border-color .2s; cursor:pointer; }
-        .ins:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.3); }
         .txrow:hover { background:#1a1d27 !important; }
       `}</style>
 
@@ -600,55 +583,6 @@ export default function OverviewReports() {
                 { label:"Effective Rate",    value:"20%",                                 color:C.muted,  Icon:I.Info         },
               ].map((m,i) => <MiniRow key={i} {...m} />)}
             </Card>
-          </div>
-        </div>
-
-        {/* KEY INSIGHTS */}
-        <div>
-          <div style={{ display:"flex", alignItems:"center", gap:12, marginBottom:16 }}>
-            <div style={{ width:36, height:36, borderRadius:10, background:"rgba(59,130,246,0.15)", display:"flex", alignItems:"center", justifyContent:"center" }}><I.Info /></div>
-            <div>
-              <h2 style={{ color:C.text, fontSize:18, fontWeight:900, margin:0, letterSpacing:"-0.02em" }}>Key Business Insights</h2>
-              <p style={{ color:C.muted, fontSize:13, margin:0 }}>Auto-generated from all 4 reports — click to highlight</p>
-            </div>
-          </div>
-          <div style={{ display:"grid", gridTemplateColumns:"repeat(3,1fr)", gap:14 }}>
-            {insights.map((ins, i) => (
-              <div key={i} className="ins"
-                onClick={() => setActiveInsight(activeInsight===i ? null : i)}
-                style={{ background:activeInsight===i?ins.bg:C.card, border:`1px solid ${activeInsight===i?ins.border:C.border}`, borderRadius:16, padding:"18px 20px", animation:`fi .4s ease ${i*.08}s both` }}>
-                <div style={{ display:"flex", justifyContent:"space-between", alignItems:"flex-start", marginBottom:12 }}>
-                  <div style={{ width:38, height:38, borderRadius:10, background:ins.bg, border:`1px solid ${ins.border}`, display:"flex", alignItems:"center", justifyContent:"center" }}>
-                    <ins.Icon />
-                  </div>
-                  <span style={{ background:`${ins.color}18`, color:ins.color, fontSize:10, fontWeight:700, letterSpacing:"0.07em", padding:"3px 8px", borderRadius:20, textTransform:"uppercase" }}>{ins.tag}</span>
-                </div>
-                <p style={{ color:C.text,  fontSize:13, fontWeight:800, margin:"0 0 6px", lineHeight:1.3 }}>{ins.title}</p>
-                <p style={{ color:C.muted, fontSize:12, margin:0, lineHeight:1.6 }}>{ins.desc}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* BALANCE SHEET EQUATION BANNER */}
-        <div style={{ background:"rgba(34,197,94,0.05)", border:"1px solid rgba(34,197,94,0.15)", borderRadius:16, padding:"18px 24px", display:"flex", alignItems:"center", justifyContent:"space-between" }}>
-          <div style={{ display:"flex", alignItems:"center", gap:14 }}>
-            <div style={{ width:44, height:44, borderRadius:12, background:"rgba(34,197,94,0.15)", display:"flex", alignItems:"center", justifyContent:"center" }}><I.CheckCircle /></div>
-            <div>
-              <p style={{ color:C.green, fontSize:13, fontWeight:800, margin:0 }}>Balance Sheet Equation Verified</p>
-              <p style={{ color:C.muted, fontSize:12, margin:"3px 0 0" }}>Assets = Liabilities + Equity · Checked against Balance Sheet Report</p>
-            </div>
-          </div>
-          <div style={{ display:"flex", gap:20, alignItems:"center" }}>
-            {[{ l:"Assets", v:`LKR ${totalAssets.toLocaleString()}`, c:C.green },{ l:"Liabilities", v:`LKR ${totalLiab.toLocaleString()}`, c:C.red },{ l:"Equity", v:`LKR ${equity.toLocaleString()}`, c:C.blue }].map((item, i, arr) => (
-              <div key={i} style={{ display:"flex", alignItems:"center", gap:16 }}>
-                <div style={{ textAlign:"center" }}>
-                  <p style={{ color:C.muted, fontSize:11, margin:0, fontWeight:600 }}>{item.l}</p>
-                  <p style={{ color:item.c,  fontSize:15, fontWeight:900, margin:"3px 0 0" }}>{item.v}</p>
-                </div>
-                {i < arr.length-1 && <span style={{ color:C.faint, fontSize:22, fontWeight:300 }}>{i===0 ? "=" : "+"}</span>}
-              </div>
-            ))}
           </div>
         </div>
 
