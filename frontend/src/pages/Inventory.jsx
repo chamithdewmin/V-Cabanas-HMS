@@ -397,7 +397,7 @@ const Inventory = () => {
                     <th className="px-4 py-3 text-left text-sm font-semibold">Recurring</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Receipt</th>
                     <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Amount</th>
-                    <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
+                    <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold w-24 min-w-[5rem]">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -441,8 +441,8 @@ const Inventory = () => {
                       <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[5rem] w-28">
                         {settings.currency} {exp.amount.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-center align-middle">
-                        <div className="inline-flex items-center justify-center gap-1">
+                      <td className="px-4 py-3 text-center align-middle w-24 min-w-[5rem]">
+                        <div className="inline-flex items-center justify-center gap-1 mx-auto">
                           <button
                             type="button"
                             onClick={() => openEdit(exp)}
