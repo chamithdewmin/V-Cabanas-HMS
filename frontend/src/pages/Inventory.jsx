@@ -396,8 +396,8 @@ const Inventory = () => {
                     <th className="px-4 py-3 text-left text-sm font-semibold">Payment</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Recurring</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Receipt</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold">Amount</th>
-                    <th className="px-4 py-3 text-center text-sm font-semibold uppercase">Actions</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold min-w-[6rem] w-28">Amount</th>
+                    <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold uppercase">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -438,10 +438,10 @@ const Inventory = () => {
                           '—'
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right">
+                      <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[6rem] w-28">
                         {settings.currency} {exp.amount.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 text-center">
                         <div className="flex items-center justify-center gap-2">
                           <button
                             type="button"
