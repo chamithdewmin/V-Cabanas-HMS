@@ -396,8 +396,8 @@ const Inventory = () => {
                     <th className="px-4 py-3 text-left text-sm font-semibold">Payment</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Recurring</th>
                     <th className="px-4 py-3 text-left text-sm font-semibold">Receipt</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold min-w-[6rem] w-28">Amount</th>
-                    <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold uppercase">Actions</th>
+                    <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Amount</th>
+                    <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -438,15 +438,15 @@ const Inventory = () => {
                           '—'
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[6rem] w-28">
+                      <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[5rem] w-28">
                         {settings.currency} {exp.amount.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-center">
-                        <div className="flex items-center justify-center gap-2">
+                      <td className="px-4 py-3 text-center align-middle">
+                        <div className="inline-flex items-center justify-center gap-1">
                           <button
                             type="button"
                             onClick={() => openEdit(exp)}
-                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-green-500 hover:text-green-400"
+                            className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400"
                             title="Edit"
                           >
                             <Pencil className="w-4 h-4" />
@@ -454,7 +454,7 @@ const Inventory = () => {
                           <button
                             type="button"
                             onClick={() => handleDeleteExpense(exp)}
-                            className="p-2 hover:bg-secondary rounded-lg transition-colors text-red-500 hover:text-red-400"
+                            className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
                             title="Delete"
                           >
                             <Trash2 className="w-4 h-4" />
