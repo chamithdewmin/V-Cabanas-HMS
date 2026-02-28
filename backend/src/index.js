@@ -23,6 +23,7 @@ import bankDetailsRoutes from './routes/bankDetails.js';
 import aiRoutes from './routes/ai.js';
 import bookingsRoutes from './routes/bookings.js';
 import pricingRoutes from './routes/pricing.js';
+import salaryRoutes from './routes/salary.js';
 import pool from './config/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -193,6 +194,7 @@ app.use('/api/transfers', transfersRoutes);
 app.use('/api/reminders', remindersRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/pricing', pricingRoutes);
+app.use('/api/salary', salaryRoutes);
 app.use('/api/ai', aiRoutes);
 
 const HOST = '0.0.0.0'; // Required for Docker: listen on all interfaces

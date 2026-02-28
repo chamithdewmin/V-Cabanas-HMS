@@ -141,6 +141,12 @@ export const api = {
     update: (id, data) => request(`/pricing/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/pricing/${id}`, { method: 'DELETE' }),
   },
+  salary: {
+    list: () => request('/salary'),
+    create: (data) => request('/salary', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => request(`/salary/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => request(`/salary/${id}`, { method: 'DELETE' }),
+  },
   ai: {
     getSummary: () => request('/ai/summary'),
     getSuggestions: () => request('/ai/suggestions', { method: 'POST', body: JSON.stringify({}) }),

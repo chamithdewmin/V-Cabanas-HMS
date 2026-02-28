@@ -156,20 +156,21 @@ const Booking = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Price</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Booking.com</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Income &amp; Profit</th>
                   <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground text-sm">
                       Loading bookings...
                     </td>
                   </tr>
                 ) : bookings.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={8}
+                      colSpan={9}
                       className="px-4 py-8 text-center text-muted-foreground text-sm"
                     >
                       No bookings yet. Click &quot;Add Booking&quot; to create one.
@@ -196,6 +197,9 @@ const Booking = () => {
                         {b.bookingComCommission != null
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28 font-medium">
+                        {(b.incomeProfit != null ? b.incomeProfit : (Number(b.price) || 0) - (Number(b.bookingComCommission) || 0)).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 text-center align-middle">
                         <div className="inline-flex items-center justify-center gap-1">

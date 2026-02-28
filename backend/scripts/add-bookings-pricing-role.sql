@@ -26,3 +26,15 @@ CREATE TABLE IF NOT EXISTS pricing (
   notes TEXT DEFAULT '',
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+
+-- Salary: employee salary records
+CREATE TABLE IF NOT EXISTS salary (
+  id VARCHAR(50) PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  employee_name VARCHAR(255) NOT NULL DEFAULT '',
+  position VARCHAR(255) DEFAULT '',
+  amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+  period VARCHAR(50) DEFAULT 'monthly',
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);

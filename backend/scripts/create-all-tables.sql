@@ -259,12 +259,24 @@ CREATE TABLE IF NOT EXISTS pricing (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 20) Settings sequence (for multiple settings rows per user)
+-- 20) Salary (employee salary records)
+CREATE TABLE IF NOT EXISTS salary (
+  id VARCHAR(50) PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  employee_name VARCHAR(255) NOT NULL DEFAULT '',
+  position VARCHAR(255) DEFAULT '',
+  amount DECIMAL(15,2) NOT NULL DEFAULT 0,
+  period VARCHAR(50) DEFAULT 'monthly',
+  notes TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 21) Settings sequence (for multiple settings rows per user)
 CREATE SEQUENCE IF NOT EXISTS settings_id_seq;
 SELECT setval('settings_id_seq', (SELECT COALESCE(MAX(id), 1) FROM settings));
 ALTER TABLE settings ALTER COLUMN id SET DEFAULT nextval('settings_id_seq');
 
--- 21) Ensure columns exist (idempotent for existing DBs)
+-- 22) Ensure columns exist (idempotent for existing DBs)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INT DEFAULT 0;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
 ALTER TABLE incomes ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);

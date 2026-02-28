@@ -5,19 +5,24 @@ import { authMiddleware } from '../middleware/auth.js';
 const router = express.Router();
 router.use(authMiddleware);
 
-const toBooking = (row) => ({
-  id: row.id,
-  customerName: row.customer_name || '',
-  roomNumber: row.room_number || '',
-  adults: row.adults ?? 0,
-  children: row.children ?? 0,
-  roomCategory: row.room_category || 'ac',
-  checkIn: row.check_in,
-  checkOut: row.check_out,
-  price: row.price != null ? parseFloat(row.price) : 0,
-  bookingComCommission: row.booking_com_commission != null ? parseFloat(row.booking_com_commission) : 0,
-  createdAt: row.created_at,
-});
+const toBooking = (row) => {
+  const price = row.price != null ? parseFloat(row.price) : 0;
+  const commission = row.booking_com_commission != null ? parseFloat(row.booking_com_commission) : 0;
+  return {
+    id: row.id,
+    customerName: row.customer_name || '',
+    roomNumber: row.room_number || '',
+    adults: row.adults ?? 0,
+    children: row.children ?? 0,
+    roomCategory: row.room_category || 'ac',
+    checkIn: row.check_in,
+    checkOut: row.check_out,
+    price,
+    bookingComCommission: commission,
+    incomeProfit: price - commission,
+    createdAt: row.created_at,
+  };
+};
 
 router.get('/', async (req, res) => {
   try {

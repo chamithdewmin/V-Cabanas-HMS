@@ -24,6 +24,7 @@ import {
   Calendar,
   BookOpen,
   Tag,
+  Banknote,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,6 +72,7 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Calendar', href: '/calendar', icon: Calendar },
   { label: 'Booking', href: '/booking', icon: BookOpen },
   { label: 'Pricing', href: '/pricing', icon: Tag },
+  { label: 'Salary Management', href: '/salary-management', icon: Banknote },
   { label: 'Analytics', icon: BarChart3, href: '/reports/overview', items: reportSubItems },
   { divider: true },
   { label: 'Reminders', href: '/reminders', icon: Bell },
