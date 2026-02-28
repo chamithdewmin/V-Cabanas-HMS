@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Search, Plus, Download, RefreshCw, Pencil, Trash2, Eye, Printer, Loader2 } from 'lucide-react';
+import { Search, Plus, Download, RefreshCw, Trash2, Eye, Printer, Loader2 } from 'lucide-react';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
 import { Input } from '@/components/ui/input';
@@ -317,7 +317,7 @@ const Orders = () => {
                   <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Total</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Payment</th>
                   <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Status</th>
-                  <th className="py-3 pl-8 pr-4 text-center text-xs sm:text-sm font-semibold w-40 min-w-[8rem]">Actions</th>
+                  <th className="py-3 pl-8 pr-4 text-center text-xs sm:text-sm font-semibold w-28 min-w-[6rem]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -346,15 +346,15 @@ const Orders = () => {
                         {order.status === 'paid' ? 'Paid' : 'Unpaid'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center align-middle w-40 min-w-[8rem]">
-                      <div className="inline-flex items-center justify-center gap-1 flex-wrap mx-auto">
+                    <td className="px-4 py-3 text-center align-middle w-28 min-w-[6rem]">
+                      <div className="inline-flex items-center justify-center gap-1 flex-wrap">
                         <button
                           type="button"
                           onClick={() => {
                             setSelectedOrder(order);
                             setInvoiceAction('view');
                           }}
-                          className="p-1.5 hover:bg-secondary rounded-md transition-colors text-blue-400 hover:text-blue-300"
+                          className="p-1.5 hover:bg-secondary rounded-md text-blue-400 hover:text-blue-300"
                           title="View"
                         >
                           <Eye className="w-4 h-4" />
@@ -365,7 +365,7 @@ const Orders = () => {
                             setSelectedOrder(order);
                             setInvoiceAction('download');
                           }}
-                          className="p-1.5 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                          className="p-1.5 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground"
                           title="Download PDF"
                         >
                           <Download className="w-4 h-4" />
@@ -376,21 +376,10 @@ const Orders = () => {
                             setSelectedOrder(order);
                             setInvoiceAction('print');
                           }}
-                          className="p-1.5 hover:bg-secondary rounded-md transition-colors text-muted-foreground hover:text-foreground"
+                          className="p-1.5 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground"
                           title="Print"
                         >
                           <Printer className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setInvoiceAction('view');
-                          }}
-                          className="p-1.5 hover:bg-secondary rounded-md transition-colors text-green-500 hover:text-green-400"
-                          title="Edit"
-                        >
-                          <Pencil className="w-4 h-4" />
                         </button>
                         <button
                           type="button"
@@ -401,7 +390,7 @@ const Orders = () => {
                               toast({ title: 'Invoice deleted', description: 'Invoice has been removed.' });
                             }
                           }}
-                          className="p-1.5 hover:bg-secondary rounded-md transition-colors text-red-500 hover:text-red-400"
+                          className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
                           title="Delete"
                         >
                           <Trash2 className="w-4 h-4" />
