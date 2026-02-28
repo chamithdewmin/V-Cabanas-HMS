@@ -24,6 +24,7 @@ import aiRoutes from './routes/ai.js';
 import bookingsRoutes from './routes/bookings.js';
 import pricingRoutes from './routes/pricing.js';
 import salaryRoutes from './routes/salary.js';
+import dailyNotesRoutes from './routes/dailyNotes.js';
 import pool from './config/db.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -195,6 +196,7 @@ app.use('/api/reminders', remindersRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/salary', salaryRoutes);
+app.use('/api/daily-notes', dailyNotesRoutes);
 app.use('/api/ai', aiRoutes);
 
 const HOST = '0.0.0.0'; // Required for Docker: listen on all interfaces

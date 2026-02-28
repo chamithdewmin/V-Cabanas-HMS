@@ -24,7 +24,8 @@ const Booking = () => {
     checkOut: '',
     price: '',
     bookingComCommission: '',
-    roomCategory: 'ac',
+    roomFeature: 'ac',
+    roomType: 'single',
   });
 
   const loadBookings = async () => {
@@ -67,7 +68,8 @@ const Booking = () => {
         roomNumber: form.roomNumber.trim(),
         adults: form.adults ? Number(form.adults) : 0,
         children: form.children ? Number(form.children) : 0,
-        roomCategory: form.roomCategory || 'ac',
+        roomFeature: form.roomFeature || 'ac',
+        roomType: form.roomType || 'single',
         checkIn: form.checkIn || null,
         checkOut: form.checkOut || null,
         price: form.price ? Number(form.price) : 0,
@@ -80,7 +82,7 @@ const Booking = () => {
         await api.bookings.create(payload);
         toast({ title: 'Booking saved', description: 'Booking has been saved.' });
       }
-      setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomCategory: 'ac' });
+      setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomFeature: 'ac', roomType: 'single' });
       setEditingBooking(null);
       setIsDialogOpen(false);
       loadBookings();
@@ -102,7 +104,8 @@ const Booking = () => {
       checkOut: b.checkOut || '',
       price: b.price ?? '',
       bookingComCommission: b.bookingComCommission ?? '',
-      roomCategory: b.roomCategory || 'ac',
+      roomFeature: b.roomFeature || 'ac',
+      roomType: b.roomType || 'single',
     });
     setIsDialogOpen(true);
   };
@@ -137,7 +140,7 @@ const Booking = () => {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={() => { setEditingBooking(null); setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomCategory: 'ac' }); setIsDialogOpen(true); }}>
+            <Button onClick={() => { setEditingBooking(null); setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomFeature: 'ac', roomType: 'single' }); setIsDialogOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" />
               Add Booking
             </Button>
@@ -150,7 +153,9 @@ const Booking = () => {
               <thead className="bg-secondary">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Customer</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Room</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Room no</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Feature</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Guests</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Check-in</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
@@ -163,14 +168,14 @@ const Booking = () => {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={9} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    <td colSpan={11} className="px-4 py-8 text-center text-muted-foreground text-sm">
                       Loading bookings...
                     </td>
                   </tr>
                 ) : bookings.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={9}
+                      colSpan={11}
                       className="px-4 py-8 text-center text-muted-foreground text-sm"
                     >
                       No bookings yet. Click &quot;Add Booking&quot; to create one.
@@ -181,6 +186,8 @@ const Booking = () => {
                     <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
                       <td className="px-4 py-3 text-sm text-left">{b.customerName}</td>
                       <td className="px-4 py-3 text-sm text-left">{b.roomNumber}</td>
+                      <td className="px-4 py-3 text-sm text-left">{b.roomFeature === 'non_ac' ? 'Non AC' : 'AC'}</td>
+                      <td className="px-4 py-3 text-sm text-left capitalize">{b.roomType || '—'}</td>
                       <td className="px-4 py-3 text-sm text-left">
                         {b.adults || 0} adults, {b.children || 0} children
                       </td>
@@ -227,7 +234,7 @@ const Booking = () => {
           setIsDialogOpen(open);
           if (!open) {
             setEditingBooking(null);
-            setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomCategory: 'ac' });
+            setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomFeature: 'ac', roomType: 'single' });
           }
         }}
       >
@@ -292,17 +299,29 @@ const Booking = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="roomCategory">Room category</Label>
+                <Label htmlFor="roomFeature">Room Feature</Label>
                 <select
-                  id="roomCategory"
-                  value={form.roomCategory}
-                  onChange={(e) => handleChange('roomCategory', e.target.value)}
+                  id="roomFeature"
+                  value={form.roomFeature}
+                  onChange={(e) => handleChange('roomFeature', e.target.value)}
                   className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   <option value="ac">AC</option>
-                  <option value="non-ac">Non AC</option>
-                  <option value="3-person">3 person room</option>
-                  <option value="2-person">2 person room</option>
+                  <option value="non_ac">Non AC</option>
+                </select>
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="roomType">Room Type</Label>
+                <select
+                  id="roomType"
+                  value={form.roomType}
+                  onChange={(e) => handleChange('roomType', e.target.value)}
+                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <option value="single">Single</option>
+                  <option value="double">Double</option>
+                  <option value="family">Family</option>
                 </select>
               </div>
 
@@ -369,7 +388,8 @@ const Booking = () => {
                     checkOut: '',
                     price: '',
                     bookingComCommission: '',
-                    roomCategory: 'ac',
+                    roomFeature: 'ac',
+                    roomType: 'single',
                   })
                 }
               >

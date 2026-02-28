@@ -26,6 +26,7 @@ import Calendar from './pages/Calendar';
 import Booking from './pages/Booking';
 import Pricing from './pages/Pricing';
 import SalaryManagement from './pages/SalaryManagement';
+import DailyNotes from './pages/DailyNotes';
 import Layout from './components/Layout';
 
 function App() {
@@ -65,6 +66,7 @@ function App() {
         <Route path="booking" element={<Booking />} />
         <Route path="pricing" element={<Pricing />} />
         <Route path="salary-management" element={<SalaryManagement />} />
+        <Route path="daily-notes" element={<DailyNotes />} />
         <Route path="reports" element={<Navigate to="/reports/overview" replace />} />
         <Route path="reports/overview" element={<ReportOverview />} />
         <Route path="reports/profit-loss" element={<ReportProfitLoss />} />

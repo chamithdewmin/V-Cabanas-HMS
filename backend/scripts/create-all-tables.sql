@@ -242,12 +242,16 @@ CREATE TABLE IF NOT EXISTS bookings (
   adults INT NOT NULL DEFAULT 0,
   children INT NOT NULL DEFAULT 0,
   room_category VARCHAR(50) NOT NULL DEFAULT 'ac',
+  room_feature VARCHAR(50) DEFAULT 'ac',
+  room_type VARCHAR(50) DEFAULT 'single',
   check_in DATE,
   check_out DATE,
   price DECIMAL(15,2) DEFAULT 0,
   booking_com_commission DECIMAL(15,2) DEFAULT 0,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_feature VARCHAR(50) DEFAULT 'ac';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_type VARCHAR(50) DEFAULT 'single';
 
 -- 19) Pricing (service/room price list)
 CREATE TABLE IF NOT EXISTS pricing (
@@ -271,12 +275,22 @@ CREATE TABLE IF NOT EXISTS salary (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 21) Settings sequence (for multiple settings rows per user)
+-- 21) Daily Notes (date, optional amount, note text)
+CREATE TABLE IF NOT EXISTS daily_notes (
+  id VARCHAR(50) PRIMARY KEY,
+  user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  note_date DATE NOT NULL,
+  amount DECIMAL(15,2),
+  note TEXT DEFAULT '',
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- 22) Settings sequence (for multiple settings rows per user)
 CREATE SEQUENCE IF NOT EXISTS settings_id_seq;
 SELECT setval('settings_id_seq', (SELECT COALESCE(MAX(id), 1) FROM settings));
 ALTER TABLE settings ALTER COLUMN id SET DEFAULT nextval('settings_id_seq');
 
--- 22) Ensure columns exist (idempotent for existing DBs)
+-- 23) Ensure columns exist (idempotent for existing DBs)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INT DEFAULT 0;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
 ALTER TABLE incomes ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);

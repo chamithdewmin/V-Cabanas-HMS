@@ -147,6 +147,12 @@ export const api = {
     update: (id, data) => request(`/salary/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/salary/${id}`, { method: 'DELETE' }),
   },
+  dailyNotes: {
+    list: () => request('/daily-notes'),
+    create: (data) => request('/daily-notes', { method: 'POST', body: JSON.stringify(data) }),
+    update: (id, data) => request(`/daily-notes/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
+    delete: (id) => request(`/daily-notes/${id}`, { method: 'DELETE' }),
+  },
   ai: {
     getSummary: () => request('/ai/summary'),
     getSuggestions: () => request('/ai/suggestions', { method: 'POST', body: JSON.stringify({}) }),

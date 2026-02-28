@@ -15,6 +15,8 @@ const toBooking = (row) => {
     adults: row.adults ?? 0,
     children: row.children ?? 0,
     roomCategory: row.room_category || 'ac',
+    roomFeature: row.room_feature || 'ac',
+    roomType: row.room_type || 'single',
     checkIn: row.check_in,
     checkOut: row.check_out,
     price,
@@ -44,8 +46,8 @@ router.post('/', async (req, res) => {
     const d = req.body;
     const id = `BKG-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     await pool.query(
-      `INSERT INTO bookings (id, user_id, customer_name, room_number, adults, children, room_category, check_in, check_out, price, booking_com_commission)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)`,
+      `INSERT INTO bookings (id, user_id, customer_name, room_number, adults, children, room_category, room_feature, room_type, check_in, check_out, price, booking_com_commission)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)`,
       [
         id,
         uid,
@@ -53,7 +55,9 @@ router.post('/', async (req, res) => {
         (d.roomNumber || '').trim(),
         parseInt(d.adults, 10) || 0,
         parseInt(d.children, 10) || 0,
-        d.roomCategory || 'ac',
+        d.roomCategory || d.roomFeature || 'ac',
+        d.roomFeature || 'ac',
+        d.roomType || 'single',
         d.checkIn || null,
         d.checkOut || null,
         d.price != null ? Number(d.price) : 0,
@@ -80,18 +84,22 @@ router.put('/:id', async (req, res) => {
         adults = COALESCE($4, adults),
         children = COALESCE($5, children),
         room_category = COALESCE($6, room_category),
-        check_in = COALESCE($7, check_in),
-        check_out = COALESCE($8, check_out),
-        price = COALESCE($9, price),
-        booking_com_commission = COALESCE($10, booking_com_commission)
-       WHERE id = $1 AND user_id = $11`,
+        room_feature = COALESCE($7, room_feature),
+        room_type = COALESCE($8, room_type),
+        check_in = COALESCE($9, check_in),
+        check_out = COALESCE($10, check_out),
+        price = COALESCE($11, price),
+        booking_com_commission = COALESCE($12, booking_com_commission)
+       WHERE id = $1 AND user_id = $13`,
       [
         id,
         d.customerName != null ? String(d.customerName).trim() : null,
         d.roomNumber != null ? String(d.roomNumber).trim() : null,
         d.adults != null ? parseInt(d.adults, 10) : null,
         d.children != null ? parseInt(d.children, 10) : null,
-        d.roomCategory || null,
+        (d.roomCategory || d.roomFeature) != null ? (d.roomCategory || d.roomFeature) : null,
+        d.roomFeature != null ? d.roomFeature : null,
+        d.roomType != null ? d.roomType : null,
         d.checkIn || null,
         d.checkOut || null,
         d.price != null ? Number(d.price) : null,
