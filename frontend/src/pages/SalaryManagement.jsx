@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Plus, Banknote, RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -148,21 +148,6 @@ const SalaryManagement = () => {
               Add Salary
             </Button>
           </div>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-lg border border-secondary p-4 flex items-center justify-between"
-          >
-            <div>
-              <p className="text-xs uppercase tracking-wide text-muted-foreground">Salary records</p>
-            </div>
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Banknote className="w-5 h-5 text-primary" />
-            </div>
-          </motion.div>
         </div>
 
         <div className="max-w-xl">
