@@ -4,7 +4,6 @@ import { useAuth } from './contexts/AuthContext';
 import { useFinance } from './contexts/FinanceContext';
 import Login from './pages/Login';
 import ForgotPassword from './pages/ForgotPassword';
-import POS from './pages/POS';
 import Inventory from './pages/Inventory';
 import Orders from './pages/Orders';
 import Customers from './pages/Customers';
@@ -55,7 +54,6 @@ function App() {
       <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
         <Route index element={<Navigate to="/dashboard" />} />
         <Route path="dashboard" element={<Dashboard />} />
-        <Route path="income" element={<POS />} />
         <Route path="expenses" element={<Inventory />} />
         <Route path="invoices" element={<Orders />} />
         <Route path="clients" element={<Customers />} />

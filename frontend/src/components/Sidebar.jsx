@@ -16,7 +16,6 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronsUpDown,
-  CreditCard,
   LogOut,
   LayoutDashboard,
   Calendar,
@@ -62,7 +61,6 @@ const reportSubItems = [
 const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
   { divider: true },
-  { label: 'Payments', href: '/income', icon: CreditCard },
   { label: 'Invoices', href: '/invoices', icon: FileText },
   { label: 'Clients', href: '/clients', icon: Users },
   { divider: true },
