@@ -11,7 +11,6 @@ import ReportOverview from './pages/reports/ReportOverview';
 import ReportIncome from './pages/reports/ReportIncome';
 import ReportExpense from './pages/reports/ReportExpense';
 import ReportTax from './pages/reports/ReportTax';
-import BalanceSheet from './pages/reports/BalanceSheet';
 import ReportProfitLoss from './pages/reports/ReportProfitLoss';
 import ReportCashFlow from './pages/reports/ReportCashFlow';
 import CashFlow from './pages/CashFlow';
@@ -70,7 +69,6 @@ function App() {
         <Route path="reports/income" element={<ReportIncome />} />
         <Route path="reports/expense" element={<ReportExpense />} />
         <Route path="reports/tax" element={<ReportTax />} />
-        <Route path="reports/balance-sheet" element={<BalanceSheet />} />
         <Route path="cash-flow" element={<CashFlow />} />
         <Route path="users" element={<Users />} />
         <Route path="profile" element={<Profile />} />
