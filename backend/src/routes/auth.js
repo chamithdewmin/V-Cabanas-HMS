@@ -341,7 +341,7 @@ router.post('/confirm-reset-data', authMiddleware, async (req, res) => {
       return res.status(400).json({ error: 'Invalid OTP. Please check and try again.' });
     }
     await pool.query('DELETE FROM reset_data_otps WHERE user_id = $1', [uid]);
-    const tables = ['orders', 'incomes', 'invoices', 'clients', 'customers', 'expenses', 'cars', 'assets', 'loans', 'transfers', 'reminders'];
+    const tables = ['orders', 'incomes', 'invoices', 'clients', 'customers', 'expenses', 'cars', 'assets', 'loans', 'transfers'];
     const client = await pool.connect();
     try {
       await client.query('BEGIN');

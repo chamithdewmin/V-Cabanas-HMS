@@ -202,23 +202,7 @@ CREATE TABLE IF NOT EXISTS password_reset_otps (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 15) Reminders (SMS on date)
-CREATE TABLE IF NOT EXISTS reminders (
-  id VARCHAR(50) PRIMARY KEY,
-  user_id INT REFERENCES users(id),
-  type VARCHAR(20) NOT NULL DEFAULT '',
-  reference_id VARCHAR(100) NOT NULL DEFAULT '',
-  reminder_date DATE NOT NULL,
-  sms_contact VARCHAR(50) NOT NULL,
-  message TEXT DEFAULT '',
-  status VARCHAR(20) DEFAULT 'pending',
-  sent_at TIMESTAMPTZ,
-  reason VARCHAR(255) DEFAULT '',
-  amount DECIMAL(15,2) DEFAULT 0,
-  created_at TIMESTAMPTZ DEFAULT NOW()
-);
-
--- 16) Bank details (encrypted, per user)
+-- 15) Bank details (encrypted, per user)
 CREATE TABLE IF NOT EXISTS bank_details (
   user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   data_encrypted TEXT NOT NULL,
@@ -226,14 +210,14 @@ CREATE TABLE IF NOT EXISTS bank_details (
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 17) Reset data OTPs (for “reset my data” flow)
+-- 16) Reset data OTPs (for “reset my data” flow)
 CREATE TABLE IF NOT EXISTS reset_data_otps (
   user_id INT PRIMARY KEY REFERENCES users(id) ON DELETE CASCADE,
   otp VARCHAR(10) NOT NULL,
   expires_at TIMESTAMPTZ NOT NULL
 );
 
--- 18) Bookings (room reservations)
+-- 17) Bookings (room reservations)
 CREATE TABLE IF NOT EXISTS bookings (
   id VARCHAR(50) PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -253,7 +237,7 @@ CREATE TABLE IF NOT EXISTS bookings (
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_feature VARCHAR(50) DEFAULT 'ac';
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_type VARCHAR(50) DEFAULT 'single';
 
--- 19) Pricing (service/room price list)
+-- 18) Pricing (service/room price list)
 CREATE TABLE IF NOT EXISTS pricing (
   id VARCHAR(50) PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -263,7 +247,7 @@ CREATE TABLE IF NOT EXISTS pricing (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 20) Salary (employee salary records)
+-- 19) Salary (employee salary records)
 CREATE TABLE IF NOT EXISTS salary (
   id VARCHAR(50) PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -275,7 +259,7 @@ CREATE TABLE IF NOT EXISTS salary (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 21) Daily Notes (date, optional amount, note text)
+-- 20) Daily Notes (date, optional amount, note text)
 CREATE TABLE IF NOT EXISTS daily_notes (
   id VARCHAR(50) PRIMARY KEY,
   user_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
@@ -285,12 +269,12 @@ CREATE TABLE IF NOT EXISTS daily_notes (
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 
--- 22) Settings sequence (for multiple settings rows per user)
+-- 21) Settings sequence (for multiple settings rows per user)
 CREATE SEQUENCE IF NOT EXISTS settings_id_seq;
 SELECT setval('settings_id_seq', (SELECT COALESCE(MAX(id), 1) FROM settings));
 ALTER TABLE settings ALTER COLUMN id SET DEFAULT nextval('settings_id_seq');
 
--- 23) Ensure columns exist (idempotent for existing DBs)
+-- 22) Ensure columns exist (idempotent for existing DBs)
 ALTER TABLE users ADD COLUMN IF NOT EXISTS token_version INT DEFAULT 0;
 ALTER TABLE clients ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
 ALTER TABLE incomes ADD COLUMN IF NOT EXISTS user_id INT REFERENCES users(id);
@@ -311,8 +295,6 @@ ALTER TABLE settings ADD COLUMN IF NOT EXISTS profile_avatar TEXT DEFAULT NULL;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS bank_details JSONB;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS bank_details_encrypted TEXT;
 ALTER TABLE invoices ADD COLUMN IF NOT EXISTS show_signature_area BOOLEAN DEFAULT false;
-ALTER TABLE reminders ADD COLUMN IF NOT EXISTS reason VARCHAR(255) DEFAULT '';
-ALTER TABLE reminders ADD COLUMN IF NOT EXISTS amount DECIMAL(15,2) DEFAULT 0;
 ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(50) DEFAULT 'receptionist';
 
 -- Migrate existing rows to user 1 (safe if no users yet)

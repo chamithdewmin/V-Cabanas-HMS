@@ -113,21 +113,10 @@ export const api = {
     update: (id, data) => request(`/users/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/users/${id}`, { method: 'DELETE' }),
   },
-  sms: {
-    getSettings: () => request('/sms/settings'),
-    saveSettings: (data) => request('/sms/settings', { method: 'PUT', body: JSON.stringify(data) }),
-    test: () => request('/sms/test', { method: 'POST' }),
-    sendBulk: (data) => request('/sms/send-bulk', { method: 'POST', body: JSON.stringify(data) }),
-  },
   transfers: {
     list: () => request('/transfers'),
     create: (data) => request('/transfers', { method: 'POST', body: JSON.stringify(data) }),
     delete: (id) => request(`/transfers/${id}`, { method: 'DELETE' }),
-  },
-  reminders: {
-    list: () => request('/reminders'),
-    create: (data) => request('/reminders', { method: 'POST', body: JSON.stringify(data) }),
-    delete: (id) => request(`/reminders/${id}`, { method: 'DELETE' }),
   },
   bookings: {
     list: () => request('/bookings'),

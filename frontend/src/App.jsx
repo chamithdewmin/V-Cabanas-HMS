@@ -19,8 +19,6 @@ import CashFlow from './pages/CashFlow';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import Users from './pages/Users';
-import SMS from './pages/SMS';
-import Reminders from './pages/Reminders';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
 import Booking from './pages/Booking';
@@ -77,8 +75,6 @@ function App() {
         <Route path="reports/balance-sheet" element={<BalanceSheet />} />
         <Route path="cash-flow" element={<CashFlow />} />
         <Route path="users" element={<Users />} />
-        <Route path="sms" element={<SMS />} />
-        <Route path="reminders" element={<Reminders />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
       </Route>

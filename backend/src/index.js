@@ -16,9 +16,7 @@ import carsRoutes from './routes/cars.js';
 import customersRoutes from './routes/customers.js';
 import ordersRoutes from './routes/orders.js';
 import usersRoutes from './routes/users.js';
-import smsRoutes from './routes/sms.js';
 import transfersRoutes from './routes/transfers.js';
-import remindersRoutes from './routes/reminders.js';
 import bankDetailsRoutes from './routes/bankDetails.js';
 import aiRoutes from './routes/ai.js';
 import bookingsRoutes from './routes/bookings.js';
@@ -87,20 +85,6 @@ async function initDb() {
         created_at TIMESTAMPTZ DEFAULT NOW()
       )
     `);
-    await pool.query(`
-      CREATE TABLE IF NOT EXISTS reminders (
-        id VARCHAR(50) PRIMARY KEY,
-        user_id INT REFERENCES users(id),
-        type VARCHAR(20) NOT NULL DEFAULT '',
-        reference_id VARCHAR(100) NOT NULL DEFAULT '',
-        reminder_date DATE NOT NULL,
-        sms_contact VARCHAR(50) NOT NULL,
-        message TEXT DEFAULT '',
-        status VARCHAR(20) DEFAULT 'pending',
-        sent_at TIMESTAMPTZ,
-        created_at TIMESTAMPTZ DEFAULT NOW()
-      )
-    `);
     console.log('Forgot-password and user-delete tables ready.');
   } catch (e) {
     console.warn('Forgot-password setup:', e.message);
@@ -128,13 +112,6 @@ async function initDb() {
     console.log('Invoice and settings columns ready.');
   } catch (e) {
     console.warn('Invoice columns:', e.message);
-  }
-  try {
-    await pool.query('ALTER TABLE reminders ADD COLUMN IF NOT EXISTS reason VARCHAR(255) DEFAULT \'\'');
-    await pool.query('ALTER TABLE reminders ADD COLUMN IF NOT EXISTS amount DECIMAL(15,2) DEFAULT 0');
-    console.log('Reminders columns (reason, amount) ready.');
-  } catch (e) {
-    console.warn('Reminders migration:', e.message);
   }
   try {
     const addPath = path.join(__dirname, '..', 'scripts', 'add-bookings-pricing-role.sql');
@@ -190,9 +167,7 @@ app.use('/api/cars', carsRoutes);
 app.use('/api/customers', customersRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/users', usersRoutes);
-app.use('/api/sms', smsRoutes);
 app.use('/api/transfers', transfersRoutes);
-app.use('/api/reminders', remindersRoutes);
 app.use('/api/bookings', bookingsRoutes);
 app.use('/api/pricing', pricingRoutes);
 app.use('/api/salary', salaryRoutes);
