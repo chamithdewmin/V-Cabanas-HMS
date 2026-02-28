@@ -31,9 +31,6 @@ const toSettings = (row) => {
     logo: row.logo,
     profileAvatar: row.profile_avatar || null,
     invoiceThemeColor: row.invoice_theme_color || '#F97316',
-    openingCash: parseFloat(row.opening_cash) || 0,
-    ownerCapital: parseFloat(row.owner_capital) || 0,
-    payables: parseFloat(row.payables) || 0,
     expenseCategories: (() => {
       let cats = row.expense_categories;
       if (typeof cats === 'string') try { cats = JSON.parse(cats); } catch (_) { cats = null; }
@@ -186,9 +183,6 @@ router.put('/', async (req, res) => {
       }
       
       addUpdate(invoiceThemeColor, 'invoice_theme_color');
-      addUpdate(d.openingCash, 'opening_cash');
-      addUpdate(d.ownerCapital, 'owner_capital');
-      addUpdate(d.payables, 'payables');
       addUpdate(expenseCategoriesJson, 'expense_categories');
       
       if (useSettingsJson) {
@@ -212,10 +206,10 @@ router.put('/', async (req, res) => {
           valuePlaceholders.push(`$${placeholderIndex}`);
           placeholderIndex++;
         }
-        insertFields.push('invoice_theme_color', 'opening_cash', 'owner_capital', 'payables', 'expense_categories');
-        insertValues.push(invoiceThemeColor, d.openingCash ?? 0, d.ownerCapital ?? 0, d.payables ?? 0, expenseCategoriesJson || '["Hosting","Tools & Subscriptions","Advertising & Marketing","Transport","Office & Utilities","Personal Use","Rent","Salaries & Wages","Insurance","Software & Licenses","Travel","Meals & Entertainment","Supplies & Materials","Professional Services","Bank & Finance Charges","Other"]');
-        valuePlaceholders.push(`$${placeholderIndex}`, `$${placeholderIndex + 1}`, `$${placeholderIndex + 2}`, `$${placeholderIndex + 3}`, `$${placeholderIndex + 4}`);
-        placeholderIndex += 5;
+        insertFields.push('invoice_theme_color', 'expense_categories');
+        insertValues.push(invoiceThemeColor, expenseCategoriesJson || '["Hosting","Tools & Subscriptions","Advertising & Marketing","Transport","Office & Utilities","Personal Use","Rent","Salaries & Wages","Insurance","Software & Licenses","Travel","Meals & Entertainment","Supplies & Materials","Professional Services","Bank & Finance Charges","Other"]');
+        valuePlaceholders.push(`$${placeholderIndex}`, `$${placeholderIndex + 1}`);
+        placeholderIndex += 2;
         
         if (useSettingsJson) {
           insertFields.push('settings_json');
@@ -253,9 +247,6 @@ router.put('/', async (req, res) => {
       }
       
       addUpdate(invoiceThemeColor, 'invoice_theme_color');
-      addUpdate(d.openingCash, 'opening_cash');
-      addUpdate(d.ownerCapital, 'owner_capital');
-      addUpdate(d.payables, 'payables');
       addUpdate(expenseCategoriesJson, 'expense_categories');
       
       if (useSettingsJson) {
@@ -279,10 +270,10 @@ router.put('/', async (req, res) => {
           valuePlaceholders.push(`$${placeholderIndex}`);
           placeholderIndex++;
         }
-        insertFields.push('invoice_theme_color', 'opening_cash', 'owner_capital', 'payables', 'expense_categories');
-        insertValues.push(invoiceThemeColor, d.openingCash ?? 0, d.ownerCapital ?? 0, d.payables ?? 0, expenseCategoriesJson || '["Hosting","Tools & Subscriptions","Advertising & Marketing","Transport","Office & Utilities","Personal Use","Rent","Salaries & Wages","Insurance","Software & Licenses","Travel","Meals & Entertainment","Supplies & Materials","Professional Services","Bank & Finance Charges","Other"]');
-        valuePlaceholders.push(`$${placeholderIndex}`, `$${placeholderIndex + 1}`, `$${placeholderIndex + 2}`, `$${placeholderIndex + 3}`, `$${placeholderIndex + 4}`);
-        placeholderIndex += 5;
+        insertFields.push('invoice_theme_color', 'expense_categories');
+        insertValues.push(invoiceThemeColor, expenseCategoriesJson || '["Hosting","Tools & Subscriptions","Advertising & Marketing","Transport","Office & Utilities","Personal Use","Rent","Salaries & Wages","Insurance","Software & Licenses","Travel","Meals & Entertainment","Supplies & Materials","Professional Services","Bank & Finance Charges","Other"]');
+        valuePlaceholders.push(`$${placeholderIndex}`, `$${placeholderIndex + 1}`);
+        placeholderIndex += 2;
         
         if (useSettingsJson) {
           insertFields.push('settings_json');

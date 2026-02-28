@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { User, Building2, Landmark, Upload, Eye, EyeOff, Save, Wallet } from 'lucide-react';
+import { User, Building2, Landmark, Upload, Eye, EyeOff, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -37,9 +37,6 @@ const Profile = () => {
     companyEmail: settings?.email || '',
     address: settings?.address || '',
     website: settings?.website || '',
-    openingCash: settings?.openingCash ?? 0,
-    ownerCapital: settings?.ownerCapital ?? 0,
-    payables: settings?.payables ?? 0,
     ...settings,
   }));
   const [bankForm, setBankForm] = useState({ accountNumber: '', accountName: '', bankName: '', branch: '' });
@@ -71,9 +68,6 @@ const Profile = () => {
         address: settings.address ?? '',
         website: settings.website ?? '',
         businessName: settings.businessName || 'My Business',
-        openingCash: settings.openingCash ?? 0,
-        ownerCapital: settings.ownerCapital ?? 0,
-        payables: settings.payables ?? 0,
         currency: settings.currency || 'LKR',
         taxRate: settings.taxRate ?? 10,
         taxEnabled: settings.taxEnabled ?? true,
@@ -203,12 +197,7 @@ const Profile = () => {
     (s.address || '').trim() !== (settings?.address || '').trim() ||
     (s.website || '').trim() !== (settings?.website || '').trim();
 
-  const openingBalancesChanged =
-    (s.openingCash ?? 0) !== (settings?.openingCash ?? 0) ||
-    (s.ownerCapital ?? 0) !== (settings?.ownerCapital ?? 0) ||
-    (s.payables ?? 0) !== (settings?.payables ?? 0);
-
-  const hasBusinessChanges = businessProfileChanged || bankFormChanged || openingBalancesChanged;
+  const hasBusinessChanges = businessProfileChanged || bankFormChanged;
 
   const handleSaveBusinessAndBank = async () => {
     setSavingBusiness(true);
@@ -221,15 +210,6 @@ const Profile = () => {
           email: s.companyEmail?.trim() || '',
           address: s.address?.trim() || '',
           website: s.website?.trim() || '',
-        });
-      }
-
-      // Save opening balances
-      if (openingBalancesChanged) {
-        await updateSettings({
-          openingCash: s.openingCash ?? 0,
-          ownerCapital: s.ownerCapital ?? 0,
-          payables: s.payables ?? 0,
         });
       }
 
@@ -250,7 +230,7 @@ const Profile = () => {
 
       toast({
         title: 'Saved',
-        description: 'Business profile, bank details, and opening balances have been saved successfully.',
+        description: 'Business profile and bank details have been saved successfully.',
       });
     } catch (err) {
       toast({
@@ -441,7 +421,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* 2. Business Profile, Bank Account & Opening Balances */}
+          {/* 2. Business Profile & Bank Account */}
           <div className="bg-card rounded-lg p-4 sm:p-6 border border-border">
             {/* Business Profile Section */}
             <div className="mb-6">
@@ -568,55 +548,6 @@ const Profile = () => {
                     onChange={(e) => setBankForm((p) => ({ ...p, branch: e.target.value }))}
                     placeholder="Colombo Main"
                   />
-                </div>
-              </div>
-            </div>
-
-            {/* Opening Balances Section */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Wallet className="w-5 h-5 text-primary shrink-0" />
-                <h2 className="text-base sm:text-lg font-semibold">Opening Balances</h2>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">
-                Starting figures for Balance Sheet. Set when you first use the system.
-              </p>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="opening-cash">Opening Cash</Label>
-                  <Input
-                    id="opening-cash"
-                    type="number"
-                    value={s.openingCash ?? 0}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, openingCash: Number(e.target.value || 0) }));
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground">Cash at business start</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="owner-capital">Owner Capital</Label>
-                  <Input
-                    id="owner-capital"
-                    type="number"
-                    value={s.ownerCapital ?? 0}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, ownerCapital: Number(e.target.value || 0) }));
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground">Owner deposits / investment</p>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="payables">Payables</Label>
-                  <Input
-                    id="payables"
-                    type="number"
-                    value={s.payables ?? 0}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, payables: Number(e.target.value || 0) }));
-                    }}
-                  />
-                  <p className="text-xs text-muted-foreground">Unpaid bills at start</p>
                 </div>
               </div>
             </div>

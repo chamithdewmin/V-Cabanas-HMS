@@ -82,9 +82,6 @@ CREATE TABLE IF NOT EXISTS settings (
   tax_enabled BOOLEAN DEFAULT TRUE,
   theme VARCHAR(50) DEFAULT 'dark',
   logo TEXT,
-  opening_cash DECIMAL(15,2) DEFAULT 0,
-  owner_capital DECIMAL(15,2) DEFAULT 0,
-  payables DECIMAL(15,2) DEFAULT 0,
   expense_categories JSONB DEFAULT '["Hosting","Tools & Subscriptions","Advertising & Marketing","Transport","Office & Utilities","Other"]',
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );

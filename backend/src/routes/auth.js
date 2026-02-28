@@ -358,7 +358,7 @@ router.post('/confirm-reset-data', authMiddleware, async (req, res) => {
         /* ignore */
       }
       await client.query(
-        `UPDATE settings SET business_name = 'My Business', logo = NULL, invoice_theme_color = '#F97316', opening_cash = 0, owner_capital = 0, payables = 0, tax_rate = 10, tax_enabled = true, currency = 'LKR', theme = 'dark', updated_at = NOW() WHERE user_id = $1`,
+        `UPDATE settings SET business_name = 'My Business', logo = NULL, invoice_theme_color = '#F97316', tax_rate = 10, tax_enabled = true, currency = 'LKR', theme = 'dark', updated_at = NOW() WHERE user_id = $1`,
         [uid]
       );
       await client.query('COMMIT');

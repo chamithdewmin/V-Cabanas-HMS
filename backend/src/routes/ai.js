@@ -403,7 +403,7 @@ async function getFinancialSummary(uid) {
     pool.query('SELECT amount, date, payment_method, category FROM expenses WHERE user_id = $1', [uid]),
     pool.query('SELECT total, status, subtotal, tax_amount FROM invoices WHERE user_id = $1', [uid]),
     pool.query('SELECT from_account, to_account, amount FROM transfers WHERE user_id = $1', [uid]),
-    pool.query('SELECT opening_cash, tax_rate, tax_enabled, business_name, currency FROM settings WHERE user_id = $1', [uid]),
+    pool.query('SELECT tax_rate, tax_enabled, business_name, currency FROM settings WHERE user_id = $1', [uid]),
   ]);
 
   const incomes = incomesRows.rows || [];
@@ -412,7 +412,7 @@ async function getFinancialSummary(uid) {
   const transfers = transfersRows.rows || [];
   const settings = settingsRows.rows[0] || {};
 
-  const openingCash = Number(settings.opening_cash) || 0;
+  const openingCash = 0;
   const taxRate = Number(settings.tax_rate) || 10;
   const taxEnabled = settings.tax_enabled !== false;
 
