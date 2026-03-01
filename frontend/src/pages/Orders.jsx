@@ -46,7 +46,57 @@ const Orders = () => {
   }, [settings?.bankDetails]);
 
   const handleChange = (field, value) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
+    setForm((prev) => {
+      const next = { ...prev, [field]: value };
+      if (field === 'clientId' && value) {
+        const c = clients.find((x) => x.id === value);
+        if (c) {
+          next.clientName = c.name || next.clientName;
+          next.clientEmail = c.email || next.clientEmail;
+          next.clientPhone = c.phone || next.clientPhone;
+        }
+      }
+      return next;
+    });
+  };
+
+  const loadFromBooking = async () => {
+    if (!form.clientId) {
+      toast({ title: 'Select a client first', description: 'Choose a client to load their booking.', variant: 'destructive' });
+      return;
+    }
+    try {
+      const data = await api.bookings.forInvoice(form.clientId);
+      const items = [];
+      if (data.booking) {
+        const b = data.booking;
+        const checkIn = b.checkIn ? (typeof b.checkIn === 'string' && b.checkIn.includes('T') ? b.checkIn.slice(0, 10) : b.checkIn) : '';
+        const checkOut = b.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '';
+        const desc = `Room ${b.roomNumber || ''}${checkIn || checkOut ? `, ${checkIn || '—'} to ${checkOut || '—'}` : ''}`.trim() || 'Booking';
+        items.push({ description: desc, price: String(b.price ?? 0), quantity: 1 });
+      }
+      (data.addons || []).forEach((a) => {
+        items.push({
+          description: a.name || 'Add-on',
+          price: String(a.unitPrice ?? 0),
+          quantity: Number(a.quantity) || 1,
+        });
+      });
+      if (items.length === 0) {
+        toast({ title: 'No booking found', description: 'This client has no booking. Add a booking and link the client first.', variant: 'destructive' });
+        return;
+      }
+      setForm((prev) => ({
+        ...prev,
+        clientName: data.client?.name ?? prev.clientName,
+        clientEmail: data.client?.email ?? prev.clientEmail,
+        clientPhone: data.client?.phone ?? prev.clientPhone,
+        items: items.length ? items : prev.items,
+      }));
+      toast({ title: 'Loaded from booking', description: `${items.length} item(s) added from this client's booking.` });
+    } catch (err) {
+      toast({ title: 'Could not load booking', description: err.message || 'Try again.', variant: 'destructive' });
+    }
   };
 
   const handleItemChange = (index, field, value) => {
@@ -473,6 +523,17 @@ const Orders = () => {
                   onChange={(e) => handleChange('clientName', e.target.value)}
                   className="mt-2"
                 />
+                {form.clientId && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={loadFromBooking}
+                    className="mt-2"
+                  >
+                    Load from booking
+                  </Button>
+                )}
               </div>
               <div className="space-y-2">
                 <Label className="text-sm font-medium">Payment Method</Label>

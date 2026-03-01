@@ -9,28 +9,34 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
+const emptyForm = () => ({
+  clientId: '',
+  customerName: '',
+  roomNumber: '',
+  adults: '',
+  children: '',
+  checkIn: '',
+  checkOut: '',
+  price: '',
+  bookingComCommission: '',
+  roomFeature: 'ac',
+  roomType: 'single',
+  addons: [],
+});
+
 const Booking = () => {
   const { toast } = useToast();
   const { user } = useAuth();
   const userRole = (user?.role || '').toLowerCase();
   const isAdmin = userRole === 'admin';
   const [bookings, setBookings] = useState([]);
+  const [clients, setClients] = useState([]);
+  const [pricingList, setPricingList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
-  const [form, setForm] = useState({
-    customerName: '',
-    roomNumber: '',
-    adults: '',
-    children: '',
-    checkIn: '',
-    checkOut: '',
-    price: '',
-    bookingComCommission: '',
-    roomFeature: 'ac',
-    roomType: 'single',
-  });
+  const [form, setForm] = useState(emptyForm());
 
   const loadBookings = async () => {
     setLoading(true);
@@ -47,6 +53,11 @@ const Booking = () => {
 
   useEffect(() => {
     loadBookings();
+  }, []);
+
+  useEffect(() => {
+    api.clients.list().then((list) => setClients(Array.isArray(list) ? list : [])).catch(() => setClients([]));
+    api.pricing.list().then((list) => setPricingList(Array.isArray(list) ? list : [])).catch(() => setPricingList([]));
   }, []);
 
   const handleChange = (field, value) => {
@@ -68,6 +79,7 @@ const Booking = () => {
     setSaving(true);
     try {
       const payload = {
+        clientId: form.clientId || null,
         customerName: form.customerName.trim(),
         roomNumber: form.roomNumber.trim(),
         adults: form.adults ? Number(form.adults) : 0,
@@ -78,6 +90,12 @@ const Booking = () => {
         checkOut: form.checkOut || null,
         price: form.price ? Number(form.price) : 0,
         bookingComCommission: form.bookingComCommission ? Number(form.bookingComCommission) : 0,
+        addons: (form.addons || []).filter((a) => a.pricingId && a.name).map((a) => ({
+          pricingId: a.pricingId,
+          name: a.name,
+          unitPrice: Number(a.unitPrice) || 0,
+          quantity: Math.max(1, Number(a.quantity) || 1),
+        })),
       };
       if (editingBooking) {
         await api.bookings.update(editingBooking.id, payload);
@@ -86,7 +104,7 @@ const Booking = () => {
         await api.bookings.create(payload);
         toast({ title: 'Booking saved', description: 'Booking has been saved.' });
       }
-      setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomFeature: 'ac', roomType: 'single' });
+      setForm(emptyForm());
       setEditingBooking(null);
       setIsDialogOpen(false);
       loadBookings();
@@ -100,6 +118,7 @@ const Booking = () => {
   const openEdit = (b) => {
     setEditingBooking(b);
     setForm({
+      clientId: b.clientId || '',
       customerName: b.customerName || '',
       roomNumber: b.roomNumber || '',
       adults: b.adults ?? '',
@@ -110,8 +129,44 @@ const Booking = () => {
       bookingComCommission: b.bookingComCommission ?? '',
       roomFeature: b.roomFeature || 'ac',
       roomType: b.roomType || 'single',
+      addons: (b.addons || []).map((a) => ({
+        pricingId: a.pricingId,
+        name: a.name || '',
+        unitPrice: a.unitPrice ?? '',
+        quantity: a.quantity ?? 1,
+      })),
     });
     setIsDialogOpen(true);
+  };
+
+  const addAddonRow = () => {
+    setForm((prev) => ({
+      ...prev,
+      addons: [...(prev.addons || []), { pricingId: '', name: '', unitPrice: '', quantity: 1 }],
+    }));
+  };
+
+  const updateAddon = (index, field, value) => {
+    setForm((prev) => {
+      const next = [...(prev.addons || [])];
+      if (!next[index]) return prev;
+      next[index] = { ...next[index], [field]: value };
+      if (field === 'pricingId') {
+        const p = pricingList.find((x) => x.id === value);
+        if (p) {
+          next[index].name = p.name || '';
+          next[index].unitPrice = p.price ?? '';
+        }
+      }
+      return { ...prev, addons: next };
+    });
+  };
+
+  const removeAddon = (index) => {
+    setForm((prev) => ({
+      ...prev,
+      addons: (prev.addons || []).filter((_, i) => i !== index),
+    }));
   };
 
   const handleDelete = async (b) => {
@@ -144,7 +199,7 @@ const Booking = () => {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={() => { setEditingBooking(null); setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomFeature: 'ac', roomType: 'single' }); setIsDialogOpen(true); }}>
+            <Button onClick={() => { setEditingBooking(null); setForm(emptyForm()); setIsDialogOpen(true); }}>
               <Plus className="w-4 h-4 mr-2" />
               Add Booking
             </Button>
@@ -248,7 +303,7 @@ const Booking = () => {
           setIsDialogOpen(open);
           if (!open) {
             setEditingBooking(null);
-            setForm({ customerName: '', roomNumber: '', adults: '', children: '', checkIn: '', checkOut: '', price: '', bookingComCommission: '', roomFeature: 'ac', roomType: 'single' });
+            setForm(emptyForm());
           }
         }}
       >
@@ -258,6 +313,25 @@ const Booking = () => {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-1.5">
+                <Label htmlFor="clientId">Client (for invoice)</Label>
+                <select
+                  id="clientId"
+                  value={form.clientId}
+                  onChange={(e) => {
+                    const id = e.target.value;
+                    handleChange('clientId', id);
+                    const c = clients.find((x) => x.id === id);
+                    if (c && c.name) handleChange('customerName', c.name);
+                  }}
+                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <option value="">Select client (optional)</option>
+                  {clients.map((c) => (
+                    <option key={c.id} value={c.id}>{c.name}</option>
+                  ))}
+                </select>
+              </div>
               <div className="space-y-1.5">
                 <Label htmlFor="customerName">Customer name</Label>
                 <Input
@@ -388,25 +462,74 @@ const Booking = () => {
               </div>
             </div>
 
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <Label>Add-ons (breakfast, lunch, tour, etc.)</Label>
+                <Button type="button" variant="outline" size="sm" onClick={addAddonRow} className="gap-1">
+                  <Plus className="w-4 h-4" />
+                  Add
+                </Button>
+              </div>
+              {(form.addons || []).length > 0 && (
+                <div className="rounded-md border border-secondary overflow-hidden">
+                  <table className="w-full text-sm">
+                    <thead className="bg-secondary">
+                      <tr>
+                        <th className="px-3 py-2 text-left font-medium">Package</th>
+                        <th className="px-3 py-2 text-right font-medium w-24">Qty</th>
+                        <th className="px-3 py-2 text-right font-medium w-28">Unit price</th>
+                        <th className="w-10" />
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {form.addons.map((a, idx) => (
+                        <tr key={idx} className="border-t border-secondary">
+                          <td className="px-3 py-2">
+                            <select
+                              value={a.pricingId}
+                              onChange={(e) => updateAddon(idx, 'pricingId', e.target.value)}
+                              className="w-full px-2 py-1.5 bg-secondary border border-secondary rounded text-sm"
+                            >
+                              <option value="">Select...</option>
+                              {pricingList.map((p) => (
+                                <option key={p.id} value={p.id}>{p.name} – {Number(p.price).toLocaleString()}</option>
+                              ))}
+                            </select>
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <Input
+                              type="number"
+                              min="1"
+                              className="w-20 text-right h-8"
+                              value={a.quantity}
+                              onChange={(e) => updateAddon(idx, 'quantity', e.target.value)}
+                            />
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <Input
+                              type="number"
+                              min="0"
+                              step="0.01"
+                              className="w-24 text-right h-8"
+                              value={a.unitPrice}
+                              onChange={(e) => updateAddon(idx, 'unitPrice', e.target.value)}
+                            />
+                          </td>
+                          <td className="px-2 py-2">
+                            <button type="button" onClick={() => removeAddon(idx)} className="p-1.5 hover:bg-secondary rounded text-red-500" title="Remove">
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
             <div className="flex justify-end gap-3 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() =>
-                  setForm({
-                    customerName: '',
-                    roomNumber: '',
-                    adults: '',
-                    children: '',
-                    checkIn: '',
-                    checkOut: '',
-                    price: '',
-                    bookingComCommission: '',
-                    roomFeature: 'ac',
-                    roomType: 'single',
-                  })
-                }
-              >
+              <Button type="button" variant="outline" onClick={() => setForm(emptyForm())}>
                 Clear
               </Button>
               <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (editingBooking ? 'Update booking' : 'Save booking')}</Button>

@@ -120,6 +120,7 @@ export const api = {
   },
   bookings: {
     list: () => request('/bookings'),
+    forInvoice: (clientId) => request(`/bookings/for-invoice?clientId=${encodeURIComponent(clientId)}`),
     create: (data) => request('/bookings', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/bookings/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/bookings/${id}`, { method: 'DELETE' }),

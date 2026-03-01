@@ -129,6 +129,14 @@ async function initDb() {
   } catch (e) {
     console.warn('Commission/salary migration:', e.message);
   }
+  try {
+    const addonsPath = path.join(__dirname, '..', 'scripts', 'add-booking-addons-client.sql');
+    const addonsSql = fs.readFileSync(addonsPath, 'utf8');
+    await pool.query(addonsSql);
+    console.log('Booking add-ons and client_id ready.');
+  } catch (e) {
+    console.warn('Booking add-ons migration:', e.message);
+  }
 }
 
 const app = express();
