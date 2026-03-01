@@ -2,6 +2,7 @@ import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { encrypt, decrypt } from '../lib/crypto.js';
+import { sendError, validateId } from '../utils/api.js';
 
 const parseBankDetails = (encryptedText) => {
   if (!encryptedText) return null;
@@ -91,14 +92,16 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
+    const idErr = validateId(req.params.id);
+    if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
     const { id } = req.params;
     const { rows } = await pool.query('SELECT * FROM invoices WHERE (id = $1 OR invoice_number = $1) AND user_id = $2', [id, uid]);
-    if (!rows[0]) return res.status(404).json({ error: 'Invoice not found' });
+    if (!rows[0]) return sendError(res, 404, 'Invoice not found');
     res.json(toInvoice(rows[0]));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    sendError(res, 500, 'Server error');
   }
 });
 
@@ -171,28 +174,32 @@ router.post('/', async (req, res) => {
 
 router.patch('/:id/status', async (req, res) => {
   try {
+    const idErr = validateId(req.params.id);
+    if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
     const { id } = req.params;
     const { status } = req.body;
     await pool.query('UPDATE invoices SET status = $2 WHERE id = $1 AND user_id = $3', [id, status, uid]);
     const { rows } = await pool.query('SELECT * FROM invoices WHERE id = $1 AND user_id = $2', [id, uid]);
-    if (!rows[0]) return res.status(404).json({ error: 'Not found' });
+    if (!rows[0]) return sendError(res, 404, 'Not found');
     res.json(toInvoice(rows[0]));
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    sendError(res, 500, 'Server error');
   }
 });
 
 router.delete('/:id', async (req, res) => {
   try {
+    const idErr = validateId(req.params.id);
+    if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
     const { rowCount } = await pool.query('DELETE FROM invoices WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
-    if (rowCount === 0) return res.status(404).json({ error: 'Not found' });
+    if (rowCount === 0) return sendError(res, 404, 'Not found');
     res.json({ success: true });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ error: 'Server error' });
+    sendError(res, 500, 'Server error');
   }
 });
 

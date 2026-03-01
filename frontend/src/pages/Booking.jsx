@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -211,19 +212,19 @@ const Booking = () => {
             <table className="w-full">
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Customer</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Room no</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Feature</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Guests</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Check-in</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Price</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Booking.com</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Income &amp; Profit</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Staff commission</th>
-                  {isAdmin && <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Net (after staff)</th>}
-                  <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Customer</th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Room no</th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Feature</th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Type</th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Guests</th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Check-in</th>
+                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
+                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Price</th>
+                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Booking.com</th>
+                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Income &amp; Profit</th>
+                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Staff commission</th>
+                  {isAdmin && <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Net (after staff)</th>}
+                  <th scope="col" className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -235,11 +236,13 @@ const Booking = () => {
                   </tr>
                 ) : bookings.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={12}
-                      className="px-4 py-8 text-center text-muted-foreground text-sm"
-                    >
-                      No bookings yet. Click &quot;Add Booking&quot; to create one.
+                    <td colSpan={12} className="p-0 align-top">
+                      <EmptyState
+                        title="No bookings yet"
+                        description="Create your first booking to get started."
+                        actionLabel="Add Booking"
+                        onAction={() => { setEditingBooking(null); setForm(emptyForm()); setIsDialogOpen(true); }}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -464,7 +467,10 @@ const Booking = () => {
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
-                <Label>Add-ons (breakfast, lunch, tour, etc.)</Label>
+                <div>
+                  <Label>Add-ons (breakfast, lunch, tour, etc.)</Label>
+                  <p className="text-xs text-muted-foreground mt-0.5">Add breakfast, lunch, tours from Pricing.</p>
+                </div>
                 <Button type="button" variant="outline" size="sm" onClick={addAddonRow} className="gap-1">
                   <Plus className="w-4 h-4" />
                   Add

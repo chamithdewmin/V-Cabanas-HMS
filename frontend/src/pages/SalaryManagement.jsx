@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -307,8 +308,18 @@ const SalaryManagement = () => {
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={isAdmin ? 9 : 6} className="px-4 py-8 text-center text-muted-foreground text-sm">
-                      {isAdmin ? 'No staff or salary records. Add users (Manager/Receptionist) and salary records.' : 'No salary records yet. Click &quot;Add Salary&quot; to create one.'}
+                    <td colSpan={isAdmin ? 9 : 6} className="p-0 align-top">
+                      <EmptyState
+                        title={isAdmin ? 'No staff or salary records yet' : 'No salary records yet'}
+                        description={isAdmin ? 'Add users (Manager/Receptionist) and salary records to get started.' : 'Add your first salary record to get started.'}
+                        actionLabel="Add Salary"
+                        onAction={() => {
+                          setEditingItem(null);
+                          setEditingStaffUser(null);
+                          setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+                          setIsDialogOpen(true);
+                        }}
+                      />
                     </td>
                   </tr>
                 ) : (
@@ -341,25 +352,29 @@ const SalaryManagement = () => {
                       <td className="px-4 py-3 text-sm capitalize text-left w-24">{row.salaryRecord?.period || '—'}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground text-left">{row.salaryRecord?.notes || '—'}</td>
                       <td className="px-4 py-3 text-center w-28">
-                        <div className="inline-flex items-center justify-center gap-1">
+                        <div className="inline-flex items-center justify-center gap-2">
                           {(row.staffUser || row.salaryRecord) && (
                             <button
                               type="button"
                               onClick={() => openEdit(row)}
-                              className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400"
+                              className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-green-500 hover:text-green-400 text-sm"
                               title="Edit"
+                              aria-label="Edit"
                             >
                               <Pencil className="w-4 h-4" />
+                              <span>Edit</span>
                             </button>
                           )}
                           {row.salaryRecord && (
                             <button
                               type="button"
                               onClick={() => handleDelete(row.salaryRecord)}
-                              className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
+                              className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-red-500 hover:text-red-400 text-sm"
                               title="Delete salary"
+                              aria-label="Delete salary"
                             >
                               <Trash2 className="w-4 h-4" />
+                              <span>Delete</span>
                             </button>
                           )}
                         </div>

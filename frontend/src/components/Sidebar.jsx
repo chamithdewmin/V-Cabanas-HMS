@@ -186,8 +186,13 @@ function ExpandableNavItem({ item }) {
 export default function Sidebar() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
   const { settings } = useFinance();
   const { open, setOpen, collapsed, toggleCollapsed } = useSidebar();
+
+  useEffect(() => {
+    setOpen(false);
+  }, [location.pathname, setOpen]);
 
   const userRole = (user?.role || '').toLowerCase();
   const isRestrictedRole = RESTRICTED_ROLES.includes(userRole);

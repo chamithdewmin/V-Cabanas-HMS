@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EmptyState from '@/components/EmptyState';
+import { Users } from 'lucide-react';
 
 const PER_PAGE = 10;
 
@@ -20,6 +22,8 @@ const Customers = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
   const [refreshLoading, setRefreshLoading] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [nameError, setNameError] = useState('');
   const [form, setForm] = useState({
     name: '',
     email: '',
@@ -49,40 +53,52 @@ const Customers = () => {
   }, [searchQuery, customers]);
 
   const handleChange = (field, value) => {
+    if (field === 'name') setNameError('');
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.name.trim()) {
+      setNameError('Client name is required.');
       toast({
         title: 'Name is required',
         description: 'Please enter a client name.',
       });
       return;
     }
-
-    if (editingClient) {
-      updateClient(editingClient.id, {
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        address: form.address,
+    setNameError('');
+    setSaving(true);
+    try {
+      if (editingClient) {
+        await updateClient(editingClient.id, {
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+        });
+        toast({ title: 'Client updated', description: `${form.name} has been updated.` });
+        setEditingClient(null);
+      } else {
+        await addClient({
+          name: form.name,
+          email: form.email,
+          phone: form.phone,
+          address: form.address,
+        });
+        toast({ title: 'Client added', description: `${form.name} has been added to your clients list.` });
+      }
+      setForm({ name: '', email: '', phone: '', address: '' });
+      setIsDialogOpen(false);
+    } catch (err) {
+      toast({
+        title: 'Failed to save client',
+        description: err?.message || err?.error || 'Please try again. Check your connection.',
+        variant: 'destructive',
       });
-      toast({ title: 'Client updated', description: `${form.name} has been updated.` });
-      setEditingClient(null);
-    } else {
-      const client = addClient({
-        name: form.name,
-        email: form.email,
-        phone: form.phone,
-        address: form.address,
-      });
-      toast({ title: 'Client added', description: `${client.name} has been added to your clients list.` });
+    } finally {
+      setSaving(false);
     }
-
-    setForm({ name: '', email: '', phone: '', address: '' });
-    setIsDialogOpen(false);
   };
 
   const openEdit = (customer) => {
@@ -179,7 +195,7 @@ const Customers = () => {
               <Download className="w-4 h-4 mr-2" />
               Export CSV
             </Button>
-            <Button onClick={() => setIsDialogOpen(true)}>
+            <Button onClick={() => setIsDialogOpen(true)} className="min-h-[44px]">
               <Plus className="w-4 h-4 mr-2" />
               Add Customer
             </Button>
@@ -212,21 +228,33 @@ const Customers = () => {
 
           {/* Table */}
           <div className="overflow-x-auto">
-            <table className="w-full text-sm">
+            <table className="w-full text-sm" aria-label="Clients list">
               <thead>
                 <tr className="border-b border-border text-muted-foreground text-xs uppercase tracking-wide">
-                  <th className="px-4 py-3 text-left font-medium">Name</th>
-                  <th className="px-4 py-3 text-left font-medium">Email address</th>
-                  <th className="px-4 py-3 text-left font-medium">Phone</th>
-                  <th className="px-4 py-3 text-left font-medium">Address</th>
-                  <th className="px-4 py-3 w-24" />
+                  <th scope="col" className="px-4 py-3 text-left font-medium sticky left-0 bg-secondary z-10">Name</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Email address</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Phone</th>
+                  <th scope="col" className="px-4 py-3 text-left font-medium">Address</th>
+                  <th scope="col" className="px-4 py-3 w-24" />
                 </tr>
               </thead>
               <tbody>
                 {pageRows.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
-                      No clients found
+                    <td colSpan={5} className="p-0 align-top">
+                      {customers.length === 0 ? (
+                        <EmptyState
+                          icon={Users}
+                          title="No clients yet"
+                          description="Add your first client to get started."
+                          actionLabel="Add Client"
+                          onAction={() => setIsDialogOpen(true)}
+                        />
+                      ) : (
+                        <div className="px-4 py-8 text-center text-muted-foreground">
+                          No clients found
+                        </div>
+                      )}
                     </td>
                   </tr>
                 ) : (
@@ -238,7 +266,7 @@ const Customers = () => {
                       transition={{ delay: index * 0.02 }}
                       className="border-b border-border transition-colors hover:bg-secondary/30"
                     >
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3 sticky left-0 bg-card z-[1]">
                         <div className="flex items-center gap-3">
                           <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary font-medium text-sm ring-2 ring-border">
                             {(customer.name || 'C').charAt(0).toUpperCase()}
@@ -337,17 +365,26 @@ const Customers = () => {
             </DialogHeader>
             <form onSubmit={handleSubmit} className="space-y-4">
               <div className="space-y-2">
-                <label className="text-sm font-medium">Name</label>
+                <label htmlFor="client-name" className="text-sm font-medium">Name</label>
                 <Input
+                  id="client-name"
                   value={form.name}
                   onChange={(e) => handleChange('name', e.target.value)}
                   placeholder="Client name"
                   required
+                  aria-invalid={!!nameError}
+                  aria-describedby={nameError ? 'client-name-error' : undefined}
                 />
+                {nameError && (
+                  <p id="client-name-error" className="text-sm text-destructive" role="alert">
+                    {nameError}
+                  </p>
+                )}
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Email</label>
+                <label htmlFor="client-email" className="text-sm font-medium">Email</label>
                 <Input
+                  id="client-email"
                   type="email"
                   value={form.email}
                   onChange={(e) => handleChange('email', e.target.value)}
@@ -355,16 +392,18 @@ const Customers = () => {
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Phone</label>
+                <label htmlFor="client-phone" className="text-sm font-medium">Phone</label>
                 <Input
+                  id="client-phone"
                   value={form.phone}
                   onChange={(e) => handleChange('phone', e.target.value)}
                   placeholder="Phone number"
                 />
               </div>
               <div className="space-y-2">
-                <label className="text-sm font-medium">Address</label>
+                <label htmlFor="client-address" className="text-sm font-medium">Address</label>
                 <Input
+                  id="client-address"
                   value={form.address}
                   onChange={(e) => handleChange('address', e.target.value)}
                   placeholder="Address (optional)"
@@ -378,8 +417,9 @@ const Customers = () => {
                 >
                   Cancel
                 </Button>
-                <Button type="submit">
-                  {editingClient ? 'Update Client' : 'Save Client'}
+                <Button type="submit" disabled={saving} className={saving ? 'gap-2' : ''}>
+                  {saving && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {saving ? 'Saving...' : editingClient ? 'Update Client' : 'Save Client'}
                 </Button>
               </div>
             </form>

@@ -9,7 +9,9 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EmptyState from '@/components/EmptyState';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
+import { FileText } from 'lucide-react';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -19,6 +21,7 @@ const Orders = () => {
   const [viewedInvoice, setViewedInvoice] = useState(null);
   const [invoiceAction, setInvoiceAction] = useState(null); // 'view' | 'download' | 'print'
   const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [lastLoadedFromBookingCount, setLastLoadedFromBookingCount] = useState(0);
   const [refreshLoading, setRefreshLoading] = useState(false);
   const { toast } = useToast();
 
@@ -38,22 +41,18 @@ const Orders = () => {
       { description: '', price: '', quantity: 1 },
     ],
   });
-  const [showBankDetailsPopup, setShowBankDetailsPopup] = useState(false);
-
-  const hasBankDetailsInSettings = useMemo(() => {
-    const b = settings?.bankDetails;
-    return b && b.accountNumber && b.accountName && b.bankName;
-  }, [settings?.bankDetails]);
-
   const handleChange = (field, value) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
-      if (field === 'clientId' && value) {
-        const c = clients.find((x) => x.id === value);
-        if (c) {
-          next.clientName = c.name || next.clientName;
-          next.clientEmail = c.email || next.clientEmail;
-          next.clientPhone = c.phone || next.clientPhone;
+      if (field === 'clientId') {
+        setLastLoadedFromBookingCount(0);
+        if (value) {
+          const c = clients.find((x) => x.id === value);
+          if (c) {
+            next.clientName = c.name || next.clientName;
+            next.clientEmail = c.email || next.clientEmail;
+            next.clientPhone = c.phone || next.clientPhone;
+          }
         }
       }
       return next;
@@ -93,6 +92,7 @@ const Orders = () => {
         clientPhone: data.client?.phone ?? prev.clientPhone,
         items: items.length ? items : prev.items,
       }));
+      setLastLoadedFromBookingCount(items.length);
       toast({ title: 'Loaded from booking', description: `${items.length} item(s) added from this client's booking.` });
     } catch (err) {
       toast({ title: 'Could not load booking', description: err.message || 'Try again.', variant: 'destructive' });
@@ -360,14 +360,14 @@ const Orders = () => {
             <table className="w-full min-w-[640px]">
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Invoice #</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Client</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Date</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Items</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Total</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Payment</th>
-                  <th className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Status</th>
-                  <th className="py-3 pl-8 pr-4 text-center text-xs sm:text-sm font-semibold w-28 min-w-[6rem]">Actions</th>
+                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Invoice #</th>
+                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Client</th>
+                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Date</th>
+                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Items</th>
+                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Total</th>
+                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Payment</th>
+                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Status</th>
+                  <th scope="col" className="py-3 pl-8 pr-4 text-center text-xs sm:text-sm font-semibold w-28 min-w-[6rem]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -464,9 +464,13 @@ const Orders = () => {
         </div>
 
         {filteredOrders.length === 0 && (
-          <div className="text-center py-12">
-            <p className="text-muted-foreground">No orders found</p>
-          </div>
+          <EmptyState
+            icon={FileText}
+            title="No invoices yet"
+            description="Create your first invoice to get started."
+            actionLabel="Create Invoice"
+            onAction={() => setIsCreateOpen(true)}
+          />
         )}
       </div>
 
@@ -539,6 +543,11 @@ const Orders = () => {
 
             <div className="space-y-2">
               <Label className="text-sm font-medium">Items</Label>
+              {lastLoadedFromBookingCount > 0 && (
+                <p className="text-sm text-muted-foreground" role="status">
+                  Loaded {lastLoadedFromBookingCount} item{lastLoadedFromBookingCount !== 1 ? 's' : ''} from booking.
+                </p>
+              )}
               <div className="space-y-3">
                 {form.items.map((item, index) => (
                   <div
@@ -625,40 +634,6 @@ const Orders = () => {
               </div>
             </div>
           </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* Add Payment Details popup */}
-      <Dialog open={showBankDetailsPopup} onOpenChange={setShowBankDetailsPopup}>
-        <DialogContent className="max-w-md" aria-describedby={undefined}>
-          <DialogHeader>
-            <DialogTitle>Add Bank Details to Invoice</DialogTitle>
-          </DialogHeader>
-          {hasBankDetailsInSettings && settings?.bankDetails && (
-            <div className="space-y-3">
-              <div className="rounded-lg border border-secondary bg-secondary/30 p-4 space-y-2 text-sm">
-                <p><span className="text-muted-foreground">Account Number:</span> {settings.bankDetails.accountNumber}</p>
-                <p><span className="text-muted-foreground">Account Name:</span> {settings.bankDetails.accountName}</p>
-                <p><span className="text-muted-foreground">Bank:</span> {settings.bankDetails.bankName}</p>
-                {settings.bankDetails.branch && (
-                  <p><span className="text-muted-foreground">Branch:</span> {settings.bankDetails.branch}</p>
-                )}
-              </div>
-              <div className="flex justify-end gap-2">
-                <Button variant="outline" onClick={() => setShowBankDetailsPopup(false)}>
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    handleChange('bankDetails', settings.bankDetails);
-                    setShowBankDetailsPopup(false);
-                  }}
-                >
-                  Add to Invoice
-                </Button>
-              </div>
-            </div>
-          )}
         </DialogContent>
       </Dialog>
     </>

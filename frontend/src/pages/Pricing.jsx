@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 
@@ -170,11 +171,17 @@ const Pricing = () => {
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
-                    <td
-                      colSpan={4}
-                      className="px-4 py-8 text-center text-muted-foreground text-sm"
-                    >
-                      No pricing items yet. Click &quot;Add Pricing&quot; to create one.
+                    <td colSpan={4} className="p-0 align-top">
+                      <EmptyState
+                        title="No pricing items yet"
+                        description="Add breakfast, lunch, tours, or other add-ons from Pricing."
+                        actionLabel="Add Pricing"
+                        onAction={() => {
+                          setForm({ name: '', price: '', notes: '' });
+                          setEditingItem(null);
+                          setIsDialogOpen(true);
+                        }}
+                      />
                     </td>
                   </tr>
                 ) : (

@@ -41,17 +41,24 @@ function App() {
 
   useEffect(() => {
     const root = document.documentElement;
-    if (settings.theme === 'dark') {
+    const theme = settings.theme === 'dark' ? 'dark' : 'light';
+    if (theme === 'dark') {
       root.classList.add('dark');
     } else {
       root.classList.remove('dark');
     }
+    try {
+      localStorage.setItem('vcabanas-theme', theme);
+    } catch (_) {}
   }, [settings.theme]);
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="animate-pulse text-muted-foreground">Loading...</div>
+      <div className="min-h-screen bg-background flex items-center justify-center" aria-busy="true" aria-live="polite">
+        <div className="flex flex-col items-center gap-4">
+          <div className="h-10 w-10 rounded-full border-2 border-primary border-t-transparent animate-spin" role="status" aria-label="Loading" />
+          <span className="text-sm text-muted-foreground">Loading...</span>
+        </div>
       </div>
     );
   }
@@ -81,7 +88,6 @@ function App() {
         <Route path="reports/income" element={<ReportIncome />} />
         <Route path="reports/expense" element={<ReportExpense />} />
         <Route path="reports/tax" element={<ReportTax />} />
-        <Route path="cash-flow" element={<CashFlow />} />
         <Route path="users" element={<Users />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
