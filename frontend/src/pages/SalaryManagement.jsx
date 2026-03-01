@@ -224,15 +224,15 @@ const SalaryManagement = () => {
             </div>
             <div className="bg-card rounded-lg border border-secondary overflow-hidden">
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full table-fixed">
                   <thead className="bg-secondary">
                     <tr>
                       <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>
                       <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold">Commission rate</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold">Total commission</th>
-                      <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold w-28" align="right">Commission rate</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold w-32" align="right">Total commission</th>
+                      <th className="px-4 py-3 text-center text-sm font-semibold w-28">Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -251,11 +251,11 @@ const SalaryManagement = () => {
                     ) : (
                       staffCommissionList.map((s) => (
                         <tr key={s.userId} className="border-b border-secondary hover:bg-secondary/30">
-                          <td className="px-4 py-3 text-sm">{s.name}</td>
-                          <td className="px-4 py-3 text-sm text-muted-foreground">{s.email}</td>
-                          <td className="px-4 py-3 text-sm capitalize">{s.role}</td>
-                          <td className="px-4 py-3 text-sm text-right tabular-nums">{s.commissionRatePct}%</td>
-                          <td className="px-4 py-3 text-sm text-right tabular-nums font-medium">
+                          <td className="px-4 py-3 text-sm text-left">{s.name}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground text-left">{s.email}</td>
+                          <td className="px-4 py-3 text-sm capitalize text-left">{s.role}</td>
+                          <td className="px-4 py-3 text-sm text-right tabular-nums w-28" align="right">{s.commissionRatePct}%</td>
+                          <td className="px-4 py-3 text-sm text-right tabular-nums font-medium w-32" align="right">
                             {Number(s.totalCommission).toLocaleString()}
                           </td>
                           <td className="px-4 py-3 text-center">
