@@ -535,55 +535,6 @@ const Orders = () => {
                   </Button>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Payment Method</Label>
-                <select
-                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={form.paymentMethod}
-                  onChange={(e) => handleChange('paymentMethod', e.target.value)}
-                >
-                  <option value="bank">Bank Transfer</option>
-                  <option value="cash">Cash</option>
-                  <option value="online">Online</option>
-                </select>
-                {form.paymentMethod === 'bank' && (
-                  <div className="mt-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      disabled={!hasBankDetailsInSettings}
-                      title={!hasBankDetailsInSettings ? 'Enter your bank details on the Settings page' : undefined}
-                      onClick={() => form.bankDetails ? handleChange('bankDetails', null) : setShowBankDetailsPopup(true)}
-                    >
-                      {form.bankDetails ? '✓ Bank details added (click to remove)' : 'Add Payment Details'}
-                    </Button>
-                    {!hasBankDetailsInSettings && (
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Enter your bank details on the Settings page
-                      </p>
-                    )}
-                  </div>
-                )}
-                <div className="mt-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={() => handleChange('showSignatureArea', !form.showSignatureArea)}
-                  >
-                    {form.showSignatureArea ? '✓ Signature area added (click to remove)' : 'Add Signature Area'}
-                  </Button>
-                </div>
-                <div className="space-y-2 mt-2">
-                  <Label className="text-sm font-medium">Due Date</Label>
-                  <Input
-                    type="date"
-                    value={form.dueDate}
-                    onChange={(e) => handleChange('dueDate', e.target.value)}
-                  />
-                </div>
-              </div>
             </div>
 
             <div className="space-y-2">

@@ -478,11 +478,16 @@ const Booking = () => {
                         <th className="px-3 py-2 text-left font-medium">Package</th>
                         <th className="px-3 py-2 text-right font-medium w-24">Qty</th>
                         <th className="px-3 py-2 text-right font-medium w-28">Unit price</th>
+                        <th className="px-3 py-2 text-right font-medium w-28">Amount</th>
                         <th className="w-10" />
                       </tr>
                     </thead>
                     <tbody>
-                      {form.addons.map((a, idx) => (
+                      {form.addons.map((a, idx) => {
+                        const qty = Number(a.quantity) || 0;
+                        const unit = Number(a.unitPrice) || 0;
+                        const amount = qty * unit;
+                        return (
                         <tr key={idx} className="border-t border-secondary">
                           <td className="px-3 py-2">
                             <select
@@ -515,13 +520,17 @@ const Booking = () => {
                               onChange={(e) => updateAddon(idx, 'unitPrice', e.target.value)}
                             />
                           </td>
+                          <td className="px-3 py-2 text-right tabular-nums font-medium">
+                            {amount.toLocaleString()}
+                          </td>
                           <td className="px-2 py-2">
                             <button type="button" onClick={() => removeAddon(idx)} className="p-1.5 hover:bg-secondary rounded text-red-500" title="Remove">
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </td>
                         </tr>
-                      ))}
+                      );
+                      })}
                     </tbody>
                   </table>
                 </div>
