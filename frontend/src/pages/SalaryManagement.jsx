@@ -171,13 +171,63 @@ const SalaryManagement = () => {
     }
   };
 
-  const filteredItems = items.filter((i) => {
+  const normalizeName = (s) => (s || '').trim().toLowerCase();
+
+  const combinedRows = React.useMemo(() => {
+    if (!isAdmin) {
+      return items.map((item) => ({
+        type: 'salary_only',
+        name: item.employeeName,
+        email: '',
+        roleOrPosition: item.position || '',
+        commissionRatePct: null,
+        totalCommission: null,
+        salaryRecord: item,
+        staffUser: null,
+      }));
+    }
+    const rows = [];
+    const salaryUsed = new Set();
+    staffCommissionList.forEach((s) => {
+      const match = items.find(
+        (item) => normalizeName(item.employeeName) === normalizeName(s.name)
+      );
+      if (match) salaryUsed.add(match.id);
+      rows.push({
+        type: 'staff',
+        name: s.name,
+        email: s.email,
+        roleOrPosition: s.role,
+        commissionRatePct: s.commissionRatePct,
+        totalCommission: s.totalCommission,
+        salaryRecord: match || null,
+        staffUser: s,
+      });
+    });
+    items.forEach((item) => {
+      if (salaryUsed.has(item.id)) return;
+      rows.push({
+        type: 'salary_only',
+        name: item.employeeName,
+        email: '',
+        roleOrPosition: item.position || '',
+        commissionRatePct: null,
+        totalCommission: null,
+        salaryRecord: item,
+        staffUser: null,
+      });
+    });
+    return rows;
+  }, [isAdmin, staffCommissionList, items]);
+
+  const filteredItems = combinedRows.filter((row) => {
     if (!search) return true;
     const q = search.toLowerCase();
     return (
-      (i.employeeName || '').toLowerCase().includes(q) ||
-      (i.position || '').toLowerCase().includes(q) ||
-      (i.notes || '').toLowerCase().includes(q)
+      (row.name || '').toLowerCase().includes(q) ||
+      (row.email || '').toLowerCase().includes(q) ||
+      (row.roleOrPosition || '').toLowerCase().includes(q) ||
+      (row.salaryRecord?.notes || '').toLowerCase().includes(q)
     );
   });
 
@@ -214,78 +264,17 @@ const SalaryManagement = () => {
           </div>
         </div>
 
-        {isAdmin && (
-          <>
-            <div>
-              <h2 className="text-xl font-semibold mb-2">Staff commission (Managers &amp; Receptionists)</h2>
-              <p className="text-muted-foreground text-sm mb-4">
-                Commission earned from bookings. Edit each user&apos;s commission rate below or in User Management.
-              </p>
-            </div>
-            <div className="bg-card rounded-lg border border-secondary overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full table-fixed">
-                  <thead className="bg-secondary">
-                    <tr>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>
-                      <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold w-28" align="right">Commission rate</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold w-32" align="right">Total commission</th>
-                      <th className="px-4 py-3 text-center text-sm font-semibold w-28">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {staffCommissionLoading ? (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">
-                          Loading...
-                        </td>
-                      </tr>
-                    ) : staffCommissionList.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">
-                          No managers or receptionists. Add users with those roles to see commission here.
-                        </td>
-                      </tr>
-                    ) : (
-                      staffCommissionList.map((s) => (
-                        <tr key={s.userId} className="border-b border-secondary hover:bg-secondary/30">
-                          <td className="px-4 py-3 text-sm text-left">{s.name}</td>
-                          <td className="px-4 py-3 text-sm text-muted-foreground text-left">{s.email}</td>
-                          <td className="px-4 py-3 text-sm capitalize text-left">{s.role}</td>
-                          <td className="px-4 py-3 text-sm text-right tabular-nums w-28" align="right">{s.commissionRatePct}%</td>
-                          <td className="px-4 py-3 text-sm text-right tabular-nums font-medium w-32" align="right">
-                            {Number(s.totalCommission).toLocaleString()}
-                          </td>
-                          <td className="px-4 py-3 text-center">
-                            <Button
-                              type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openCommissionRateEdit(s)}
-                              className="gap-1"
-                            >
-                              <Percent className="w-4 h-4" />
-                              Edit rate
-                            </Button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </>
-        )}
-
-        <div className="flex items-center justify-between mt-8">
-          <h2 className="text-xl font-semibold">Salary records</h2>
+        <div>
+          <h2 className="text-xl font-semibold mb-2">Staff &amp; salary</h2>
+          <p className="text-muted-foreground text-sm mb-4">
+            {isAdmin
+              ? 'Commission from bookings and salary records in one place. Match by employee name.'
+              : 'Your salary records.'}
+          </p>
         </div>
         <div className="max-w-xl">
           <Input
-            placeholder="Search by employee name, position..."
+            placeholder="Search by name, email, position..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
@@ -293,64 +282,100 @@ const SalaryManagement = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full table-fixed">
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Employee</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Position</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Period</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                  {isAdmin && <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>}
+                  <th className="px-4 py-3 text-left text-sm font-semibold">Role / position</th>
+                  {isAdmin && (
+                    <>
+                      <th className="px-4 py-3 text-right text-sm font-semibold w-28" align="right">Commission rate</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold w-32" align="right">Total commission</th>
+                    </>
+                  )}
+                  <th className="px-4 py-3 text-right text-sm font-semibold w-28" align="right">Salary amount</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold w-24">Period</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                  <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold uppercase min-w-[6rem] w-28">Actions</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold w-36">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {loading ? (
+                {loading || (isAdmin && staffCommissionLoading) ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    <td colSpan={isAdmin ? 9 : 6} className="px-4 py-8 text-center text-muted-foreground text-sm">
                       Loading...
                     </td>
                   </tr>
                 ) : filteredItems.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">
-                      No salary records yet. Click &quot;Add Salary&quot; to create one.
+                    <td colSpan={isAdmin ? 9 : 6} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                      {isAdmin ? 'No staff or salary records. Add users (Manager/Receptionist) and salary records.' : 'No salary records yet. Click &quot;Add Salary&quot; to create one.'}
                     </td>
                   </tr>
                 ) : (
-                  filteredItems.map((item, index) => (
+                  filteredItems.map((row, index) => (
                     <motion.tr
-                      key={item.id}
+                      key={row.staffUser ? `staff-${row.staffUser.userId}` : `salary-${row.salaryRecord?.id}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.02 }}
-                      className="border-b border-secondary hover:bg-secondary/50 transition-colors"
+                      className="border-b border-secondary hover:bg-secondary/30"
                     >
-                      <td className="px-4 py-3 text-sm text-left">{item.employeeName}</td>
-                      <td className="px-4 py-3 text-sm text-left">{item.position || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-24 font-medium">
-                        {item.amount != null ? Number(item.amount).toLocaleString() : '—'}
+                      <td className="px-4 py-3 text-sm text-left">{row.name || '—'}</td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-sm text-muted-foreground text-left">{row.email || '—'}</td>
+                      )}
+                      <td className="px-4 py-3 text-sm capitalize text-left">{row.roleOrPosition || '—'}</td>
+                      {isAdmin && (
+                        <>
+                          <td className="px-4 py-3 text-sm text-right tabular-nums w-28" align="right">
+                            {row.commissionRatePct != null ? `${row.commissionRatePct}%` : '—'}
+                          </td>
+                          <td className="px-4 py-3 text-sm text-right tabular-nums font-medium w-32" align="right">
+                            {row.totalCommission != null ? Number(row.totalCommission).toLocaleString() : '—'}
+                          </td>
+                        </>
+                      )}
+                      <td className="px-4 py-3 text-sm text-right tabular-nums w-28 font-medium" align="right">
+                        {row.salaryRecord?.amount != null ? Number(row.salaryRecord.amount).toLocaleString() : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-left capitalize">{item.period || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-left text-muted-foreground">{item.notes || '—'}</td>
-                      <td className="px-4 py-3 text-center align-middle min-w-[6rem] w-28">
-                        <div className="inline-flex items-center justify-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(item)}
-                            className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400"
-                            title="Edit"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(item)}
-                            className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                      <td className="px-4 py-3 text-sm capitalize text-left w-24">{row.salaryRecord?.period || '—'}</td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground text-left">{row.salaryRecord?.notes || '—'}</td>
+                      <td className="px-4 py-3 text-center w-36">
+                        <div className="inline-flex items-center justify-center gap-1 flex-wrap">
+                          {row.staffUser && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openCommissionRateEdit(row.staffUser)}
+                              className="gap-1"
+                            >
+                              <Percent className="w-4 h-4" />
+                              Edit rate
+                            </Button>
+                          )}
+                          {row.salaryRecord && (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openEdit(row.salaryRecord)}
+                                className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400"
+                                title="Edit salary"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(row.salaryRecord)}
+                                className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
+                                title="Delete salary"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          )}
                         </div>
                       </td>
                     </motion.tr>
