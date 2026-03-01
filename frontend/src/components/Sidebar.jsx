@@ -56,6 +56,16 @@ const reportSubItems = [
   { to: '/reports/tax', label: 'Tax Reports' },
 ];
 
+/** Roles that see only Invoices, Clients, and Booking */
+const RESTRICTED_ROLES = ['manager', 'receptionist'];
+
+/** Nav items shown only to Manager and Receptionist */
+const RESTRICTED_NAV_ITEMS = [
+  { label: 'Invoices', href: '/invoices', icon: FileText },
+  { label: 'Clients', href: '/clients', icon: Users },
+  { label: 'Booking', href: '/booking', icon: BookOpen },
+];
+
 /** Nav config with dividers (demo-style). Use href for links, items[] for expandable sections. */
 const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
@@ -72,7 +82,7 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Daily Notes', href: '/daily-notes', icon: StickyNote },
   { label: 'Analytics', icon: BarChart3, href: '/reports/overview', items: reportSubItems },
   { divider: true },
-  { label: 'User Management', href: '/users', icon: UserPlus },
+  { label: 'User Management', href: '/users', icon: UserPlus, adminOnly: true },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -179,6 +189,11 @@ export default function Sidebar() {
   const { settings } = useFinance();
   const { open, setOpen, collapsed, toggleCollapsed } = useSidebar();
 
+  const userRole = (user?.role || '').toLowerCase();
+  const isRestrictedRole = RESTRICTED_ROLES.includes(userRole);
+  const canManageUsers = userRole === 'admin';
+  const navEntries = isRestrictedRole ? RESTRICTED_NAV_ITEMS : NAV_ITEMS_WITH_DIVIDERS;
+
   const handleLogout = () => {
     logout();
     navigate('/login');
@@ -249,7 +264,7 @@ export default function Sidebar() {
         <SidebarContent>
           {!collapsed && <SidebarGroupLabel>Menu</SidebarGroupLabel>}
           <SidebarMenu>
-            {NAV_ITEMS_WITH_DIVIDERS.map((entry, index) => {
+            {navEntries.map((entry, index) => {
               if (entry.divider) {
                 return <SidebarDivider key={`divider-${index}`} />;
               }

@@ -25,6 +25,16 @@ import SalaryManagement from './pages/SalaryManagement';
 import DailyNotes from './pages/DailyNotes';
 import Layout from './components/Layout';
 
+const RESTRICTED_ROLES = ['manager', 'receptionist'];
+const RESTRICTED_ALLOWED_PATHS = ['/invoices', '/clients', '/booking'];
+
+function DefaultRedirect() {
+  const { user } = useAuth();
+  const role = (user?.role || '').toLowerCase();
+  const to = RESTRICTED_ROLES.includes(role) ? '/invoices' : '/dashboard';
+  return <Navigate to={to} replace />;
+}
+
 function App() {
   const { isAuthenticated, loading, user } = useAuth();
   const { settings } = useFinance();
@@ -46,12 +56,14 @@ function App() {
     );
   }
 
+  const loginRedirectTo = RESTRICTED_ROLES.includes((user?.role || '').toLowerCase()) ? '/invoices' : '/dashboard';
+
   return (
     <Routes>
-      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/dashboard" />} />
-      <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
+      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to={loginRedirectTo} />} />
+      <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to={loginRedirectTo} />} />
       <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
-        <Route index element={<Navigate to="/dashboard" />} />
+        <Route index element={<DefaultRedirect />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="expenses" element={<Inventory />} />
         <Route path="invoices" element={<Orders />} />

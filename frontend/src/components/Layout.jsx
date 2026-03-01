@@ -1,9 +1,21 @@
 import React from 'react';
-import { Outlet } from 'react-router-dom';
+import { Outlet, useLocation, Navigate } from 'react-router-dom';
 import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
 import Sidebar from '@/components/Sidebar';
+import { useAuth } from '@/contexts/AuthContext';
+
+const RESTRICTED_ROLES = ['manager', 'receptionist'];
+const RESTRICTED_ALLOWED_PATHS = ['/invoices', '/clients', '/booking'];
 
 const Layout = () => {
+  const { user } = useAuth();
+  const location = useLocation();
+  const role = (user?.role || '').toLowerCase();
+  const isRestricted = RESTRICTED_ROLES.includes(role);
+  const pathAllowed = RESTRICTED_ALLOWED_PATHS.some((p) => location.pathname === p || location.pathname.startsWith(p + '/'));
+  if (isRestricted && !pathAllowed) {
+    return <Navigate to="/invoices" replace />;
+  }
   return (
     <SidebarProvider defaultCollapsed={false}>
       <Sidebar />

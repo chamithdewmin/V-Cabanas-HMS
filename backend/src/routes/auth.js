@@ -95,7 +95,7 @@ router.post('/login', async (req, res) => {
     }
 
     const { rows } = await pool.query(
-      'SELECT id, email, name, password_hash FROM users WHERE LOWER(TRIM(email)) = $1',
+      'SELECT id, email, name, password_hash, COALESCE(role, \'receptionist\') AS role FROM users WHERE LOWER(TRIM(email)) = $1',
       [emailTrimmed]
     );
 
@@ -123,7 +123,7 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       token,
-      user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name, role: user.role || 'receptionist' },
     });
   } catch (err) {
     console.error('Login error:', err);
@@ -142,7 +142,7 @@ router.get('/me', async (req, res) => {
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const { rows } = await pool.query(
-      'SELECT id, email, name, token_version FROM users WHERE id = $1',
+      'SELECT id, email, name, token_version, COALESCE(role, \'receptionist\') AS role FROM users WHERE id = $1',
       [decoded.id]
     );
     if (!rows[0]) {
@@ -153,7 +153,7 @@ router.get('/me', async (req, res) => {
     if (tokenVersion !== currentVersion) {
       return res.status(401).json({ error: 'Session expired' });
     }
-    res.json({ user: { id: rows[0].id, email: rows[0].email, name: rows[0].name } });
+    res.json({ user: { id: rows[0].id, email: rows[0].email, name: rows[0].name, role: rows[0].role || 'receptionist' } });
   } catch {
     res.status(401).json({ error: 'Invalid token' });
   }

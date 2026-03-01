@@ -38,7 +38,7 @@ export const AuthProvider = ({ children }) => {
             try {
               const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
               setIsAuthenticated(true);
-              setUser({ id: payload.id, email: payload.email, name: payload.email || 'User' });
+              setUser({ id: payload.id, email: payload.email, name: payload.email || 'User', role: 'receptionist' });
             } catch {
               localStorage.removeItem('token');
             }
@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
           try {
             const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
             setIsAuthenticated(true);
-            setUser({ id: payload.id, email: payload.email, name: payload.email || 'User' });
+            setUser({ id: payload.id, email: payload.email, name: payload.email || 'User', role: 'receptionist' });
           } catch {
             localStorage.removeItem('token');
           }
@@ -72,7 +72,7 @@ export const AuthProvider = ({ children }) => {
     } catch (err) {
       // Fallback: allow demo login when API is unreachable (e.g. backend not deployed)
       if (email === 'admin@gmail.com' && password === 'admin123') {
-        const userData = { id: 1, email: 'admin@gmail.com', name: 'Admin' };
+        const userData = { id: 1, email: 'admin@gmail.com', name: 'Admin', role: 'admin' };
         setIsAuthenticated(true);
         setUser(userData);
         return { success: true };
