@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Plus, RefreshCw, Pencil, Trash2, Percent } from 'lucide-react';
+import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
@@ -30,10 +30,9 @@ const SalaryManagement = () => {
     amount: '',
     period: 'monthly',
     notes: '',
+    commissionRatePct: '',
   });
-  const [commissionRateDialog, setCommissionRateDialog] = useState(null);
-  const [commissionRateValue, setCommissionRateValue] = useState('');
-  const [savingCommission, setSavingCommission] = useState(false);
+  const [editingStaffUser, setEditingStaffUser] = useState(null);
   const [usersList, setUsersList] = useState([]);
 
   const loadStaffCommission = async () => {
@@ -80,7 +79,8 @@ const SalaryManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.employeeName.trim() || !form.amount) {
+    const isSalaryMode = editingItem || !editingStaffUser;
+    if (isSalaryMode && (!form.employeeName.trim() || !form.amount)) {
       toast({
         title: 'Missing details',
         description: 'Please enter employee name and amount.',
@@ -88,27 +88,52 @@ const SalaryManagement = () => {
       });
       return;
     }
+    if (editingStaffUser && (form.commissionRatePct === '' || parseFloat(form.commissionRatePct) < 0)) {
+      toast({
+        title: 'Invalid commission rate',
+        description: 'Please enter a valid commission rate (0–100).',
+        variant: 'destructive',
+      });
+      return;
+    }
 
     setSaving(true);
     try {
-      const payload = {
-        employeeName: form.employeeName.trim(),
-        position: (form.position || '').trim(),
-        amount: Number(form.amount),
-        period: form.period || 'monthly',
-        notes: (form.notes || '').trim(),
-      };
-      if (editingItem) {
-        await api.salary.update(editingItem.id, payload);
-        toast({ title: 'Salary updated', description: 'Salary record has been updated.' });
-      } else {
-        await api.salary.create(payload);
-        toast({ title: 'Salary added', description: 'New salary record has been saved.' });
+      if (editingItem || isSalaryMode) {
+        const payload = {
+          employeeName: form.employeeName.trim(),
+          position: (form.position || '').trim(),
+          amount: Number(form.amount) || 0,
+          period: form.period || 'monthly',
+          notes: (form.notes || '').trim(),
+        };
+        if (editingItem) {
+          await api.salary.update(editingItem.id, payload);
+          toast({ title: 'Salary updated', description: 'Salary record has been updated.' });
+        } else {
+          await api.salary.create(payload);
+          toast({ title: 'Salary added', description: 'New salary record has been saved.' });
+        }
       }
-      setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '' });
+      if (editingStaffUser && form.commissionRatePct !== '') {
+        const rate = Math.min(100, Math.max(0, parseFloat(form.commissionRatePct) || 0));
+        const userRow = usersList.find((u) => u.id === editingStaffUser.userId);
+        if (userRow) {
+          await api.users.update(editingStaffUser.userId, {
+            name: userRow.name,
+            email: userRow.email,
+            role: userRow.role,
+            commission_rate_pct: rate,
+          });
+          toast({ title: 'Commission rate updated', description: `Rate set to ${rate}%.` });
+        }
+      }
+      setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
       setEditingItem(null);
+      setEditingStaffUser(null);
       setIsDialogOpen(false);
       loadItems();
+      if (isAdmin) loadStaffCommission();
     } catch (err) {
       toast({ title: editingItem ? 'Update failed' : 'Save failed', description: err.message || 'Could not save', variant: 'destructive' });
     } finally {
@@ -116,14 +141,18 @@ const SalaryManagement = () => {
     }
   };
 
-  const openEdit = (item) => {
-    setEditingItem(item);
+  const openEdit = (row) => {
+    const salaryRecord = row.salaryRecord || null;
+    const staffUser = row.staffUser || null;
+    setEditingItem(salaryRecord);
+    setEditingStaffUser(staffUser);
     setForm({
-      employeeName: item.employeeName || '',
-      position: item.position || '',
-      amount: String(item.amount ?? ''),
-      period: item.period || 'monthly',
-      notes: item.notes || '',
+      employeeName: row.name || salaryRecord?.employeeName || '',
+      position: row.roleOrPosition || salaryRecord?.position || '',
+      amount: salaryRecord ? String(salaryRecord.amount ?? '') : '',
+      period: salaryRecord?.period || 'monthly',
+      notes: salaryRecord?.notes || '',
+      commissionRatePct: staffUser ? String(staffUser.commissionRatePct ?? 10) : '',
     });
     setIsDialogOpen(true);
   };
@@ -136,38 +165,6 @@ const SalaryManagement = () => {
       loadItems();
     } catch (err) {
       toast({ title: 'Delete failed', description: err.message || 'Could not delete', variant: 'destructive' });
-    }
-  };
-
-  const openCommissionRateEdit = (staff) => {
-    setCommissionRateDialog(staff);
-    setCommissionRateValue(String(staff.commissionRatePct ?? 10));
-  };
-
-  const saveCommissionRate = async (e) => {
-    e.preventDefault();
-    if (commissionRateDialog == null) return;
-    const rate = Math.min(100, Math.max(0, parseFloat(commissionRateValue) || 0));
-    setSavingCommission(true);
-    try {
-      const userRow = usersList.find((u) => u.id === commissionRateDialog.userId);
-      if (!userRow) {
-        toast({ title: 'User not found', variant: 'destructive' });
-        return;
-      }
-      await api.users.update(commissionRateDialog.userId, {
-        name: userRow.name,
-        email: userRow.email,
-        role: userRow.role,
-        commission_rate_pct: rate,
-      });
-      toast({ title: 'Commission rate updated', description: `${commissionRateDialog.name}'s rate is now ${rate}%.` });
-      setCommissionRateDialog(null);
-      loadStaffCommission();
-    } catch (err) {
-      toast({ title: 'Update failed', description: err.message || 'Could not update rate', variant: 'destructive' });
-    } finally {
-      setSavingCommission(false);
     }
   };
 
@@ -254,7 +251,8 @@ const SalaryManagement = () => {
             <Button
               onClick={() => {
                 setEditingItem(null);
-                setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '' });
+                setEditingStaffUser(null);
+                setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
                 setIsDialogOpen(true);
               }}
             >
@@ -290,14 +288,14 @@ const SalaryManagement = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold">Role / position</th>
                   {isAdmin && (
                     <>
-                      <th className="px-4 py-3 text-right text-sm font-semibold w-28" align="right">Commission rate</th>
-                      <th className="px-4 py-3 text-right text-sm font-semibold w-32" align="right">Total commission</th>
+                      <th className="px-4 py-3 text-sm font-semibold w-28 text-right" align="right">Commission rate</th>
+                      <th className="px-4 py-3 text-sm font-semibold w-32 text-right" align="right">Total commission</th>
                     </>
                   )}
-                  <th className="px-4 py-3 text-right text-sm font-semibold w-28" align="right">Salary amount</th>
+                  <th className="px-4 py-3 text-sm font-semibold w-28 text-right" align="right">Salary amount</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold w-24">Period</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold w-36">Actions</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold w-28">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -342,39 +340,27 @@ const SalaryManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-sm capitalize text-left w-24">{row.salaryRecord?.period || '—'}</td>
                       <td className="px-4 py-3 text-sm text-muted-foreground text-left">{row.salaryRecord?.notes || '—'}</td>
-                      <td className="px-4 py-3 text-center w-36">
-                        <div className="inline-flex items-center justify-center gap-1 flex-wrap">
-                          {row.staffUser && (
-                            <Button
+                      <td className="px-4 py-3 text-center w-28">
+                        <div className="inline-flex items-center justify-center gap-1">
+                          {(row.staffUser || row.salaryRecord) && (
+                            <button
                               type="button"
-                              variant="outline"
-                              size="sm"
-                              onClick={() => openCommissionRateEdit(row.staffUser)}
-                              className="gap-1"
+                              onClick={() => openEdit(row)}
+                              className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400"
+                              title="Edit"
                             >
-                              <Percent className="w-4 h-4" />
-                              Edit rate
-                            </Button>
+                              <Pencil className="w-4 h-4" />
+                            </button>
                           )}
                           {row.salaryRecord && (
-                            <>
-                              <button
-                                type="button"
-                                onClick={() => openEdit(row.salaryRecord)}
-                                className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400"
-                                title="Edit salary"
-                              >
-                                <Pencil className="w-4 h-4" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDelete(row.salaryRecord)}
-                                className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
-                                title="Delete salary"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                              </button>
-                            </>
+                            <button
+                              type="button"
+                              onClick={() => handleDelete(row.salaryRecord)}
+                              className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
+                              title="Delete salary"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
                           )}
                         </div>
                       </td>
@@ -393,13 +379,16 @@ const SalaryManagement = () => {
           setIsDialogOpen(open);
           if (!open) {
             setEditingItem(null);
-            setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '' });
+            setEditingStaffUser(null);
+            setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
           }
         }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>{editingItem ? 'Edit Salary' : 'Add Salary'}</DialogTitle>
+            <DialogTitle>
+              {editingStaffUser && !editingItem ? 'Edit commission' : editingItem ? 'Edit salary & commission' : 'Add Salary'}
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
@@ -408,7 +397,8 @@ const SalaryManagement = () => {
                 value={form.employeeName}
                 onChange={(e) => handleChange('employeeName', e.target.value)}
                 placeholder="Full name"
-                required
+                readOnly={!!editingStaffUser && !editingItem}
+                required={!editingStaffUser || !!editingItem}
               />
             </div>
             <div className="space-y-2">
@@ -417,62 +407,46 @@ const SalaryManagement = () => {
                 value={form.position}
                 onChange={(e) => handleChange('position', e.target.value)}
                 placeholder="e.g. Manager, Receptionist"
+                readOnly={!!editingStaffUser && !editingItem}
               />
             </div>
-            <div className="space-y-2">
-              <Label>Amount</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
-                value={form.amount}
-                onChange={(e) => handleChange('amount', e.target.value)}
-                placeholder="Salary amount"
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Period</Label>
-              <select
-                className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                value={form.period}
-                onChange={(e) => handleChange('period', e.target.value)}
-              >
-                <option value="monthly">Monthly</option>
-                <option value="weekly">Weekly</option>
-              </select>
-            </div>
-            <div className="space-y-2">
-              <Label>Notes (optional)</Label>
-              <textarea
-                className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-[60px]"
-                value={form.notes}
-                onChange={(e) => handleChange('notes', e.target.value)}
-                placeholder="Additional notes"
-              />
-            </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : editingItem ? 'Update Salary' : 'Save Salary'}
-              </Button>
-            </div>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={!!commissionRateDialog} onOpenChange={(open) => !open && setCommissionRateDialog(null)}>
-        <DialogContent className="max-w-sm">
-          <DialogHeader>
-            <DialogTitle>Edit commission rate</DialogTitle>
-          </DialogHeader>
-          {commissionRateDialog && (
-            <form onSubmit={saveCommissionRate} className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {commissionRateDialog.name} ({commissionRateDialog.email})
-              </p>
+            {(!editingStaffUser || editingItem) && (
+              <>
+                <div className="space-y-2">
+                  <Label>Amount</Label>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.amount}
+                    onChange={(e) => handleChange('amount', e.target.value)}
+                    placeholder="Salary amount"
+                    required={!editingStaffUser || !!editingItem}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Period</Label>
+                  <select
+                    className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                    value={form.period}
+                    onChange={(e) => handleChange('period', e.target.value)}
+                  >
+                    <option value="monthly">Monthly</option>
+                    <option value="weekly">Weekly</option>
+                  </select>
+                </div>
+                <div className="space-y-2">
+                  <Label>Notes (optional)</Label>
+                  <textarea
+                    className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-[60px]"
+                    value={form.notes}
+                    onChange={(e) => handleChange('notes', e.target.value)}
+                    placeholder="Additional notes"
+                  />
+                </div>
+              </>
+            )}
+            {editingStaffUser && isAdmin && (
               <div className="space-y-2">
                 <Label>Commission rate (%)</Label>
                 <Input
@@ -480,21 +454,22 @@ const SalaryManagement = () => {
                   min="0"
                   max="100"
                   step="0.5"
-                  value={commissionRateValue}
-                  onChange={(e) => setCommissionRateValue(e.target.value)}
+                  value={form.commissionRatePct}
+                  onChange={(e) => handleChange('commissionRatePct', e.target.value)}
                   placeholder="10"
                 />
+                <p className="text-xs text-muted-foreground">Percentage of booking price earned as commission.</p>
               </div>
-              <div className="flex justify-end gap-2">
-                <Button type="button" variant="outline" onClick={() => setCommissionRateDialog(null)}>
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={savingCommission}>
-                  {savingCommission ? 'Saving...' : 'Save'}
-                </Button>
-              </div>
-            </form>
-          )}
+            )}
+            <div className="flex justify-end gap-2 pt-2">
+              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button type="submit" disabled={saving}>
+                {saving ? 'Saving...' : editingStaffUser && !editingItem ? 'Update commission' : editingItem ? 'Update' : 'Save Salary'}
+              </Button>
+            </div>
+          </form>
         </DialogContent>
       </Dialog>
     </>
