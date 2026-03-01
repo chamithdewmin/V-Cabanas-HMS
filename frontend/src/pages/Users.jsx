@@ -28,6 +28,7 @@ const Users = () => {
     email: '',
     password: '',
     role: ROLE_RECEPTIONIST,
+    commission_rate_pct: 10,
   });
   const { toast } = useToast();
 
@@ -98,6 +99,9 @@ const Users = () => {
       if (editingUser) {
         const payload = { name: form.name.trim(), email: form.email.trim(), role: form.role };
         if (form.password) payload.password = form.password;
+        if (form.role === ROLE_MANAGER || form.role === ROLE_RECEPTIONIST) {
+          payload.commission_rate_pct = Math.min(100, Math.max(0, Number(form.commission_rate_pct) || 10));
+        }
         await api.users.update(editingUser.id, payload);
         toast({ title: 'User updated', description: `${form.name} has been updated.` });
       } else {
@@ -109,7 +113,7 @@ const Users = () => {
         });
         toast({ title: 'User added', description: `${form.name} can now log in.` });
       }
-      setForm({ name: '', email: '', password: '', role: ROLE_RECEPTIONIST });
+      setForm({ name: '', email: '', password: '', role: ROLE_RECEPTIONIST, commission_rate_pct: 10 });
       setEditingUser(null);
       setIsDialogOpen(false);
       loadUsers();
@@ -126,13 +130,13 @@ const Users = () => {
 
   const openEdit = (user) => {
     setEditingUser(user);
+    const role = user.role || (user.email === PROTECTED_EMAIL ? ROLE_ADMIN : ROLE_RECEPTIONIST);
     setForm({
       name: user.name,
       email: user.email,
       password: '',
-      role:
-        user.role ||
-        (user.email === PROTECTED_EMAIL ? ROLE_ADMIN : ROLE_RECEPTIONIST),
+      role,
+      commission_rate_pct: user.commission_rate_pct != null ? user.commission_rate_pct : 10,
     });
     setIsDialogOpen(true);
   };
@@ -428,6 +432,23 @@ const Users = () => {
                   <option value={ROLE_RECEPTIONIST}>Receptionist</option>
                 </select>
               </div>
+              {(form.role === ROLE_MANAGER || form.role === ROLE_RECEPTIONIST) && (
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Booking commission rate (%)</label>
+                  <Input
+                    type="number"
+                    min="0"
+                    max="100"
+                    step="0.5"
+                    value={form.commission_rate_pct}
+                    onChange={(e) => handleChange('commission_rate_pct', e.target.value)}
+                    placeholder="10"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Percentage of each booking price earned as commission when this user creates a booking.
+                  </p>
+                </div>
+              )}
               <div className="flex justify-end gap-2 pt-2">
                 <Button
                   type="button"

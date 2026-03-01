@@ -15,6 +15,36 @@ const toSalary = (row) => ({
   createdAt: row.created_at,
 });
 
+router.get('/staff-commission', async (req, res) => {
+  try {
+    const role = (req.user.role || '').toLowerCase();
+    if (role !== 'admin') {
+      return res.status(403).json({ error: 'Admin only' });
+    }
+    const { rows } = await pool.query(
+      `SELECT u.id AS user_id, u.name, u.email, COALESCE(u.role, 'receptionist') AS role,
+       COALESCE(u.commission_rate_pct, 10) AS commission_rate_pct,
+       COALESCE(SUM(b.staff_commission_amount), 0)::numeric(15,2) AS total_commission
+       FROM users u
+       LEFT JOIN bookings b ON b.user_id = u.id
+       WHERE LOWER(COALESCE(u.role, 'receptionist')) IN ('manager', 'receptionist')
+       GROUP BY u.id, u.name, u.email, u.role, u.commission_rate_pct
+       ORDER BY u.name`
+    );
+    res.json(rows.map((r) => ({
+      userId: r.user_id,
+      name: r.name,
+      email: r.email,
+      role: r.role,
+      commissionRatePct: parseFloat(r.commission_rate_pct) || 10,
+      totalCommission: parseFloat(r.total_commission) || 0,
+    })));
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;

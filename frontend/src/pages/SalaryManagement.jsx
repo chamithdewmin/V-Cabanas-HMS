@@ -1,17 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react';
+import { Plus, RefreshCw, Pencil, Trash2, Percent } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const SalaryManagement = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const userRole = (user?.role || '').toLowerCase();
+  const isAdmin = userRole === 'admin';
+
   const [items, setItems] = useState([]);
+  const [staffCommissionList, setStaffCommissionList] = useState([]);
+  const [staffCommissionLoading, setStaffCommissionLoading] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
@@ -24,6 +31,24 @@ const SalaryManagement = () => {
     period: 'monthly',
     notes: '',
   });
+  const [commissionRateDialog, setCommissionRateDialog] = useState(null);
+  const [commissionRateValue, setCommissionRateValue] = useState('');
+  const [savingCommission, setSavingCommission] = useState(false);
+  const [usersList, setUsersList] = useState([]);
+
+  const loadStaffCommission = async () => {
+    if (!isAdmin) return;
+    setStaffCommissionLoading(true);
+    try {
+      const list = await api.salary.staffCommission();
+      setStaffCommissionList(Array.isArray(list) ? list : []);
+    } catch (err) {
+      toast({ title: 'Failed to load staff commission', description: err.message || 'Could not fetch', variant: 'destructive' });
+      setStaffCommissionList([]);
+    } finally {
+      setStaffCommissionLoading(false);
+    }
+  };
 
   const loadItems = async () => {
     setLoading(true);
@@ -41,6 +66,13 @@ const SalaryManagement = () => {
   useEffect(() => {
     loadItems();
   }, []);
+
+  useEffect(() => {
+    if (isAdmin) {
+      loadStaffCommission();
+      api.users.list().then((list) => setUsersList(Array.isArray(list) ? list : [])).catch(() => setUsersList([]));
+    }
+  }, [isAdmin]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -107,6 +139,38 @@ const SalaryManagement = () => {
     }
   };
 
+  const openCommissionRateEdit = (staff) => {
+    setCommissionRateDialog(staff);
+    setCommissionRateValue(String(staff.commissionRatePct ?? 10));
+  };
+
+  const saveCommissionRate = async (e) => {
+    e.preventDefault();
+    if (commissionRateDialog == null) return;
+    const rate = Math.min(100, Math.max(0, parseFloat(commissionRateValue) || 0));
+    setSavingCommission(true);
+    try {
+      const userRow = usersList.find((u) => u.id === commissionRateDialog.userId);
+      if (!userRow) {
+        toast({ title: 'User not found', variant: 'destructive' });
+        return;
+      }
+      await api.users.update(commissionRateDialog.userId, {
+        name: userRow.name,
+        email: userRow.email,
+        role: userRow.role,
+        commission_rate_pct: rate,
+      });
+      toast({ title: 'Commission rate updated', description: `${commissionRateDialog.name}'s rate is now ${rate}%.` });
+      setCommissionRateDialog(null);
+      loadStaffCommission();
+    } catch (err) {
+      toast({ title: 'Update failed', description: err.message || 'Could not update rate', variant: 'destructive' });
+    } finally {
+      setSavingCommission(false);
+    }
+  };
+
   const filteredItems = items.filter((i) => {
     if (!search) return true;
     const q = search.toLowerCase();
@@ -133,7 +197,7 @@ const SalaryManagement = () => {
             </p>
           </div>
           <div className="flex gap-3">
-            <Button variant="outline" onClick={loadItems} disabled={loading}>
+            <Button variant="outline" onClick={() => { loadItems(); if (isAdmin) loadStaffCommission(); }} disabled={loading}>
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
@@ -150,6 +214,75 @@ const SalaryManagement = () => {
           </div>
         </div>
 
+        {isAdmin && (
+          <>
+            <div>
+              <h2 className="text-xl font-semibold mb-2">Staff commission (Managers &amp; Receptionists)</h2>
+              <p className="text-muted-foreground text-sm mb-4">
+                Commission earned from bookings. Edit each user&apos;s commission rate below or in User Management.
+              </p>
+            </div>
+            <div className="bg-card rounded-lg border border-secondary overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-secondary">
+                    <tr>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>
+                      <th className="px-4 py-3 text-left text-sm font-semibold">Role</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold">Commission rate</th>
+                      <th className="px-4 py-3 text-right text-sm font-semibold">Total commission</th>
+                      <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {staffCommissionLoading ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                          Loading...
+                        </td>
+                      </tr>
+                    ) : staffCommissionList.length === 0 ? (
+                      <tr>
+                        <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                          No managers or receptionists. Add users with those roles to see commission here.
+                        </td>
+                      </tr>
+                    ) : (
+                      staffCommissionList.map((s) => (
+                        <tr key={s.userId} className="border-b border-secondary hover:bg-secondary/30">
+                          <td className="px-4 py-3 text-sm">{s.name}</td>
+                          <td className="px-4 py-3 text-sm text-muted-foreground">{s.email}</td>
+                          <td className="px-4 py-3 text-sm capitalize">{s.role}</td>
+                          <td className="px-4 py-3 text-sm text-right tabular-nums">{s.commissionRatePct}%</td>
+                          <td className="px-4 py-3 text-sm text-right tabular-nums font-medium">
+                            {Number(s.totalCommission).toLocaleString()}
+                          </td>
+                          <td className="px-4 py-3 text-center">
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => openCommissionRateEdit(s)}
+                              className="gap-1"
+                            >
+                              <Percent className="w-4 h-4" />
+                              Edit rate
+                            </Button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
+
+        <div className="flex items-center justify-between mt-8">
+          <h2 className="text-xl font-semibold">Salary records</h2>
+        </div>
         <div className="max-w-xl">
           <Input
             placeholder="Search by employee name, position..."
@@ -302,6 +435,41 @@ const SalaryManagement = () => {
               </Button>
             </div>
           </form>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!commissionRateDialog} onOpenChange={(open) => !open && setCommissionRateDialog(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Edit commission rate</DialogTitle>
+          </DialogHeader>
+          {commissionRateDialog && (
+            <form onSubmit={saveCommissionRate} className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                {commissionRateDialog.name} ({commissionRateDialog.email})
+              </p>
+              <div className="space-y-2">
+                <Label>Commission rate (%)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  max="100"
+                  step="0.5"
+                  value={commissionRateValue}
+                  onChange={(e) => setCommissionRateValue(e.target.value)}
+                  placeholder="10"
+                />
+              </div>
+              <div className="flex justify-end gap-2">
+                <Button type="button" variant="outline" onClick={() => setCommissionRateDialog(null)}>
+                  Cancel
+                </Button>
+                <Button type="submit" disabled={savingCommission}>
+                  {savingCommission ? 'Saving...' : 'Save'}
+                </Button>
+              </div>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </>

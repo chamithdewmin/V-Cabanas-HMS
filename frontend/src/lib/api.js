@@ -132,6 +132,7 @@ export const api = {
   },
   salary: {
     list: () => request('/salary'),
+    staffCommission: () => request('/salary/staff-commission'),
     create: (data) => request('/salary', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/salary/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/salary/${id}`, { method: 'DELETE' }),

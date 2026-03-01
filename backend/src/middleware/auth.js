@@ -11,7 +11,10 @@ export const authMiddleware = async (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    const { rows } = await pool.query('SELECT id, token_version FROM users WHERE id = $1', [decoded.id]);
+    const { rows } = await pool.query(
+      'SELECT id, email, token_version, COALESCE(role, \'receptionist\') AS role, COALESCE(commission_rate_pct, 10) AS commission_rate_pct FROM users WHERE id = $1',
+      [decoded.id]
+    );
     if (!rows[0]) {
       return res.status(401).json({ error: 'User not found' });
     }
@@ -20,7 +23,12 @@ export const authMiddleware = async (req, res, next) => {
     if (tokenVersion !== currentVersion) {
       return res.status(401).json({ error: 'Session expired' });
     }
-    req.user = { id: decoded.id, email: decoded.email };
+    req.user = {
+      id: rows[0].id,
+      email: rows[0].email,
+      role: rows[0].role,
+      commission_rate_pct: parseFloat(rows[0].commission_rate_pct) || 0,
+    };
     next();
   } catch {
     return res.status(401).json({ error: 'Invalid or expired token' });

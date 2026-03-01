@@ -121,6 +121,14 @@ async function initDb() {
   } catch (e) {
     console.warn('Bookings/pricing/role migration:', e.message);
   }
+  try {
+    const commissionPath = path.join(__dirname, '..', 'scripts', 'add-commission-salary.sql');
+    const commissionSql = fs.readFileSync(commissionPath, 'utf8');
+    await pool.query(commissionSql);
+    console.log('Commission and salary columns ready.');
+  } catch (e) {
+    console.warn('Commission/salary migration:', e.message);
+  }
 }
 
 const app = express();

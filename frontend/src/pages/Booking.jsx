@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { BookOpen, Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Booking = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const userRole = (user?.role || '').toLowerCase();
+  const isAdmin = userRole === 'admin';
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -162,20 +166,22 @@ const Booking = () => {
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Price</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Booking.com</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Income &amp; Profit</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Staff commission</th>
+                  {isAdmin && <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Net (after staff)</th>}
                   <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={11} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    <td colSpan={12} className="px-4 py-8 text-center text-muted-foreground text-sm">
                       Loading bookings...
                     </td>
                   </tr>
                 ) : bookings.length === 0 ? (
                   <tr>
                     <td
-                      colSpan={11}
+                      colSpan={12}
                       className="px-4 py-8 text-center text-muted-foreground text-sm"
                     >
                       No bookings yet. Click &quot;Add Booking&quot; to create one.
@@ -208,6 +214,14 @@ const Booking = () => {
                       <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28 font-medium">
                         {(b.incomeProfit != null ? b.incomeProfit : (Number(b.price) || 0) - (Number(b.bookingComCommission) || 0)).toLocaleString()}
                       </td>
+                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28">
+                        {(b.staffCommissionAmount != null ? Number(b.staffCommissionAmount) : 0).toLocaleString()}
+                      </td>
+                      {isAdmin && (
+                        <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28 font-medium">
+                          {(b.netAfterStaffCommission != null ? Number(b.netAfterStaffCommission) : (b.incomeProfit != null ? b.incomeProfit : 0) - (b.staffCommissionAmount != null ? Number(b.staffCommissionAmount) : 0)).toLocaleString()}
+                        </td>
+                      )}
                       <td className="px-4 py-3 text-center align-middle">
                         <div className="inline-flex items-center justify-center gap-1">
                           <button type="button" onClick={() => openEdit(b)} className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400" title="Edit">

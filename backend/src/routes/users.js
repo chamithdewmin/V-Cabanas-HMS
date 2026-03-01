@@ -11,9 +11,13 @@ router.use(authMiddleware);
 router.get('/', async (req, res) => {
   try {
     const { rows } = await pool.query(
-      'SELECT id, email, name, created_at, COALESCE(role, \'receptionist\') AS role FROM users ORDER BY created_at DESC'
+      `SELECT id, email, name, created_at, COALESCE(role, 'receptionist') AS role,
+       COALESCE(commission_rate_pct, 10) AS commission_rate_pct FROM users ORDER BY created_at DESC`
     );
-    res.json(rows);
+    res.json(rows.map((r) => ({
+      ...r,
+      commission_rate_pct: r.commission_rate_pct != null ? parseFloat(r.commission_rate_pct) : 10,
+    })));
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: 'Server error' });
@@ -29,12 +33,12 @@ router.post('/', async (req, res) => {
     const r = (role && ['admin', 'manager', 'receptionist'].includes(role)) ? role : 'receptionist';
     const hash = await bcrypt.hash(password, 10);
     const { rows } = await pool.query(
-      `INSERT INTO users (email, password_hash, name, role)
-       VALUES ($1, $2, $3, $4)
-       RETURNING id, email, name, created_at, role`,
+      `INSERT INTO users (email, password_hash, name, role, commission_rate_pct)
+       VALUES ($1, $2, $3, $4, 10)
+       RETURNING id, email, name, created_at, role, COALESCE(commission_rate_pct, 10) AS commission_rate_pct`,
       [email.trim(), hash, name.trim(), r]
     );
-    res.status(201).json(rows[0]);
+    res.status(201).json({ ...rows[0], commission_rate_pct: parseFloat(rows[0].commission_rate_pct) || 10 });
   } catch (err) {
     if (err.code === '23505') {
       return res.status(400).json({ error: 'Email already exists' });
@@ -47,27 +51,36 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const { id } = req.params;
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, commission_rate_pct } = req.body;
     if (!name || !email) {
       return res.status(400).json({ error: 'Name and email are required' });
     }
     const r = (role && ['admin', 'manager', 'receptionist'].includes(role)) ? role : null;
     let query = 'UPDATE users SET name = $2, email = $3';
     const params = [id, name.trim(), email.trim()];
+    let paramIdx = 4;
     if (r) {
-      query += ', role = $4';
+      query += `, role = $${paramIdx}`;
       params.push(r);
+      paramIdx++;
+    }
+    if (commission_rate_pct !== undefined && commission_rate_pct !== null) {
+      const rate = Math.min(100, Math.max(0, parseFloat(commission_rate_pct)));
+      query += `, commission_rate_pct = $${paramIdx}`;
+      params.push(rate);
+      paramIdx++;
     }
     if (password && password.trim()) {
       const hash = await bcrypt.hash(password, 10);
-      const idx = params.length + 1;
-      query += `, password_hash = $${idx}`;
+      query += `, password_hash = $${paramIdx}`;
       params.push(hash);
+      paramIdx++;
     }
-    query += ` WHERE id = $1 RETURNING id, email, name, created_at, COALESCE(role, 'receptionist') AS role`;
+    query += ` WHERE id = $1 RETURNING id, email, name, created_at, COALESCE(role, 'receptionist') AS role, COALESCE(commission_rate_pct, 10) AS commission_rate_pct`;
     const { rows } = await pool.query(query, params);
     if (!rows[0]) return res.status(404).json({ error: 'User not found' });
-    res.json(rows[0]);
+    const out = { ...rows[0], commission_rate_pct: parseFloat(rows[0].commission_rate_pct) || 10 };
+    res.json(out);
   } catch (err) {
     if (err.code === '23505') {
       return res.status(400).json({ error: 'Email already exists' });
