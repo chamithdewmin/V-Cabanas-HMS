@@ -507,6 +507,85 @@
   text-underline-offset: 2px;
 }
 
+.login-page .panel-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.login-page .otp-row {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.login-page .otp-digit {
+  width: 52px;
+  height: 52px;
+  text-align: center;
+  font-size: 22px;
+  border-radius: 14px;
+  border: 1px solid #2a2a2a;
+  background: #1a1a1a;
+  color: #f0f0f0;
+  outline: none;
+  transition: border-color 0.2s, background 0.2s;
+  font-family: inherit;
+}
+
+.login-page .otp-digit:focus {
+  border-color: rgba(255, 255, 255, 0.3);
+  background: #1e1e1e;
+}
+
+.login-page .resend-row {
+  text-align: center;
+  font-size: 13px;
+  color: #777777;
+}
+
+.login-page .resend-link {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #bbbbbb;
+  font-size: inherit;
+  font-family: inherit;
+}
+
+.login-page .resend-link:hover {
+  color: #ffffff;
+}
+
+.login-page .resend-count {
+  color: #3b82f6;
+  font-weight: 600;
+}
+
+.login-page .form-hint-error {
+  font-size: 12px;
+  color: #fca5a5;
+  margin-top: 4px;
+}
+
+.login-page .dev-otp-banner {
+  padding: 12px 14px;
+  border-radius: 8px;
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  background: rgba(234, 179, 8, 0.08);
+  font-size: 0.75rem;
+  color: #eab308;
+}
+
+.login-page .dev-otp-banner strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 1.1rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.12em;
+}
+
 @keyframes login-fadeUp {
   from {
     opacity: 0;
