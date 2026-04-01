@@ -4,7 +4,6 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import loginBackground from '@/assets/login-background.webp';
-import loginLogo from '@/assets/login logo.png';
 import { APP_VERSION } from '@/constants';
 import './Login.css';
 
@@ -52,7 +51,6 @@ const Login = () => {
 
             <header className="nav a2">
               <Link to="/login" className="logo">
-                <img src={loginLogo} alt="" className="logo-image" width={32} height={32} />
                 <span className="logo-text">
                   V Cabanas <span>HMS</span>
                 </span>

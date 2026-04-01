@@ -3,7 +3,6 @@ import { Helmet } from 'react-helmet';
 import { useNavigate, Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import loginBackground from '@/assets/login-background.webp';
-import loginLogo from '@/assets/login logo.png';
 import './Login.css';
 
 const EyeIcon = ({ open }) =>
@@ -297,7 +296,6 @@ export default function ForgotPassword() {
 
             <header className="nav a2">
               <Link className="logo" to="/login">
-                <img src={loginLogo} alt="" className="logo-image" width={32} height={32} />
                 <span className="logo-text">
                   V Cabanas <span>HMS</span>
                 </span>
