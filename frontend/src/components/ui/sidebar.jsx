@@ -24,7 +24,7 @@ export function SidebarProvider({ children, defaultCollapsed = false }) {
       }}
     >
       <div
-        className="group/sidebar-wrapper flex min-h-screen w-full bg-background dark:bg-[#0C0E14]"
+        className="group/sidebar-wrapper flex min-h-screen w-full bg-background"
         data-state={collapsed ? 'collapsed' : 'expanded'}
       >
         {children}
@@ -43,7 +43,7 @@ export const Sidebar = React.forwardRef(
         data-collapsible={collapsible}
         data-state={isIconOnly ? 'collapsed' : 'expanded'}
         className={cn(
-          'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lg dark:bg-[#13161e] transition-[width] duration-300 ease-sidebar',
+          'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lg transition-[width] duration-300 ease-sidebar',
           'left-3 top-[max(0.75rem,env(safe-area-inset-top))] bottom-[max(0.75rem,env(safe-area-inset-bottom))]',
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           isIconOnly ? 'w-[56px]' : 'w-[240px] max-w-[85vw]',

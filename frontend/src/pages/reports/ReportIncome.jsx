@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/use-toast';
 import ExportReportDialog from '@/components/ExportReportDialog';
 import ReportPreviewModal from '@/components/ReportPreviewModal';
 import { getPrintHtml } from '@/utils/pdfPrint';
+import { C, REPORT_INCOME_SCALE } from '@/lib/reportTheme';
 
 const filterByRange = (items, range, dateKey = 'date') => {
   if (!range) return items;
@@ -29,7 +30,7 @@ const filterByRange = (items, range, dateKey = 'date') => {
   });
 };
 
-const COLORS = ['#22c55e', '#16a34a', '#15803d', '#166534', '#14532d', '#052e16'];
+const COLORS = REPORT_INCOME_SCALE;
 
 const ReportIncome = () => {
   const { incomes, settings, loadData } = useFinance();
@@ -124,8 +125,8 @@ const ReportIncome = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: "#1c1e24",
-                border: "1px solid #303338",
+                background: C.chromeBg,
+                border: `1px solid ${C.chromeBorder}`,
                 borderRadius: 8,
                 padding: "9px 16px",
                 color: "#fff",
@@ -144,8 +145,8 @@ const ReportIncome = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: "#1c1e24",
-                border: "1px solid #303338",
+                background: C.chromeBg,
+                border: `1px solid ${C.chromeBorder}`,
                 borderRadius: 8,
                 padding: "9px 16px",
                 color: "#fff",
@@ -164,8 +165,8 @@ const ReportIncome = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: "#1c1e24",
-                border: "1px solid #303338",
+                background: C.chromeBg,
+                border: `1px solid ${C.chromeBorder}`,
                 borderRadius: 8,
                 padding: "9px 16px",
                 color: "#fff",

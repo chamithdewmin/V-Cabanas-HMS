@@ -27,9 +27,10 @@ const ForgotPassword = () => {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
-  const inputClass = 'h-12 bg-[#0a0a0a] border-[#0a0a0a] text-[#a0a0a0] placeholder:text-[#6b6b6b]';
-  const labelClass = 'text-[#D3D3D3]';
-  const linkClass = 'text-[#6A6FF7] hover:text-[#8b8ff9]';
+  const inputClass =
+    'h-12 bg-background border-input text-foreground placeholder:text-muted-foreground';
+  const labelClass = 'text-foreground';
+  const linkClass = 'text-primary hover:text-primary/90';
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
@@ -112,12 +113,12 @@ const ForgotPassword = () => {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
-          <div className="bg-[#1e1e1e] rounded-3xl shadow-xl p-8 sm:p-10">
+          <div className="bg-card text-card-foreground rounded-3xl border border-border shadow-xl p-8 sm:p-10">
             <div className="flex justify-center mb-6">
               <img src={loginLogo} alt="V Cabanas HMS" className="h-10 object-contain" />
             </div>
-            <h2 className="text-xl font-bold text-[#D3D3D3] mb-2 text-center">Forgot Password</h2>
-            <p className="text-sm text-[#a0a0a0] text-center mb-6">
+            <h2 className="text-xl font-bold text-foreground mb-2 text-center">Forgot Password</h2>
+            <p className="text-sm text-muted-foreground text-center mb-6">
               {step === STEPS.PHONE && 'Enter your registered phone number to receive an OTP'}
               {step === STEPS.OTP && 'Enter the OTP sent to your phone'}
               {step === STEPS.PASSWORD && 'Create your new password'}
@@ -127,11 +128,11 @@ const ForgotPassword = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-center gap-2 mb-6"
+                className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center gap-2 mb-6"
                 role="alert"
               >
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                <span className="text-sm text-red-400">{error}</span>
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                <span className="text-sm text-destructive">{error}</span>
               </motion.div>
             )}
 
@@ -139,11 +140,11 @@ const ForgotPassword = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-emerald-500/10 border border-emerald-500/30 rounded-lg p-3 flex items-center gap-2 mb-6"
+                className="rounded-lg border border-[#22c55e]/30 bg-[#22c55e]/10 p-3 flex items-center gap-2 mb-6"
                 role="alert"
               >
-                <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
-                <span className="text-sm text-emerald-400">{success}</span>
+                <CheckCircle className="w-5 h-5 text-[#22c55e] flex-shrink-0" />
+                <span className="text-sm text-[#22c55e]">{success}</span>
               </motion.div>
             )}
 
@@ -189,9 +190,9 @@ const ForgotPassword = () => {
                   className="space-y-5"
                 >
                   {devOtp && (
-                    <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3">
-                      <p className="text-xs text-amber-400 mb-1">Testing mode – use this OTP:</p>
-                      <p className="text-lg font-mono font-bold text-amber-300">{devOtp}</p>
+                    <div className="rounded-lg border border-[#eab308]/30 bg-[#eab308]/10 p-3">
+                      <p className="text-xs text-[#eab308] mb-1">Testing mode – use this OTP:</p>
+                      <p className="text-lg font-mono font-bold text-[#eab308]">{devOtp}</p>
                     </div>
                   )}
                   <div className="space-y-2">
@@ -218,7 +219,7 @@ const ForgotPassword = () => {
                   <button
                     type="button"
                     onClick={() => { setStep(STEPS.PHONE); setPhone(''); setOtp(''); setDevOtp(''); setError(''); setSuccess(''); }}
-                    className="w-full text-sm text-[#a0a0a0] hover:text-[#D3D3D3]"
+                    className="w-full text-sm text-muted-foreground hover:text-foreground"
                   >
                     Use a different phone number
                   </button>
@@ -250,7 +251,7 @@ const ForgotPassword = () => {
                       <button
                         type="button"
                         onClick={() => setShowPassword(!showPassword)}
-                        className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a0a0a0] hover:text-[#D3D3D3]"
+                        className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         aria-label={showPassword ? 'Hide password' : 'Show password'}
                       >
                         {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -281,7 +282,7 @@ const ForgotPassword = () => {
               )}
             </AnimatePresence>
 
-            <p className="text-center text-[#D3D3D3] mt-6 text-sm">
+            <p className="text-center text-muted-foreground mt-6 text-sm">
               Remember your password?{' '}
               <Link to="/login" className={`${linkClass} font-medium`}>
                 Sign in
@@ -289,7 +290,7 @@ const ForgotPassword = () => {
             </p>
 
             <div className="text-center mt-4">
-              <p className="text-[#a0a0a0] text-xs">Version: {APP_VERSION}</p>
+              <p className="text-muted-foreground text-xs">Version: {APP_VERSION}</p>
             </div>
           </div>
         </motion.div>

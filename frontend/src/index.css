@@ -4,77 +4,87 @@
 
 @layer base {
   :root {
-    /* Light theme: using #0c0e14 background for all pages */
-    --background: 225 25% 6%; /* #0c0e14 */
-    --foreground: 210 40% 96%;
+    /* Light — page canvas */
+    --background: 210 20% 98%;
+    --foreground: 222 47% 11%;
 
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
 
-    --primary: 217 91% 60%; /* blue */
+    /* Brand blue ~#0e5cff */
+    --primary: 221 100% 53%;
     --primary-foreground: 0 0% 100%;
 
-    /* Slightly darker so border-secondary and bg-secondary are visible vs white */
-    --secondary: 214 20% 90%;
+    --secondary: 214 20% 96%;
     --secondary-foreground: 222 47% 11%;
 
-    --muted: 214 20% 92%;
-    --muted-foreground: 215 15% 35%;
+    --muted: 214 20% 96%;
+    --muted-foreground: 215 15% 45%;
 
-    --accent: 217 91% 60%; /* blue */
+    --accent: 221 100% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    /* Visible borders for cards, inputs, dividers */
-    --border: 214 20% 86%;
-    --input: 214 20% 88%;
-    --ring: 222 84% 56%;
+    --border: 214 20% 88%;
+    --input: 214 20% 92%;
+    --ring: 221 100% 53%;
 
-    /* Sidebar active state: dark blue with blue accent */
-    --sidebar-active-bg: 217 55% 22%;
-    --sidebar-active-accent: 217 91% 60%;
+    --sidebar-active-bg: 221 100% 95%;
+    --sidebar-active-accent: 221 100% 53%;
+
+    /* Light tables (hex, global table rules) */
+    --table-header-bg: #f8fafc;
+    --table-row-odd: #ffffff;
+    --table-row-even: #f8fafc;
+    --table-row-hover: #f1f5f9;
+    --table-divider: #e2e8f0;
+    --table-border: #e2e8f0;
+    --text-primary: #0f172a;
+    --text-body: #334155;
+    --text-label: #64748b;
+    --text-muted: #94a3b8;
+    --text-placeholder: #cbd5e1;
   }
 
   .dark {
-    /* Dark theme with custom background colors */
-    --background: 225 25% 6%; /* #0c0e14 for page background */
+    --background: 0 0% 0%;
     --foreground: 210 40% 96%;
 
-    --card: 224 22% 10%; /* #13161e for sidebar and cards */
+    --card: 0 0% 4%;
     --card-foreground: 210 40% 96%;
 
-    --primary: 217 91% 60%; /* blue */
+    --primary: 221 100% 53%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 210 25% 18%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 30% 80%;
 
     --muted: 210 25% 18%;
     --muted-foreground: 210 30% 80%;
 
-    --accent: 217 91% 60%; /* blue */
+    --accent: 221 100% 53%;
     --accent-foreground: 0 0% 100%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
 
-    --border: 216 19% 15%;
-    --input: 216 19% 15%;
-    --ring: 222 84% 56%;
+    --border: 0 0% 9%;
+    --input: 217 33% 17%;
+    --ring: 221 100% 53%;
 
-    --sidebar-active-bg: 217 55% 22%;
-    --sidebar-active-accent: 217 91% 60%;
+    --sidebar-active-bg: 221 55% 22%;
+    --sidebar-active-accent: 221 100% 53%;
 
-    /* Table color scheme */
-    --table-header-bg: #0f1117;
-    --table-row-odd: #111419;
-    --table-row-even: #13161e;
-    --table-row-hover: #1a1d27;
-    --table-divider: #1e2433;
-    --table-border: #2a3347;
-    --text-primary: #fff;
+    /* Dark tables */
+    --table-header-bg: #000000;
+    --table-row-odd: #0a0a0a;
+    --table-row-even: #0a0a0a;
+    --table-row-hover: #101010;
+    --table-divider: #171717;
+    --table-border: #171717;
+    --text-primary: #ffffff;
     --text-body: #d1d9e6;
     --text-label: #8b9ab0;
     --text-muted: #6b7a99;
@@ -85,44 +95,43 @@
     @apply border-border;
   }
 
-  /* Scrollbar: light theme (default) */
+  /* Scrollbars — aligned with border / surface tokens */
   * {
     scrollbar-width: thin;
-    scrollbar-color: hsl(214 20% 75%) hsl(214 20% 94%);
+    scrollbar-color: #cbd5e1 #f1f5f9;
   }
   *::-webkit-scrollbar {
     width: 10px;
     height: 10px;
   }
   *::-webkit-scrollbar-track {
-    background: hsl(214 20% 94%);
+    background: #f1f5f9;
   }
   *::-webkit-scrollbar-thumb {
-    background: hsl(214 20% 75%);
+    background: #cbd5e1;
     border-radius: 5px;
   }
   *::-webkit-scrollbar-thumb:hover {
-    background: hsl(214 20% 65%);
+    background: #94a3b8;
   }
   *::-webkit-scrollbar-button {
     display: none;
   }
 
-  /* Scrollbar: dark theme */
   .dark * {
-    scrollbar-color: #333 #111;
+    scrollbar-color: #2a3347 #0a0a0a;
   }
   .dark *::-webkit-scrollbar-track {
-    background: #111;
+    background: #0a0a0a;
   }
   .dark *::-webkit-scrollbar-thumb {
-    background: #333;
+    background: #2a3347;
   }
   .dark *::-webkit-scrollbar-thumb:hover {
-    background: #444;
+    background: #4a5568;
   }
   .dark *::-webkit-scrollbar-button {
-    background: #111;
+    display: none;
   }
   body {
     @apply bg-background text-foreground;
@@ -213,6 +222,104 @@ table {
 .report-preview-content p.text-gray-500,
 .report-preview-content .text-muted {
   color: #666 !important;
+}
+
+/* Light theme tables */
+html:not(.dark) table {
+  border-color: var(--table-divider);
+}
+
+html:not(.dark) thead {
+  background-color: var(--table-header-bg) !important;
+}
+
+html:not(.dark) thead th {
+  color: var(--text-primary) !important;
+  font-weight: 600;
+  padding: 12px 16px;
+  text-align: left;
+  font-size: 0.875rem;
+  border-bottom: 1px solid var(--table-divider);
+}
+
+html:not(.dark) tbody tr {
+  background-color: var(--table-row-even);
+  border-bottom: 1px solid var(--table-divider);
+  transition: background-color 0.2s ease;
+}
+
+html:not(.dark) tbody tr:nth-child(odd) {
+  background-color: var(--table-row-odd);
+}
+
+html:not(.dark) tbody tr:hover {
+  background-color: var(--table-row-hover) !important;
+}
+
+html:not(.dark) tbody td {
+  color: var(--text-body);
+  padding: 12px 16px;
+  font-size: 0.875rem;
+}
+
+html:not(.dark) tbody td strong,
+html:not(.dark) tbody td .font-bold,
+html:not(.dark) tbody td .font-semibold,
+html:not(.dark) tbody td[class*='font-semibold'],
+html:not(.dark) tbody td[class*='font-bold'] {
+  color: var(--text-primary);
+}
+
+html:not(.dark) tbody td .text-muted-foreground,
+html:not(.dark) tbody td .text-xs,
+html:not(.dark) tbody td[class*='text-muted'] {
+  color: var(--text-label);
+}
+
+html:not(.dark) tbody td .text-gray-500,
+html:not(.dark) tbody td .text-gray-600,
+html:not(.dark) tbody td[class*='text-gray-500'],
+html:not(.dark) tbody td[class*='text-gray-600'] {
+  color: var(--text-muted);
+}
+
+html:not(.dark) tbody td .text-gray-400,
+html:not(.dark) tbody td::placeholder,
+html:not(.dark) tbody input::placeholder,
+html:not(.dark) tbody textarea::placeholder {
+  color: var(--text-placeholder);
+}
+
+html:not(.dark) table tbody tr {
+  border-bottom-color: var(--table-divider);
+}
+
+html:not(.dark) tbody select,
+html:not(.dark) tbody .dropdown,
+html:not(.dark) tbody [role='combobox'] {
+  background-color: var(--table-row-even);
+  border-color: var(--table-border);
+  color: var(--text-body);
+}
+
+html:not(.dark) tbody select:hover,
+html:not(.dark) tbody .dropdown:hover,
+html:not(.dark) tbody [role='combobox']:hover {
+  border-color: var(--table-divider);
+  background-color: var(--table-row-hover);
+}
+
+html:not(.dark) thead.bg-secondary {
+  background-color: var(--table-header-bg) !important;
+}
+
+html:not(.dark) tbody tr.bg-secondary,
+html:not(.dark) tbody tr.hover\:bg-secondary\/50:hover {
+  background-color: var(--table-row-hover) !important;
+}
+
+html:not(.dark) tbody tr.border-secondary {
+  border-color: var(--table-divider) !important;
 }
 
 .dark table {

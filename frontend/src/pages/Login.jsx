@@ -55,27 +55,27 @@ const Login = () => {
           transition={{ duration: 0.5 }}
           className="w-full max-w-md"
         >
-          <div className="bg-[#1e1e1e] rounded-3xl shadow-xl p-8 sm:p-10">
+          <div className="bg-card text-card-foreground rounded-3xl border border-border shadow-xl p-8 sm:p-10">
             <div className="flex justify-center mb-6">
               <img src={loginLogo} alt="V Cabanas HMS" className="h-10 object-contain" />
             </div>
-            <h2 className="text-xl font-bold text-[#D3D3D3] mb-8 text-center">Login to your Account</h2>
+            <h2 className="text-xl font-bold text-foreground mb-8 text-center">Login to your Account</h2>
 
             {error && (
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="bg-red-500/10 border border-red-500/30 rounded-lg p-3 flex items-center gap-2 mb-6"
+                className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center gap-2 mb-6"
                 role="alert"
               >
-                <AlertCircle className="w-5 h-5 text-red-500 flex-shrink-0" />
-                <span className="text-sm text-red-400">{error}</span>
+                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
+                <span className="text-sm text-destructive">{error}</span>
               </motion.div>
             )}
 
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-[#D3D3D3]">Business Email</Label>
+                <Label htmlFor="email" className="text-foreground">Business Email</Label>
                 <Input
                   id="email"
                   type="email"
@@ -83,14 +83,14 @@ const Login = () => {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="h-12 bg-[#0a0a0a] border-[#0a0a0a] text-[#a0a0a0] placeholder:text-[#6b6b6b] "
+                  className="h-12 bg-background border-input text-foreground placeholder:text-muted-foreground"
                 />
               </div>
 
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <Label htmlFor="password" className="text-[#D3D3D3]">Password</Label>
-                  <Link to="/forgot-password" className="text-sm text-[#6A6FF7] hover:text-[#8b8ff9]">
+                  <Label htmlFor="password" className="text-foreground">Password</Label>
+                  <Link to="/forgot-password" className="text-sm text-primary hover:text-primary/90">
                     Forgot Password?
                   </Link>
                 </div>
@@ -102,12 +102,12 @@ const Login = () => {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="h-12 bg-[#0a0a0a] border-[#0a0a0a] text-[#a0a0a0] placeholder:text-[#6b6b6b] pr-10"
+                    className="h-12 bg-background border-input text-foreground placeholder:text-muted-foreground pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#a0a0a0] hover:text-[#D3D3D3] transition-colors"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -124,15 +124,15 @@ const Login = () => {
               </Button>
             </form>
 
-            <p className="text-center text-[#D3D3D3] mt-6 text-sm">
+            <p className="text-center text-muted-foreground mt-6 text-sm">
               New to V Cabanas HMS?{' '}
-              <a href="#" className="text-[#6A6FF7] hover:text-[#8b8ff9] font-medium">
+              <a href="#" className="text-primary hover:text-primary/90 font-medium">
                 Sign Up
               </a>
             </p>
 
             <div className="text-center mt-4">
-              <p className="text-[#D3D3D3] text-xs">Version: {APP_VERSION}</p>
+              <p className="text-muted-foreground text-xs">Version: {APP_VERSION}</p>
             </div>
           </div>
 

@@ -8,14 +8,7 @@ import { useFinance } from "@/contexts/FinanceContext";
 import Breadcrumbs from "@/components/Breadcrumbs";
 import { getPrintHtml } from "@/utils/pdfPrint";
 import ReportPreviewModal from "@/components/ReportPreviewModal";
-
-// ─── COLORS ──────────────────────────────────────────────────────────────────
-const C = {
-  bg:"#0c0e14", bg2:"#0f1117", card:"#13161e", border:"#1e2433",
-  border2:"#2a3347", text:"#fff", text2:"#d1d9e6", muted:"#8b9ab0",
-  faint:"#4a5568", green:"#22c55e", red:"#ef4444", blue:"#3b82f6",
-  cyan:"#22d3ee", yellow:"#eab308", purple:"#a78bfa", orange:"#f97316",
-};
+import { C } from "@/lib/reportTheme";
 
 // ─── SVG ICON ENGINE ─────────────────────────────────────────────────────────
 const Svg = ({ d, s = 18, c = "#fff", sw = 2 }) => (
@@ -69,7 +62,7 @@ const sMap = {
 const Tip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null;
   return (
-    <div style={{ background:"#1a1d27", border:`1px solid ${C.border2}`, borderRadius:12, padding:"12px 16px", boxShadow:"0 8px 32px rgba(0,0,0,.5)" }}>
+    <div style={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:12, padding:"12px 16px", boxShadow:"0 8px 32px rgba(0,0,0,.5)" }}>
       <p style={{ color:C.muted, fontSize:11, margin:"0 0 8px", fontWeight:600 }}>{label}</p>
       {payload.map((p,i) => (
         <div key={i} style={{ display:"flex", alignItems:"center", gap:8, marginBottom:3 }}>
@@ -342,7 +335,7 @@ export default function OverviewReports() {
         ::-webkit-scrollbar { width:4px; }
         ::-webkit-scrollbar-thumb { background:${C.border2}; border-radius:99px; }
         @keyframes fi { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
-        .txrow:hover { background:#1a1d27 !important; }
+        .txrow:hover { background:${C.rowHover} !important; }
       `}</style>
 
       <div style={{ padding:"24px 18px", display:"flex", flexDirection:"column", gap:20, animation:"fi .4s ease" }}>
@@ -365,8 +358,8 @@ export default function OverviewReports() {
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "#1c1e24",
-                  border: "1px solid #303338",
+                  background: C.chromeBg,
+                  border: `1px solid ${C.chromeBorder}`,
                   borderRadius: 8,
                   padding: "9px 16px",
                   color: "#fff",
@@ -385,8 +378,8 @@ export default function OverviewReports() {
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "#1c1e24",
-                  border: "1px solid #303338",
+                  background: C.chromeBg,
+                  border: `1px solid ${C.chromeBorder}`,
                   borderRadius: 8,
                   padding: "9px 16px",
                   color: "#fff",
@@ -405,8 +398,8 @@ export default function OverviewReports() {
                   display: "flex",
                   alignItems: "center",
                   gap: 8,
-                  background: "#1c1e24",
-                  border: "1px solid #303338",
+                  background: C.chromeBg,
+                  border: `1px solid ${C.chromeBorder}`,
                   borderRadius: 8,
                   padding: "9px 16px",
                   color: "#fff",
@@ -539,7 +532,7 @@ export default function OverviewReports() {
                   <Pie data={incomeSources} cx="50%" cy="50%" innerRadius={50} outerRadius={72} dataKey="value" strokeWidth={0}>
                     {incomeSources.map((e,i) => <Cell key={i} fill={e.color}/>)}
                   </Pie>
-                  <Tooltip formatter={v=>`LKR ${v.toLocaleString()}`} contentStyle={{ background:"#1a1d27", border:`1px solid ${C.border2}`, borderRadius:10 }}/>
+                  <Tooltip formatter={v=>`LKR ${v.toLocaleString()}`} contentStyle={{ background:C.card, border:`1px solid ${C.border2}`, borderRadius:10 }}/>
                 </PieChart>
               </ResponsiveContainer>
               <div style={{ display:"flex", flexDirection:"column", gap:8, marginTop:6 }}>

@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
+import { C } from "@/lib/reportTheme";
 
 // ─── MASTERCARD ───────────────────────────────────────────────────────────────
 const MastercardIcon = () => (
@@ -116,7 +117,7 @@ const CashIcon = () => (
 const CustomTooltip = ({ active, payload, label, currency = "" }) => {
   if (active && payload && payload.length) {
     return (
-      <div style={{ background: "#1e2433", border: "1px solid #2a3347", borderRadius: 10, padding: "10px 14px" }}>
+      <div style={{ background: C.border, border: `1px solid ${C.border2}`, borderRadius: 10, padding: "10px 14px" }}>
         <p style={{ color: "#fff", fontWeight: 700, marginBottom: 4, fontSize: 13 }}>{label}</p>
         {payload.map((p, i) => (
           <p key={i} style={{ color: p.color, fontSize: 12, margin: "2px 0" }}>
@@ -142,14 +143,14 @@ const StatCard = ({ icon, iconBg, label, value, badge, badgeColor }) => {
 
   return (
     <div style={{
-      background: "#13161e",
+      background: C.card,
       borderRadius: 16,
       padding: "18px 20px",
       display: "flex",
       alignItems: "center",
       gap: 16,
       flex: 1,
-      border: "1px solid #1e2433",
+      border: `1px solid ${C.border}`,
     }}>
       <div style={{
         width: 44, height: 44, borderRadius: 12,
@@ -159,7 +160,7 @@ const StatCard = ({ icon, iconBg, label, value, badge, badgeColor }) => {
       }}>{icon}</div>
       <div>
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <p style={{ color: "#8b9ab0", fontSize: 12, margin: 0, fontWeight: 500 }}>{label}</p>
+          <p style={{ color: C.muted, fontSize: 12, margin: 0, fontWeight: 500 }}>{label}</p>
           {badge && (
             <span style={{
               background: badgeBg,
@@ -579,16 +580,16 @@ export default function FinanceDashboard() {
       minHeight: "100vh",
       padding: 22,
       fontFamily: "'Inter', -apple-system, BlinkMacSystemFont, sans-serif",
-      color: "#fff",
+      color: C.text,
     },
     card: {
-      background: "#13161e",
+      background: C.card,
       borderRadius: 20,
-      border: "1px solid #1e2433",
+      border: `1px solid ${C.border}`,
       padding: 20,
     },
-    label: { color: "#8b9ab0", fontSize: 12, fontWeight: 500, margin: 0 },
-    val: { color: "#fff", fontSize: 26, fontWeight: 800, margin: "4px 0 0", letterSpacing: "-0.03em" },
+    label: { color: C.muted, fontSize: 12, fontWeight: 500, margin: 0 },
+    val: { color: C.text, fontSize: 26, fontWeight: 800, margin: "4px 0 0", letterSpacing: "-0.03em" },
   };
 
   useEffect(() => {
@@ -615,8 +616,8 @@ export default function FinanceDashboard() {
       <div className="dashboard-container -mx-3 sm:-mx-4 lg:-mx-5" style={s.page}>
       {/* HEADER + DATE RANGE TOGGLE */}
       <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 16, marginTop: -4 }}>
-        <p style={{ color: "#8b9ab0", fontSize: 15, margin: 0, fontWeight: 500 }}>{getGreeting()}, {userName} 👋</p>
-        <div style={{ display: "flex", gap: 6, background: "#1e2433", borderRadius: 10, padding: 4 }}>
+        <p style={{ color: C.muted, fontSize: 15, margin: 0, fontWeight: 500 }}>{getGreeting()}, {userName} 👋</p>
+        <div style={{ display: "flex", gap: 6, background: C.border, borderRadius: 10, padding: 4 }}>
           {DATE_RANGES.map(({ value, label }) => (
             <button
               key={value}
@@ -699,21 +700,21 @@ export default function FinanceDashboard() {
               <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b82f6" }} />
-                  <span style={{ color: "#8b9ab0", fontSize: 12 }}>Income</span>
+                  <span style={{ color: C.muted, fontSize: 12 }}>Income</span>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22d3ee" }} />
-                  <span style={{ color: "#8b9ab0", fontSize: 12 }}>Outcome</span>
+                  <span style={{ color: C.muted, fontSize: 12 }}>Outcome</span>
                 </div>
-                <div style={{ background: "#1e2433", borderRadius: 8, padding: "4px 12px", fontSize: 12, color: "#8b9ab0" }}>
+                <div style={{ background: C.border, borderRadius: 8, padding: "4px 12px", fontSize: 12, color: C.muted }}>
                 {dateRange === "month" ? "Last 8 months" : dateRange === "quarter" ? "Last 8 quarters" : "Last 5 years"}
               </div>
               </div>
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <BarChart data={analyticsData} barGap={4} barCategoryGap={20}>
-                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: "#8b9ab0", fontSize: 12 }} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: "#8b9ab0", fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
+                <XAxis dataKey="month" axisLine={false} tickLine={false} tick={{ fill: C.muted, fontSize: 12 }} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: C.muted, fontSize: 11 }} tickFormatter={v => `${(v / 1000).toFixed(0)}K`} />
                 <Tooltip content={<CustomTooltip currency={settings.currency || ''} />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                 <Bar dataKey="income" radius={[6, 6, 0, 0]} fill="#3b82f6" />
                 <Bar dataKey="outcome" radius={[6, 6, 0, 0]} fill="#22d3ee" opacity={0.7} />
@@ -730,18 +731,18 @@ export default function FinanceDashboard() {
                 <div style={{ display: "flex", gap: 12 }}>
                   <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#3b82f6" }} />
-                    <span style={{ color: "#8b9ab0", fontSize: 11 }}>Earning</span>
+                    <span style={{ color: C.muted, fontSize: 11 }}>Earning</span>
                   </div>
                   <div style={{ display: "flex", alignItems: "center", gap: 5 }}>
                     <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22d3ee" }} />
-                    <span style={{ color: "#8b9ab0", fontSize: 11 }}>Spent</span>
+                    <span style={{ color: C.muted, fontSize: 11 }}>Spent</span>
                   </div>
                 </div>
               </div>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart data={activityData} barGap={2} barCategoryGap={14}>
-                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: "#8b9ab0", fontSize: 11 }} />
-                  <YAxis axisLine={false} tickLine={false} tick={{ fill: "#8b9ab0", fontSize: 10 }} tickFormatter={v => `${settings.currency || ''}${(v / 1000).toFixed(0)}k`} width={30} />
+                  <XAxis dataKey="day" axisLine={false} tickLine={false} tick={{ fill: C.muted, fontSize: 11 }} />
+                  <YAxis axisLine={false} tickLine={false} tick={{ fill: C.muted, fontSize: 10 }} tickFormatter={v => `${settings.currency || ''}${(v / 1000).toFixed(0)}k`} width={30} />
                   <Tooltip content={<CustomTooltip currency={settings.currency || ''} />} cursor={{ fill: "rgba(255,255,255,0.03)" }} />
                   <Bar dataKey="earning" radius={[4, 4, 0, 0]} fill="#3b82f6" />
                   <Bar dataKey="spent" radius={[4, 4, 0, 0]} fill="#22d3ee" opacity={0.7} />
@@ -758,22 +759,22 @@ export default function FinanceDashboard() {
                     <div key={i}>
                       <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 }}>
                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                          <div style={{ width: 32, height: 32, borderRadius: 8, background: "#1e2433", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                          <div style={{ width: 32, height: 32, borderRadius: 8, background: C.border, display: "flex", alignItems: "center", justifyContent: "center" }}>
                             {p.icon}
                           </div>
-                          <span style={{ color: "#d1d9e6", fontSize: 13, fontWeight: 500 }}>{p.label}</span>
+                          <span style={{ color: C.text2, fontSize: 13, fontWeight: 500 }}>{p.label}</span>
                         </div>
-                        <span style={{ color: "#8b9ab0", fontSize: 11 }}>
+                        <span style={{ color: C.muted, fontSize: 11 }}>
                           <span style={{ color: "#fff", fontWeight: 600 }}>{formatCurrency(p.spent)}</span>/{formatCurrency(p.total)}
                         </span>
                       </div>
-                      <div style={{ height: 3, background: "#1e2433", borderRadius: 99 }}>
+                      <div style={{ height: 3, background: C.border, borderRadius: 99 }}>
                         <div style={{ height: 3, background: p.color, borderRadius: 99, width: `${Math.min((p.spent / p.total) * 100, 100)}%` }} />
                       </div>
                     </div>
                   );
                 }) : (
-                  <p style={{ color: "#8b9ab0", fontSize: 12, textAlign: "center", margin: "20px 0" }}>No expense data available</p>
+                  <p style={{ color: C.muted, fontSize: 12, textAlign: "center", margin: "20px 0" }}>No expense data available</p>
                 )}
               </div>
             </div>
@@ -873,7 +874,7 @@ export default function FinanceDashboard() {
                           transition: "all 0.3s ease",
                           background: currentCard === i
                             ? (c.id === 1 ? "#16a34a" : "#3b82f6")
-                            : "#2a3347",
+                            : C.border2,
                         }}
                       />
                     ))}
@@ -881,10 +882,10 @@ export default function FinanceDashboard() {
 
                   {/* Info strip */}
                   <div style={{
-                    background: "#13161e",
+                    background: C.card,
                     borderRadius: 14,
                     padding: "14px 18px",
-                    border: "1px solid #1e2433",
+                    border: `1px solid ${C.border}`,
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "space-between",
@@ -895,7 +896,7 @@ export default function FinanceDashboard() {
                       <>
                         <div style={{ display: "flex", gap: 20 }}>
                           <div>
-                            <p style={{ color: "#8b9ab0", fontSize: 11, margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.07em" }}>My Cash</p>
+                            <p style={{ color: C.muted, fontSize: 11, margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.07em" }}>My Cash</p>
                             <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: 0 }}>Cash in Hand</p>
                           </div>
                         </div>
@@ -916,7 +917,7 @@ export default function FinanceDashboard() {
                       <>
                         <div style={{ display: "flex", gap: 20 }}>
                           <div>
-                            <p style={{ color: "#8b9ab0", fontSize: 11, margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.07em" }}>My card</p>
+                            <p style={{ color: C.muted, fontSize: 11, margin: "0 0 2px", textTransform: "uppercase", letterSpacing: "0.07em" }}>My card</p>
                             <p style={{ color: "#fff", fontSize: 15, fontWeight: 700, margin: 0 }}>Bank Balance</p>
                           </div>
                         </div>
@@ -969,7 +970,7 @@ export default function FinanceDashboard() {
           <div style={s.card}>
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 8 }}>
               <h3 style={{ color: "#fff", fontSize: 14, fontWeight: 700, margin: 0 }}>Activity</h3>
-              <div style={{ background: "#1e2433", borderRadius: 8, padding: "4px 10px", fontSize: 12, color: "#8b9ab0" }}>Month ▾</div>
+              <div style={{ background: C.border, borderRadius: 8, padding: "4px 10px", fontSize: 12, color: C.muted }}>Month ▾</div>
             </div>
             <div style={{ display: "flex", justifyContent: "center" }}>
               <PieChart width={200} height={120}>
@@ -996,14 +997,14 @@ export default function FinanceDashboard() {
               <div style={{ textAlign: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#3b82f6" }} />
-                  <span style={{ color: "#8b9ab0", fontSize: 12 }}>Income</span>
+                  <span style={{ color: C.muted, fontSize: 12 }}>Income</span>
                 </div>
                 <p style={{ color: "#fff", fontWeight: 700, fontSize: 16, margin: "4px 0 0" }}>{activityPercentages.dailyPayment || 0}%</p>
               </div>
               <div style={{ textAlign: "center" }}>
                 <div style={{ display: "flex", alignItems: "center", gap: 6, justifyContent: "center" }}>
                   <div style={{ width: 8, height: 8, borderRadius: "50%", background: "#22d3ee" }} />
-                  <span style={{ color: "#8b9ab0", fontSize: 12 }}>Expenses</span>
+                  <span style={{ color: C.muted, fontSize: 12 }}>Expenses</span>
                 </div>
                 <p style={{ color: "#fff", fontWeight: 700, fontSize: 16, margin: "4px 0 0" }}>{activityPercentages.hobby || 0}%</p>
               </div>

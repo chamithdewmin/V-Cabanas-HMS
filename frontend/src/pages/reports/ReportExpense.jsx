@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/use-toast';
 import ExportReportDialog from '@/components/ExportReportDialog';
 import ReportPreviewModal from '@/components/ReportPreviewModal';
 import { getPrintHtml } from '@/utils/pdfPrint';
+import { C, REPORT_EXPENSE_SCALE } from '@/lib/reportTheme';
 
 const filterByRange = (items, range, dateKey = 'date') => {
   if (!range) return items;
@@ -29,7 +30,7 @@ const filterByRange = (items, range, dateKey = 'date') => {
   });
 };
 
-const COLORS = ['#ef4444', '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d', '#450a0a'];
+const COLORS = REPORT_EXPENSE_SCALE;
 
 const ReportExpense = () => {
   const { expenses, settings, loadData } = useFinance();
@@ -101,8 +102,8 @@ const ReportExpense = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: "#1c1e24",
-                border: "1px solid #303338",
+                background: C.chromeBg,
+                border: `1px solid ${C.chromeBorder}`,
                 borderRadius: 8,
                 padding: "9px 16px",
                 color: "#fff",
@@ -121,8 +122,8 @@ const ReportExpense = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: "#1c1e24",
-                border: "1px solid #303338",
+                background: C.chromeBg,
+                border: `1px solid ${C.chromeBorder}`,
                 borderRadius: 8,
                 padding: "9px 16px",
                 color: "#fff",
@@ -141,8 +142,8 @@ const ReportExpense = () => {
                 display: "flex",
                 alignItems: "center",
                 gap: 8,
-                background: "#1c1e24",
-                border: "1px solid #303338",
+                background: C.chromeBg,
+                border: `1px solid ${C.chromeBorder}`,
                 borderRadius: 8,
                 padding: "9px 16px",
                 color: "#fff",

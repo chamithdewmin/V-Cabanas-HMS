@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { getPrintHtml } from '@/utils/pdfPrint';
 import ReportPreviewModal from '@/components/ReportPreviewModal';
+import { C, REPORT_ORANGE_SCALE } from '@/lib/reportTheme';
 
 const DATE_RANGES = [
   { value: 'month', label: 'This month' },
@@ -88,7 +89,7 @@ const Reports = () => {
     return income - expense;
   }, [incomes, expenses, rangeBounds]);
 
-  const COLORS = ['#ff6a00', '#ff8533', '#ffa366', '#ffc199', '#ffd9cc'];
+  const COLORS = REPORT_ORANGE_SCALE;
 
   const handleExport = () => {
     const headers = ['Period', 'Income', 'Expenses', 'Profit'];
@@ -214,19 +215,19 @@ const Reports = () => {
             <h2 className="text-xl font-bold mb-4">Cash Flow (Income vs Expenses)</h2>
             <ResponsiveContainer width="100%" height={300}>
               <LineChart data={profitTrend}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#1f2933" />
-                <XAxis dataKey="date" stroke="#bfc9d1" />
-                <YAxis stroke="#bfc9d1" />
+                <CartesianGrid strokeDasharray="3 3" stroke={C.border} />
+                <XAxis dataKey="date" stroke={C.text2} />
+                <YAxis stroke={C.text2} />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#111316',
-                    border: '1px solid #1f2933',
+                    backgroundColor: C.card,
+                    border: `1px solid ${C.border}`,
                     borderRadius: '0.5rem',
                   }}
                 />
-                <Line type="monotone" dataKey="income" stroke="#22c55e" strokeWidth={2} name="Income" />
-                <Line type="monotone" dataKey="expenses" stroke="#ef4444" strokeWidth={2} name="Expenses" />
-                <Line type="monotone" dataKey="profit" stroke="#3b82f6" strokeWidth={2} name="Profit" />
+                <Line type="monotone" dataKey="income" stroke={C.green} strokeWidth={2} name="Income" />
+                <Line type="monotone" dataKey="expenses" stroke={C.red} strokeWidth={2} name="Expenses" />
+                <Line type="monotone" dataKey="profit" stroke={C.blue} strokeWidth={2} name="Profit" />
               </LineChart>
             </ResponsiveContainer>
           </motion.div>
@@ -249,7 +250,7 @@ const Reports = () => {
                     labelLine={false}
                     label={({ category, percent }) => `${category} ${(percent * 100).toFixed(0)}%`}
                     outerRadius={100}
-                    fill="#8884d8"
+                    fill={C.purple}
                     dataKey="amount"
                   >
                     {expenseByCategory.map((entry, index) => (
@@ -258,8 +259,8 @@ const Reports = () => {
                   </Pie>
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#111316',
-                      border: '1px solid #1f2933',
+                      backgroundColor: C.card,
+                      border: `1px solid ${C.border}`,
                       borderRadius: '0.5rem',
                     }}
                   />
