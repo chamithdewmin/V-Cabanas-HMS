@@ -43,7 +43,8 @@ export const Sidebar = React.forwardRef(
         data-collapsible={collapsible}
         data-state={isIconOnly ? 'collapsed' : 'expanded'}
         className={cn(
-          'fixed top-0 left-0 z-50 flex h-screen flex-col border-r border-border bg-card dark:bg-[#13161e] transition-[width] duration-300 ease-sidebar pt-[env(safe-area-inset-top)]',
+          'fixed z-50 flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-lg dark:bg-[#13161e] transition-[width] duration-300 ease-sidebar',
+          'left-3 top-[max(0.75rem,env(safe-area-inset-top))] bottom-[max(0.75rem,env(safe-area-inset-bottom))]',
           open ? 'translate-x-0' : '-translate-x-full lg:translate-x-0',
           isIconOnly ? 'w-[56px]' : 'w-[240px] max-w-[85vw]',
           className
@@ -117,7 +118,7 @@ export function SidebarInset({ className, ...props }) {
     <main
       className={cn(
         'flex flex-1 flex-col min-w-0 transition-[margin] duration-300 ease-sidebar',
-        'lg:ml-[240px] group-data-[state=collapsed]/sidebar-wrapper:lg:ml-[56px]',
+        'lg:ml-[252px] group-data-[state=collapsed]/sidebar-wrapper:lg:ml-[68px]',
         className
       )}
       {...props}
