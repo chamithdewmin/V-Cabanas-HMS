@@ -1,15 +1,12 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { motion } from 'framer-motion';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
 import { AlertCircle, Eye, EyeOff } from 'lucide-react';
 import loginBackground from '@/assets/login-background.webp';
 import loginLogo from '@/assets/login logo.png';
 import { APP_VERSION } from '@/constants';
+import './Login.css';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -45,98 +42,128 @@ const Login = () => {
         <meta name="description" content="Login to V Cabanas HMS business management system" />
       </Helmet>
 
-      <div
-        className="min-h-screen flex items-center justify-center p-6 bg-cover bg-center bg-no-repeat"
-        style={{ backgroundImage: `url(${loginBackground})` }}
-      >
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="w-full max-w-md"
-        >
-          <div className="bg-card text-card-foreground rounded-3xl border border-border shadow-xl p-8 sm:p-10">
-            <div className="flex justify-center mb-6">
-              <img src={loginLogo} alt="V Cabanas HMS" className="h-10 object-contain" />
+      <div className="login-page">
+        <div className="page">
+          <section
+            className="hero a1"
+            style={{ backgroundImage: `url(${loginBackground})` }}
+          >
+            <div className="hero-bg" aria-hidden="true" />
+
+            <header className="nav a2">
+              <Link to="/login" className="logo">
+                <img src={loginLogo} alt="" className="logo-image" width={32} height={32} />
+                <span className="logo-text">
+                  V Cabanas <span>HMS</span>
+                </span>
+              </Link>
+              <p className="hotline">
+                <strong>Support</strong> · Business operations
+              </p>
+            </header>
+
+            <div className="hero-inner a3">
+              <p className="eyebrow">Hotel management</p>
+              <h1 className="headline">
+                Calm control for <em>every</em> stay.
+              </h1>
+              <p className="tagline">
+                Invoices, bookings, cash flow, and reports in one place—built for teams who run
+                properties without the spreadsheet chaos.
+              </p>
             </div>
-            <h2 className="text-xl font-bold text-foreground mb-8 text-center">Login to your Account</h2>
 
-            {error && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-destructive/10 border border-destructive/30 rounded-lg p-3 flex items-center gap-2 mb-6"
-                role="alert"
-              >
-                <AlertCircle className="w-5 h-5 text-destructive flex-shrink-0" />
-                <span className="text-sm text-destructive">{error}</span>
-              </motion.div>
-            )}
+            <footer className="hero-footer a4">
+              <a href="#">Privacy</a>
+              <a href="#">Terms</a>
+              <a href="#">Contact</a>
+            </footer>
+          </section>
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-foreground">Business Email</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="hello@yourcompany.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-12 bg-background border-input text-foreground placeholder:text-muted-foreground"
-                />
-              </div>
+          <section className="panel">
+            <div className="panel-inner">
+              <p className="panel-eyebrow p1">Secure access</p>
+              <h2 className="panel-title p2">Welcome back</h2>
+              <p className="panel-sub p3">Sign in with your business email and password.</p>
 
-              <div className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <Label htmlFor="password" className="text-foreground">Password</Label>
-                  <Link to="/forgot-password" className="text-sm text-primary hover:text-primary/90">
-                    Forgot Password?
+              <form onSubmit={handleSubmit} noValidate>
+                <div className="form-group p4">
+                  <label htmlFor="login-email" className="form-label">
+                    Business email
+                  </label>
+                  <input
+                    id="login-email"
+                    name="email"
+                    type="email"
+                    autoComplete="email"
+                    placeholder="hello@yourcompany.com"
+                    className="form-input"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                  />
+                </div>
+
+                <div className="form-group p5">
+                  <label htmlFor="login-password" className="form-label">
+                    Password
+                  </label>
+                  <div className="password-input-wrapper">
+                    <input
+                      id="login-password"
+                      name="password"
+                      type={showPassword ? 'text' : 'password'}
+                      autoComplete="current-password"
+                      placeholder="••••••••"
+                      className="form-input"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle-btn"
+                      onClick={() => setShowPassword((s) => !s)}
+                      aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    >
+                      {showPassword ? <EyeOff size={18} strokeWidth={2} /> : <Eye size={18} strokeWidth={2} />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="forgot-link-row p5">
+                  <Link to="/forgot-password" className="forgot-link">
+                    Forgot password?
                   </Link>
                 </div>
-                <div className="relative">
-                  <Input
-                    id="password"
-                    type={showPassword ? 'text' : 'password'}
-                    placeholder="••••••••"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="h-12 bg-background border-input text-foreground placeholder:text-muted-foreground pr-10"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
-                  >
-                    {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                  </button>
+
+                <button type="submit" className="submit-btn p6" disabled={loading}>
+                  {loading ? 'Signing in…' : 'Sign in'}
+                </button>
+              </form>
+
+              <p className="panel-bottom p6">
+                New to V Cabanas HMS?{' '}
+                <a href="#" onClick={(e) => e.preventDefault()}>
+                  Request access
+                </a>
+              </p>
+
+              <p className="note-text">Version {APP_VERSION}</p>
+            </div>
+
+            {error ? (
+              <div className="login-notifications" role="alert">
+                <div className="login-notification login-notification--error">
+                  <span className="login-notification-icon">
+                    <AlertCircle size={18} strokeWidth={2} />
+                  </span>
+                  <span className="login-notification-text">{error}</span>
                 </div>
               </div>
-
-              <Button
-                type="submit"
-                disabled={loading}
-                className="w-full h-12 bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg transition-colors"
-              >
-                {loading ? 'Signing in...' : 'Sign in'}
-              </Button>
-            </form>
-
-            <p className="text-center text-muted-foreground mt-6 text-sm">
-              New to V Cabanas HMS?{' '}
-              <a href="#" className="text-primary hover:text-primary/90 font-medium">
-                Sign Up
-              </a>
-            </p>
-
-            <div className="text-center mt-4">
-              <p className="text-muted-foreground text-xs">Version: {APP_VERSION}</p>
-            </div>
-          </div>
-
-        </motion.div>
+            ) : null}
+          </section>
+        </div>
       </div>
     </>
   );
