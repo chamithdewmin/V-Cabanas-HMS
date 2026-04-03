@@ -135,36 +135,42 @@ export default function ReportMonthly() {
           </Button>
         </div>
 
-        <div className="flex flex-wrap items-end gap-4 rounded-lg border border-secondary bg-card p-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="report-year">Year</Label>
-            <select
-              id="report-year"
-              value={year}
-              onChange={(e) => setYear(Number(e.target.value))}
-              className="min-w-[8rem] rounded-md border border-secondary bg-secondary px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              {yearOptions.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="report-month">Month</Label>
-            <select
-              id="report-month"
-              value={month}
-              onChange={(e) => setMonth(Number(e.target.value))}
-              className="min-w-[10rem] rounded-md border border-secondary bg-secondary px-3 py-2 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-            >
-              {MONTHS.map((m) => (
-                <option key={m.value} value={m.value}>
-                  {m.label}
-                </option>
-              ))}
-            </select>
+        <div className="rounded-lg border border-secondary bg-card p-4">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-start sm:gap-x-10 sm:gap-y-0 sm:max-w-md">
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="report-year" className="block">
+                Year
+              </Label>
+              <select
+                id="report-year"
+                value={year}
+                onChange={(e) => setYear(Number(e.target.value))}
+                className="h-10 min-w-[8rem] w-full rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
+              >
+                {yearOptions.map((y) => (
+                  <option key={y} value={y}>
+                    {y}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1.5">
+              <Label htmlFor="report-month" className="block">
+                Month
+              </Label>
+              <select
+                id="report-month"
+                value={month}
+                onChange={(e) => setMonth(Number(e.target.value))}
+                className="h-10 min-w-[10rem] w-full rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 sm:w-auto"
+              >
+                {MONTHS.map((m) => (
+                  <option key={m.value} value={m.value}>
+                    {m.label}
+                  </option>
+                ))}
+              </select>
+            </div>
           </div>
         </div>
 
