@@ -179,13 +179,13 @@ export default function ReportMonthly() {
             <table className="w-full">
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">No</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Check in date</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Booking price</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Booking.com price</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Manager commission</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">TOTAL</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-left">No</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-left">Name</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-left">Check in date</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">Booking price</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">Booking.com price</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">Manager commission</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">TOTAL</th>
                 </tr>
               </thead>
               <tbody>
