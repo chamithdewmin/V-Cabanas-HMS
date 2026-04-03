@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 import { encrypt, decrypt } from '../lib/crypto.js';
 import { sendError, validateId } from '../utils/api.js';
 
@@ -82,7 +83,11 @@ const toInvoice = (row) => {
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rows } = await pool.query('SELECT * FROM invoices WHERE user_id = $1 ORDER BY created_at DESC', [uid]);
+    const adm = isAdmin(req);
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM invoices ORDER BY created_at DESC' : 'SELECT * FROM invoices WHERE user_id = $1 ORDER BY created_at DESC',
+      adm ? [] : [uid]
+    );
     res.json(rows.map(toInvoice));
   } catch (err) {
     console.error(err);
@@ -95,8 +100,14 @@ router.get('/:id', async (req, res) => {
     const idErr = validateId(req.params.id);
     if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { id } = req.params;
-    const { rows } = await pool.query('SELECT * FROM invoices WHERE (id = $1 OR invoice_number = $1) AND user_id = $2', [id, uid]);
+    const { rows } = await pool.query(
+      adm
+        ? 'SELECT * FROM invoices WHERE id = $1 OR invoice_number = $1'
+        : 'SELECT * FROM invoices WHERE (id = $1 OR invoice_number = $1) AND user_id = $2',
+      adm ? [id] : [id, uid]
+    );
     if (!rows[0]) return sendError(res, 404, 'Invoice not found');
     res.json(toInvoice(rows[0]));
   } catch (err) {
@@ -177,10 +188,18 @@ router.patch('/:id/status', async (req, res) => {
     const idErr = validateId(req.params.id);
     if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { id } = req.params;
     const { status } = req.body;
-    await pool.query('UPDATE invoices SET status = $2 WHERE id = $1 AND user_id = $3', [id, status, uid]);
-    const { rows } = await pool.query('SELECT * FROM invoices WHERE id = $1 AND user_id = $2', [id, uid]);
+    if (adm) {
+      await pool.query('UPDATE invoices SET status = $2 WHERE id = $1', [id, status]);
+    } else {
+      await pool.query('UPDATE invoices SET status = $2 WHERE id = $1 AND user_id = $3', [id, status, uid]);
+    }
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM invoices WHERE id = $1' : 'SELECT * FROM invoices WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
+    );
     if (!rows[0]) return sendError(res, 404, 'Not found');
     res.json(toInvoice(rows[0]));
   } catch (err) {
@@ -194,7 +213,11 @@ router.delete('/:id', async (req, res) => {
     const idErr = validateId(req.params.id);
     if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
-    const { rowCount } = await pool.query('DELETE FROM invoices WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
+    const adm = isAdmin(req);
+    const { rowCount } = await pool.query(
+      adm ? 'DELETE FROM invoices WHERE id = $1' : 'DELETE FROM invoices WHERE id = $1 AND user_id = $2',
+      adm ? [req.params.id] : [req.params.id, uid]
+    );
     if (rowCount === 0) return sendError(res, 404, 'Not found');
     res.json({ success: true });
   } catch (err) {

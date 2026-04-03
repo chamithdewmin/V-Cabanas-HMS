@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 import { sendError, validateId } from '../utils/api.js';
 
 const router = express.Router();
@@ -19,7 +20,11 @@ const toClient = (row) => ({
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rows } = await pool.query('SELECT * FROM clients WHERE user_id = $1 ORDER BY created_at DESC', [uid]);
+    const adm = isAdmin(req);
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM clients ORDER BY created_at DESC' : 'SELECT * FROM clients WHERE user_id = $1 ORDER BY created_at DESC',
+      adm ? [] : [uid]
+    );
     res.json(rows.map(toClient));
   } catch (err) {
     console.error(err);
@@ -53,13 +58,24 @@ router.put('/:id', async (req, res) => {
     const idErr = validateId(req.params.id);
     if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { id } = req.params;
     const { name, email, phone, address } = req.body;
-    await pool.query(
-      'UPDATE clients SET name = COALESCE($2, name), email = COALESCE($3, email), phone = COALESCE($4, phone), address = COALESCE($5, address) WHERE id = $1 AND user_id = $6',
-      [id, name, email, phone, address, uid]
+    if (adm) {
+      await pool.query(
+        'UPDATE clients SET name = COALESCE($2, name), email = COALESCE($3, email), phone = COALESCE($4, phone), address = COALESCE($5, address) WHERE id = $1',
+        [id, name, email, phone, address]
+      );
+    } else {
+      await pool.query(
+        'UPDATE clients SET name = COALESCE($2, name), email = COALESCE($3, email), phone = COALESCE($4, phone), address = COALESCE($5, address) WHERE id = $1 AND user_id = $6',
+        [id, name, email, phone, address, uid]
+      );
+    }
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM clients WHERE id = $1' : 'SELECT * FROM clients WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
     );
-    const { rows } = await pool.query('SELECT * FROM clients WHERE id = $1 AND user_id = $2', [id, uid]);
     if (!rows[0]) return sendError(res, 404, 'Not found');
     res.json(toClient(rows[0]));
   } catch (err) {
@@ -73,7 +89,11 @@ router.delete('/:id', async (req, res) => {
     const idErr = validateId(req.params.id);
     if (idErr) return sendError(res, 400, idErr);
     const uid = req.user.id;
-    const { rowCount } = await pool.query('DELETE FROM clients WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
+    const adm = isAdmin(req);
+    const { rowCount } = await pool.query(
+      adm ? 'DELETE FROM clients WHERE id = $1' : 'DELETE FROM clients WHERE id = $1 AND user_id = $2',
+      adm ? [req.params.id] : [req.params.id, uid]
+    );
     if (rowCount === 0) return sendError(res, 404, 'Not found');
     res.json({ success: true });
   } catch (err) {

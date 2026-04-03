@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -57,13 +58,16 @@ async function getAddonsForBooking(pool, bookingId) {
 router.get('/for-invoice', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const clientId = req.query.clientId;
     if (!clientId) {
       return res.status(400).json({ error: 'clientId is required' });
     }
     const { rows: bookingRows } = await pool.query(
-      'SELECT * FROM bookings WHERE user_id = $1 AND client_id = $2 ORDER BY created_at DESC LIMIT 1',
-      [uid, clientId]
+      adm
+        ? 'SELECT * FROM bookings WHERE client_id = $1 ORDER BY created_at DESC LIMIT 1'
+        : 'SELECT * FROM bookings WHERE user_id = $1 AND client_id = $2 ORDER BY created_at DESC LIMIT 1',
+      adm ? [clientId] : [uid, clientId]
     );
     if (!bookingRows[0]) {
       return res.json({ booking: null, addons: [], client: null });
@@ -71,8 +75,10 @@ router.get('/for-invoice', async (req, res) => {
     const booking = bookingRows[0];
     const addons = await getAddonsForBooking(pool, booking.id);
     const { rows: clientRows } = await pool.query(
-      'SELECT id, name, email, phone FROM clients WHERE id = $1 AND user_id = $2',
-      [clientId, uid]
+      adm
+        ? 'SELECT id, name, email, phone FROM clients WHERE id = $1'
+        : 'SELECT id, name, email, phone FROM clients WHERE id = $1 AND user_id = $2',
+      adm ? [clientId] : [clientId, uid]
     );
     const client = clientRows[0] || null;
     res.json({
@@ -95,9 +101,10 @@ router.get('/for-invoice', async (req, res) => {
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { rows } = await pool.query(
-      'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
-      [uid]
+      adm ? 'SELECT * FROM bookings ORDER BY created_at DESC' : 'SELECT * FROM bookings WHERE user_id = $1 ORDER BY created_at DESC',
+      adm ? [] : [uid]
     );
     const result = [];
     for (const row of rows) {
@@ -165,18 +172,33 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const role = (req.user.role || '').toLowerCase();
     const ratePct = req.user.commission_rate_pct;
     const { id } = req.params;
     const d = req.body;
     const priceParam = d.price != null ? Number(d.price) : null;
-    const { rows: existing } = await pool.query('SELECT price FROM bookings WHERE id = $1 AND user_id = $2', [id, uid]);
+    const { rows: existing } = await pool.query(
+      adm ? 'SELECT price, user_id FROM bookings WHERE id = $1' : 'SELECT price, user_id FROM bookings WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
+    );
     if (!existing[0]) return res.status(404).json({ error: 'Not found' });
     const price = priceParam != null ? priceParam : parseFloat(existing[0].price) || 0;
-    const staffCommissionAmount = computeStaffCommission(role, ratePct, price);
+    let ownerRole = role;
+    let ownerRate = ratePct;
+    if (adm && existing[0].user_id != null) {
+      const { rows: urows } = await pool.query(
+        `SELECT COALESCE(role, 'receptionist') AS role, COALESCE(commission_rate_pct, 10) AS commission_rate_pct FROM users WHERE id = $1`,
+        [existing[0].user_id]
+      );
+      if (urows[0]) {
+        ownerRole = urows[0].role;
+        ownerRate = urows[0].commission_rate_pct;
+      }
+    }
+    const staffCommissionAmount = computeStaffCommission(ownerRole, ownerRate, price);
     const clientId = d.clientId !== undefined ? (d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null) : undefined;
-    const updates = [
-      id,
+    const rowFields = [
       d.customerName != null ? String(d.customerName).trim() : null,
       d.roomNumber != null ? String(d.roomNumber).trim() : null,
       d.adults != null ? parseInt(d.adults, 10) : null,
@@ -188,10 +210,31 @@ router.put('/:id', async (req, res) => {
       d.checkOut || null,
       d.price != null ? Number(d.price) : null,
       d.bookingComCommission != null ? Number(d.bookingComCommission) : null,
-      uid,
-      staffCommissionAmount,
     ];
-    let query = `UPDATE bookings SET
+    if (adm) {
+      const updatesAdm = [id, ...rowFields, staffCommissionAmount];
+      let q = `UPDATE bookings SET
+        customer_name = COALESCE($2, customer_name),
+        room_number = COALESCE($3, room_number),
+        adults = COALESCE($4, adults),
+        children = COALESCE($5, children),
+        room_category = COALESCE($6, room_category),
+        room_feature = COALESCE($7, room_feature),
+        room_type = COALESCE($8, room_type),
+        check_in = COALESCE($9, check_in),
+        check_out = COALESCE($10, check_out),
+        price = COALESCE($11, price),
+        booking_com_commission = COALESCE($12, booking_com_commission),
+        staff_commission_amount = $13`;
+      if (clientId !== undefined) {
+        q += ', client_id = $14';
+        updatesAdm.push(clientId);
+      }
+      q += ' WHERE id = $1';
+      await pool.query(q, updatesAdm);
+    } else {
+      const updates = [id, ...rowFields, uid, staffCommissionAmount];
+      let query = `UPDATE bookings SET
         customer_name = COALESCE($2, customer_name),
         room_number = COALESCE($3, room_number),
         adults = COALESCE($4, adults),
@@ -204,12 +247,13 @@ router.put('/:id', async (req, res) => {
         price = COALESCE($11, price),
         booking_com_commission = COALESCE($12, booking_com_commission),
         staff_commission_amount = $14`;
-    if (clientId !== undefined) {
-      query += ', client_id = $15';
-      updates.push(clientId);
+      if (clientId !== undefined) {
+        query += ', client_id = $15';
+        updates.push(clientId);
+      }
+      query += ` WHERE id = $1 AND user_id = $13`;
+      await pool.query(query, updates);
     }
-    query += ` WHERE id = $1 AND user_id = $13`;
-    await pool.query(query, updates);
     if (Array.isArray(d.addons)) {
       await pool.query('DELETE FROM booking_addons WHERE booking_id = $1', [id]);
       for (const a of d.addons) {
@@ -224,7 +268,10 @@ router.put('/:id', async (req, res) => {
       }
     }
     const addonsRows = await getAddonsForBooking(pool, id);
-    const { rows } = await pool.query('SELECT * FROM bookings WHERE id = $1 AND user_id = $2', [id, uid]);
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM bookings WHERE id = $1' : 'SELECT * FROM bookings WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
+    );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     res.json(toBooking(rows[0], addonsRows));
   } catch (err) {
@@ -236,7 +283,11 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rowCount } = await pool.query('DELETE FROM bookings WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
+    const adm = isAdmin(req);
+    const { rowCount } = await pool.query(
+      adm ? 'DELETE FROM bookings WHERE id = $1' : 'DELETE FROM bookings WHERE id = $1 AND user_id = $2',
+      adm ? [req.params.id] : [req.params.id, uid]
+    );
     if (rowCount === 0) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
   } catch (err) {

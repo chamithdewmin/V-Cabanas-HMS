@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -24,7 +25,11 @@ const toCar = (row) => ({
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rows } = await pool.query('SELECT * FROM cars WHERE user_id = $1 ORDER BY id', [uid]);
+    const adm = isAdmin(req);
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM cars ORDER BY id' : 'SELECT * FROM cars WHERE user_id = $1 ORDER BY id',
+      adm ? [] : [uid]
+    );
     res.json(rows.map(toCar));
   } catch (err) {
     console.error(err);
@@ -68,16 +73,31 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { id } = req.params;
     const d = req.body;
-    await pool.query(
-      `UPDATE cars SET make = COALESCE($2, make), model = COALESCE($3, model), year = COALESCE($4, year), price = COALESCE($5, price),
-       colors = COALESCE($6, colors), stock = COALESCE($7, stock), images = COALESCE($8, images), vin = COALESCE($9, vin),
-       condition = COALESCE($10, condition), mileage = COALESCE($11, mileage), transmission = COALESCE($12, transmission), fuel_type = COALESCE($13, fuel_type)
-       WHERE id = $1 AND user_id = $14`,
-      [id, d.make, d.model, d.year, d.price ? Number(d.price) : null, d.colors ? JSON.stringify(d.colors) : null, d.stock, d.images ? JSON.stringify(d.images) : null, d.vin, d.condition, d.mileage, d.transmission, d.fuelType, uid]
+    const params = [id, d.make, d.model, d.year, d.price ? Number(d.price) : null, d.colors ? JSON.stringify(d.colors) : null, d.stock, d.images ? JSON.stringify(d.images) : null, d.vin, d.condition, d.mileage, d.transmission, d.fuelType];
+    if (adm) {
+      await pool.query(
+        `UPDATE cars SET make = COALESCE($2, make), model = COALESCE($3, model), year = COALESCE($4, year), price = COALESCE($5, price),
+         colors = COALESCE($6, colors), stock = COALESCE($7, stock), images = COALESCE($8, images), vin = COALESCE($9, vin),
+         condition = COALESCE($10, condition), mileage = COALESCE($11, mileage), transmission = COALESCE($12, transmission), fuel_type = COALESCE($13, fuel_type)
+         WHERE id = $1`,
+        params
+      );
+    } else {
+      await pool.query(
+        `UPDATE cars SET make = COALESCE($2, make), model = COALESCE($3, model), year = COALESCE($4, year), price = COALESCE($5, price),
+         colors = COALESCE($6, colors), stock = COALESCE($7, stock), images = COALESCE($8, images), vin = COALESCE($9, vin),
+         condition = COALESCE($10, condition), mileage = COALESCE($11, mileage), transmission = COALESCE($12, transmission), fuel_type = COALESCE($13, fuel_type)
+         WHERE id = $1 AND user_id = $14`,
+        [...params, uid]
+      );
+    }
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM cars WHERE id = $1' : 'SELECT * FROM cars WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
     );
-    const { rows } = await pool.query('SELECT * FROM cars WHERE id = $1 AND user_id = $2', [id, uid]);
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     res.json(toCar(rows[0]));
   } catch (err) {
@@ -89,7 +109,11 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rowCount } = await pool.query('DELETE FROM cars WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
+    const adm = isAdmin(req);
+    const { rowCount } = await pool.query(
+      adm ? 'DELETE FROM cars WHERE id = $1' : 'DELETE FROM cars WHERE id = $1 AND user_id = $2',
+      adm ? [req.params.id] : [req.params.id, uid]
+    );
     if (rowCount === 0) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
   } catch (err) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
+import { Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, UserPlus, Pencil, Trash2, MoreHorizontal, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -7,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const PROTECTED_EMAIL = 'logozodev@gmail.com';
 const ROLE_ADMIN = 'admin';
@@ -15,6 +17,7 @@ const ROLE_RECEPTIONIST = 'receptionist';
 const PER_PAGE = 10;
 
 const Users = () => {
+  const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -188,6 +191,10 @@ const Users = () => {
     }
     if (currentPage < totalPages - 2) pageNumbers.push('...');
     if (totalPages > 1) pageNumbers.push(totalPages);
+  }
+
+  if ((user?.role || '').toLowerCase() !== 'admin') {
+    return <Navigate to="/dashboard" replace />;
   }
 
   return (

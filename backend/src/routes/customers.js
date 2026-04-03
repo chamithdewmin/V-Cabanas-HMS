@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -17,7 +18,11 @@ const toCustomer = (row) => ({
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rows } = await pool.query('SELECT * FROM customers WHERE user_id = $1 ORDER BY id', [uid]);
+    const adm = isAdmin(req);
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM customers ORDER BY id' : 'SELECT * FROM customers WHERE user_id = $1 ORDER BY id',
+      adm ? [] : [uid]
+    );
     res.json(rows.map(toCustomer));
   } catch (err) {
     console.error(err);
@@ -45,13 +50,25 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { id } = req.params;
     const d = req.body;
-    await pool.query(
-      'UPDATE customers SET name = COALESCE($2, name), email = COALESCE($3, email), phone = COALESCE($4, phone), address = COALESCE($5, address), purchase_history = COALESCE($6, purchase_history) WHERE id = $1 AND user_id = $7',
-      [id, d.name, d.email, d.phone, d.address, d.purchaseHistory ? JSON.stringify(d.purchaseHistory) : null, uid]
+    const p = [id, d.name, d.email, d.phone, d.address, d.purchaseHistory ? JSON.stringify(d.purchaseHistory) : null];
+    if (adm) {
+      await pool.query(
+        'UPDATE customers SET name = COALESCE($2, name), email = COALESCE($3, email), phone = COALESCE($4, phone), address = COALESCE($5, address), purchase_history = COALESCE($6, purchase_history) WHERE id = $1',
+        p
+      );
+    } else {
+      await pool.query(
+        'UPDATE customers SET name = COALESCE($2, name), email = COALESCE($3, email), phone = COALESCE($4, phone), address = COALESCE($5, address), purchase_history = COALESCE($6, purchase_history) WHERE id = $1 AND user_id = $7',
+        [...p, uid]
+      );
+    }
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM customers WHERE id = $1' : 'SELECT * FROM customers WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
     );
-    const { rows } = await pool.query('SELECT * FROM customers WHERE id = $1 AND user_id = $2', [id, uid]);
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     res.json(toCustomer(rows[0]));
   } catch (err) {
@@ -63,7 +80,11 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rowCount } = await pool.query('DELETE FROM customers WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
+    const adm = isAdmin(req);
+    const { rowCount } = await pool.query(
+      adm ? 'DELETE FROM customers WHERE id = $1' : 'DELETE FROM customers WHERE id = $1 AND user_id = $2',
+      adm ? [req.params.id] : [req.params.id, uid]
+    );
     if (rowCount === 0) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
   } catch (err) {

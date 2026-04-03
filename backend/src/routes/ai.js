@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -376,7 +377,7 @@ RESPONSE FORMAT FOR CALCULATIONS AND HOW-TO:
 /**
  * Build a financial summary for the current user from the database (no PII).
  */
-async function getFinancialSummary(uid) {
+async function getFinancialSummary(uid, isAdminUser) {
   const now = new Date();
   const thisYear = now.getFullYear();
   const thisMonth = now.getMonth();
@@ -399,10 +400,22 @@ async function getFinancialSummary(uid) {
     transfersRows,
     settingsRows,
   ] = await Promise.all([
-    pool.query('SELECT amount, date, payment_method FROM incomes WHERE user_id = $1', [uid]),
-    pool.query('SELECT amount, date, payment_method, category FROM expenses WHERE user_id = $1', [uid]),
-    pool.query('SELECT total, status, subtotal, tax_amount FROM invoices WHERE user_id = $1', [uid]),
-    pool.query('SELECT from_account, to_account, amount FROM transfers WHERE user_id = $1', [uid]),
+    pool.query(
+      isAdminUser ? 'SELECT amount, date, payment_method FROM incomes' : 'SELECT amount, date, payment_method FROM incomes WHERE user_id = $1',
+      isAdminUser ? [] : [uid]
+    ),
+    pool.query(
+      isAdminUser ? 'SELECT amount, date, payment_method, category FROM expenses' : 'SELECT amount, date, payment_method, category FROM expenses WHERE user_id = $1',
+      isAdminUser ? [] : [uid]
+    ),
+    pool.query(
+      isAdminUser ? 'SELECT total, status, subtotal, tax_amount FROM invoices' : 'SELECT total, status, subtotal, tax_amount FROM invoices WHERE user_id = $1',
+      isAdminUser ? [] : [uid]
+    ),
+    pool.query(
+      isAdminUser ? 'SELECT from_account, to_account, amount FROM transfers' : 'SELECT from_account, to_account, amount FROM transfers WHERE user_id = $1',
+      isAdminUser ? [] : [uid]
+    ),
     pool.query('SELECT tax_rate, tax_enabled, business_name, currency FROM settings WHERE user_id = $1', [uid]),
   ]);
 
@@ -559,7 +572,7 @@ async function callAI(messages) {
 router.post('/suggestions', async (req, res) => {
   try {
     const uid = req.user.id;
-    const summary = await getFinancialSummary(uid);
+    const summary = await getFinancialSummary(uid, isAdmin(req));
 
     const systemPrompt = `You are an expert financial advisor and V Cabanas HMS system specialist. You help small business owners make smart financial decisions and master the V Cabanas HMS platform.
 
@@ -625,7 +638,7 @@ router.post('/ask', async (req, res) => {
       return res.status(400).json({ error: 'Question is required' });
     }
 
-    const summary = await getFinancialSummary(uid);
+    const summary = await getFinancialSummary(uid, isAdmin(req));
 
     const systemPrompt = `You are an expert V Cabanas HMS advisor and financial consultant. You're deeply trained on every feature, benefit, and best practice of the V Cabanas HMS system. Your goal: help users master the platform and make excellent financial decisions with clear, step-by-step answers and accurate calculations.
 
@@ -685,7 +698,7 @@ Remember: Deliver complete, accurate, ready-to-use answers. Use step-by-step log
 router.get('/summary', async (req, res) => {
   try {
     const uid = req.user.id;
-    const summary = await getFinancialSummary(uid);
+    const summary = await getFinancialSummary(uid, isAdmin(req));
     res.json(summary);
   } catch (err) {
     console.error('[AI summary]', err);

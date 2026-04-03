@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -21,7 +22,11 @@ const toOrder = (row) => ({
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rows } = await pool.query('SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC', [uid]);
+    const adm = isAdmin(req);
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM orders ORDER BY created_at DESC' : 'SELECT * FROM orders WHERE user_id = $1 ORDER BY created_at DESC',
+      adm ? [] : [uid]
+    );
     res.json(rows.map(toOrder));
   } catch (err) {
     console.error(err);

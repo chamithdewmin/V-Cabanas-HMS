@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -16,9 +17,10 @@ const toPricing = (row) => ({
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { rows } = await pool.query(
-      'SELECT * FROM pricing WHERE user_id = $1 ORDER BY created_at DESC',
-      [uid]
+      adm ? 'SELECT * FROM pricing ORDER BY created_at DESC' : 'SELECT * FROM pricing WHERE user_id = $1 ORDER BY created_at DESC',
+      adm ? [] : [uid]
     );
     res.json(rows.map(toPricing));
   } catch (err) {
@@ -48,14 +50,25 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { id } = req.params;
     const d = req.body;
-    await pool.query(
-      `UPDATE pricing SET name = COALESCE($2, name), price = COALESCE($3, price), notes = COALESCE($4, notes)
-       WHERE id = $1 AND user_id = $5`,
-      [id, d.name != null ? String(d.name).trim() : null, d.price != null ? Number(d.price) : null, d.notes != null ? String(d.notes).trim() : null, uid]
+    if (adm) {
+      await pool.query(
+        `UPDATE pricing SET name = COALESCE($2, name), price = COALESCE($3, price), notes = COALESCE($4, notes) WHERE id = $1`,
+        [id, d.name != null ? String(d.name).trim() : null, d.price != null ? Number(d.price) : null, d.notes != null ? String(d.notes).trim() : null]
+      );
+    } else {
+      await pool.query(
+        `UPDATE pricing SET name = COALESCE($2, name), price = COALESCE($3, price), notes = COALESCE($4, notes)
+         WHERE id = $1 AND user_id = $5`,
+        [id, d.name != null ? String(d.name).trim() : null, d.price != null ? Number(d.price) : null, d.notes != null ? String(d.notes).trim() : null, uid]
+      );
+    }
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM pricing WHERE id = $1' : 'SELECT * FROM pricing WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
     );
-    const { rows } = await pool.query('SELECT * FROM pricing WHERE id = $1 AND user_id = $2', [id, uid]);
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     res.json(toPricing(rows[0]));
   } catch (err) {
@@ -67,7 +80,11 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rowCount } = await pool.query('DELETE FROM pricing WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
+    const adm = isAdmin(req);
+    const { rowCount } = await pool.query(
+      adm ? 'DELETE FROM pricing WHERE id = $1' : 'DELETE FROM pricing WHERE id = $1 AND user_id = $2',
+      adm ? [req.params.id] : [req.params.id, uid]
+    );
     if (rowCount === 0) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
   } catch (err) {

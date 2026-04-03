@@ -26,18 +26,12 @@ import SalaryManagement from './pages/SalaryManagement';
 import DailyNotes from './pages/DailyNotes';
 import Layout from './components/Layout';
 
-const RESTRICTED_ROLES = ['manager', 'receptionist'];
-const RESTRICTED_ALLOWED_PATHS = ['/invoices', '/clients', '/booking'];
-
 function DefaultRedirect() {
-  const { user } = useAuth();
-  const role = (user?.role || '').toLowerCase();
-  const to = RESTRICTED_ROLES.includes(role) ? '/invoices' : '/dashboard';
-  return <Navigate to={to} replace />;
+  return <Navigate to="/dashboard" replace />;
 }
 
 function App() {
-  const { isAuthenticated, loading, user } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
   const { settings } = useFinance();
 
   useEffect(() => {
@@ -64,7 +58,7 @@ function App() {
     );
   }
 
-  const loginRedirectTo = RESTRICTED_ROLES.includes((user?.role || '').toLowerCase()) ? '/invoices' : '/dashboard';
+  const loginRedirectTo = '/dashboard';
 
   return (
     <Routes>

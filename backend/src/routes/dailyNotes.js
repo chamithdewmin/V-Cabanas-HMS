@@ -1,6 +1,7 @@
 import express from 'express';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
 router.use(authMiddleware);
@@ -16,9 +17,12 @@ const toNote = (row) => ({
 router.get('/', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { rows } = await pool.query(
-      'SELECT * FROM daily_notes WHERE user_id = $1 ORDER BY note_date DESC, created_at DESC',
-      [uid]
+      adm
+        ? 'SELECT * FROM daily_notes ORDER BY note_date DESC, created_at DESC'
+        : 'SELECT * FROM daily_notes WHERE user_id = $1 ORDER BY note_date DESC, created_at DESC',
+      adm ? [] : [uid]
     );
     res.json(rows.map(toNote));
   } catch (err) {
@@ -54,23 +58,30 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
+    const adm = isAdmin(req);
     const { id } = req.params;
     const d = req.body;
-    await pool.query(
-      `UPDATE daily_notes SET
-        note_date = COALESCE($2, note_date),
-        amount = $3,
-        note = COALESCE($4, note)
-       WHERE id = $1 AND user_id = $5`,
-      [
-        id,
-        d.noteDate || null,
-        d.amount != null && d.amount !== '' ? Number(d.amount) : null,
-        d.note != null ? String(d.note).trim() : null,
-        uid,
-      ]
+    const baseParams = [
+      id,
+      d.noteDate || null,
+      d.amount != null && d.amount !== '' ? Number(d.amount) : null,
+      d.note != null ? String(d.note).trim() : null,
+    ];
+    if (adm) {
+      await pool.query(
+        `UPDATE daily_notes SET note_date = COALESCE($2, note_date), amount = $3, note = COALESCE($4, note) WHERE id = $1`,
+        baseParams
+      );
+    } else {
+      await pool.query(
+        `UPDATE daily_notes SET note_date = COALESCE($2, note_date), amount = $3, note = COALESCE($4, note) WHERE id = $1 AND user_id = $5`,
+        [...baseParams, uid]
+      );
+    }
+    const { rows } = await pool.query(
+      adm ? 'SELECT * FROM daily_notes WHERE id = $1' : 'SELECT * FROM daily_notes WHERE id = $1 AND user_id = $2',
+      adm ? [id] : [id, uid]
     );
-    const { rows } = await pool.query('SELECT * FROM daily_notes WHERE id = $1 AND user_id = $2', [id, uid]);
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     res.json(toNote(rows[0]));
   } catch (err) {
@@ -82,7 +93,11 @@ router.put('/:id', async (req, res) => {
 router.delete('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
-    const { rowCount } = await pool.query('DELETE FROM daily_notes WHERE id = $1 AND user_id = $2', [req.params.id, uid]);
+    const adm = isAdmin(req);
+    const { rowCount } = await pool.query(
+      adm ? 'DELETE FROM daily_notes WHERE id = $1' : 'DELETE FROM daily_notes WHERE id = $1 AND user_id = $2',
+      adm ? [req.params.id] : [req.params.id, uid]
+    );
     if (rowCount === 0) return res.status(404).json({ error: 'Not found' });
     res.json({ success: true });
   } catch (err) {
