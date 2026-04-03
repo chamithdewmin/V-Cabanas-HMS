@@ -281,22 +281,39 @@ const SalaryManagement = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full table-fixed">
+            <table className="w-full min-w-[56rem] border-collapse table-auto">
+              <colgroup>
+                <col className="min-w-[7rem]" />
+                {isAdmin && <col className="min-w-[11rem]" />}
+                <col className="min-w-[8rem]" />
+                {isAdmin && (
+                  <>
+                    <col className="w-[7.5rem]" />
+                    <col className="w-[8.5rem]" />
+                  </>
+                )}
+                <col className="w-[8.5rem]" />
+                <col className="w-[6.5rem]" />
+                <col className="min-w-[6rem]" />
+                <col className="w-[10rem]" />
+              </colgroup>
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                  {isAdmin && <th className="px-4 py-3 text-left text-sm font-semibold">Email</th>}
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Role / position</th>
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-left">Name</th>
+                  {isAdmin && (
+                    <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-left">Email</th>
+                  )}
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-left">Role / position</th>
                   {isAdmin && (
                     <>
-                      <th className="px-4 py-3 text-sm font-semibold w-28 text-right" align="right">Commission rate</th>
-                      <th className="px-4 py-3 text-sm font-semibold w-32 text-right" align="right">Total commission</th>
+                      <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Commission rate</th>
+                      <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Total commission</th>
                     </>
                   )}
-                  <th className="px-4 py-3 text-sm font-semibold w-28 text-right" align="right">Salary amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold w-24">Period</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold w-28">Actions</th>
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Salary amount</th>
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-left">Period</th>
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-left">Notes</th>
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -331,27 +348,31 @@ const SalaryManagement = () => {
                       transition={{ delay: index * 0.02 }}
                       className="border-b border-secondary hover:bg-secondary/30"
                     >
-                      <td className="px-4 py-3 text-sm text-left">{row.name || '—'}</td>
+                      <td className="px-4 py-3 text-sm !text-left align-top">{row.name || '—'}</td>
                       {isAdmin && (
-                        <td className="px-4 py-3 text-sm text-muted-foreground text-left">{row.email || '—'}</td>
+                        <td className="px-4 py-3 text-sm text-muted-foreground !text-left align-top max-w-[14rem] truncate" title={row.email || ''}>
+                          {row.email || '—'}
+                        </td>
                       )}
-                      <td className="px-4 py-3 text-sm capitalize text-left">{row.roleOrPosition || '—'}</td>
+                      <td className="px-4 py-3 text-sm capitalize !text-left align-top">{row.roleOrPosition || '—'}</td>
                       {isAdmin && (
                         <>
-                          <td className="px-4 py-3 text-sm text-right tabular-nums w-28" align="right">
+                          <td className="px-4 py-3 text-sm tabular-nums !text-right align-top">
                             {row.commissionRatePct != null ? `${row.commissionRatePct}%` : '—'}
                           </td>
-                          <td className="px-4 py-3 text-sm text-right tabular-nums font-medium w-32" align="right">
+                          <td className="px-4 py-3 text-sm tabular-nums font-medium !text-right align-top">
                             {row.totalCommission != null ? Number(row.totalCommission).toLocaleString() : '—'}
                           </td>
                         </>
                       )}
-                      <td className="px-4 py-3 text-sm text-right tabular-nums w-28 font-medium" align="right">
+                      <td className="px-4 py-3 text-sm tabular-nums font-medium !text-right align-top">
                         {row.salaryRecord?.amount != null ? Number(row.salaryRecord.amount).toLocaleString() : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm capitalize text-left w-24">{row.salaryRecord?.period || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-muted-foreground text-left">{row.salaryRecord?.notes || '—'}</td>
-                      <td className="px-4 py-3 text-center w-28">
+                      <td className="px-4 py-3 text-sm capitalize !text-left align-top whitespace-nowrap">
+                        {row.salaryRecord?.period || '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm text-muted-foreground !text-left align-top">{row.salaryRecord?.notes || '—'}</td>
+                      <td className="px-4 py-3 !text-center align-top whitespace-nowrap">
                         <div className="inline-flex items-center justify-center gap-2">
                           {(row.staffUser || row.salaryRecord) && (
                             <button
