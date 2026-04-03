@@ -30,6 +30,8 @@ const Booking = () => {
   const { user } = useAuth();
   const userRole = (user?.role || '').toLowerCase();
   const isAdmin = userRole === 'admin';
+  /** Customer through Actions (incl. optional Net column). */
+  const tableColSpan = isAdmin ? 13 : 12;
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
   const [pricingList, setPricingList] = useState([]);
@@ -209,34 +211,77 @@ const Booking = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[76rem] border-collapse table-auto">
+              <colgroup>
+                <col className="min-w-[9rem]" />
+                <col className="w-24" />
+                <col className="w-[5.5rem]" />
+                <col className="w-[5.5rem]" />
+                <col className="min-w-[10rem]" />
+                <col className="w-[7.5rem]" />
+                <col className="w-[7.5rem]" />
+                <col className="w-[7.5rem]" />
+                <col className="w-[7.5rem]" />
+                <col className="w-[8.5rem]" />
+                <col className="w-[8.5rem]" />
+                {isAdmin && <col className="w-[9rem]" />}
+                <col className="w-[7.5rem]" />
+              </colgroup>
               <thead className="bg-secondary">
                 <tr>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Customer</th>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Room no</th>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Feature</th>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Type</th>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Guests</th>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Check-in</th>
-                  <th scope="col" className="px-4 py-3 text-left text-sm font-semibold">Check-out</th>
-                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">Price</th>
-                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Booking.com</th>
-                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Income &amp; Profit</th>
-                  <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Staff commission</th>
-                  {isAdmin && <th scope="col" className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Net (after staff)</th>}
-                  <th scope="col" className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-left">
+                    Customer
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-left">
+                    Room no
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-left">
+                    Feature
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-left">
+                    Type
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-left">
+                    Guests
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-left">
+                    Check-in
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-left">
+                    Check-out
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                    Price
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                    Booking.com
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                    Income &amp; Profit
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                    Staff commission
+                  </th>
+                  {isAdmin && (
+                    <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                      Net (after staff)
+                    </th>
+                  )}
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-center">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={12} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    <td colSpan={tableColSpan} className="px-4 py-8 text-center text-muted-foreground text-sm">
                       Loading bookings...
                     </td>
                   </tr>
                 ) : bookings.length === 0 ? (
                   <tr>
-                    <td colSpan={12} className="p-0 align-top">
+                    <td colSpan={tableColSpan} className="p-0 align-top">
                       <EmptyState
                         title="No bookings yet"
                         description="Create your first booking to get started."
@@ -248,40 +293,40 @@ const Booking = () => {
                 ) : (
                   bookings.map((b) => (
                     <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
-                      <td className="px-4 py-3 text-sm text-left">{b.customerName}</td>
-                      <td className="px-4 py-3 text-sm text-left">{b.roomNumber}</td>
-                      <td className="px-4 py-3 text-sm text-left">{b.roomFeature === 'non_ac' ? 'Non AC' : 'AC'}</td>
-                      <td className="px-4 py-3 text-sm text-left capitalize">{b.roomType || '—'}</td>
-                      <td className="px-4 py-3 text-sm text-left">
+                      <td className="px-4 py-3 text-sm !text-left align-middle text-foreground">{b.customerName}</td>
+                      <td className="px-4 py-3 text-sm !text-left align-middle text-foreground">{b.roomNumber}</td>
+                      <td className="px-4 py-3 text-sm !text-left align-middle text-foreground">{b.roomFeature === 'non_ac' ? 'Non AC' : 'AC'}</td>
+                      <td className="px-4 py-3 text-sm !text-left align-middle capitalize text-foreground">{b.roomType || '—'}</td>
+                      <td className="px-4 py-3 text-sm !text-left align-middle whitespace-nowrap text-foreground">
                         {b.adults || 0} adults, {b.children || 0} children
                       </td>
-                      <td className="px-4 py-3 text-sm text-left">
+                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground">
                         {b.checkIn ? (typeof b.checkIn === 'string' && b.checkIn.includes('T') ? b.checkIn.slice(0, 10) : b.checkIn) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-left">
+                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground">
                         {b.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-24">
+                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
                         {b.price != null ? Number(b.price).toLocaleString() : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28">
+                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
                         {b.bookingComCommission != null
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28 font-medium">
+                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle font-medium text-foreground">
                         {(b.incomeProfit != null ? b.incomeProfit : (Number(b.price) || 0) - (Number(b.bookingComCommission) || 0)).toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28">
+                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
                         {(b.staffCommissionAmount != null ? Number(b.staffCommissionAmount) : 0).toLocaleString()}
                       </td>
                       {isAdmin && (
-                        <td className="px-4 py-3 text-sm text-right tabular-nums min-w-[5rem] w-28 font-medium">
+                        <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle font-medium text-foreground">
                           {(b.netAfterStaffCommission != null ? Number(b.netAfterStaffCommission) : (b.incomeProfit != null ? b.incomeProfit : 0) - (b.staffCommissionAmount != null ? Number(b.staffCommissionAmount) : 0)).toLocaleString()}
                         </td>
                       )}
-                      <td className="px-4 py-3 text-center align-middle">
-                        <div className="inline-flex items-center justify-center gap-1">
+                      <td className="px-4 py-3 !text-center align-middle">
+                        <div className="inline-flex w-full items-center justify-center gap-1">
                           <button type="button" onClick={() => openEdit(b)} className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400" title="Edit">
                             <Pencil className="w-4 h-4" />
                           </button>

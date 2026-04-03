@@ -357,17 +357,43 @@ const Orders = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden min-w-0">
           <div className="overflow-x-auto -mx-3 sm:mx-0">
-            <table className="w-full min-w-[640px]">
+            <table className="w-full min-w-[56rem] border-collapse table-auto">
+              <colgroup>
+                <col className="min-w-[10.5rem]" />
+                <col className="min-w-[8rem]" />
+                <col className="min-w-[9.5rem]" />
+                <col className="w-14" />
+                <col className="w-[8rem]" />
+                <col className="w-[6.5rem]" />
+                <col className="w-[7rem]" />
+                <col className="w-[8.5rem]" />
+              </colgroup>
               <thead className="bg-secondary">
                 <tr>
-                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Invoice #</th>
-                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Client</th>
-                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Date</th>
-                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Items</th>
-                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Total</th>
-                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Payment</th>
-                  <th scope="col" className="px-3 sm:px-4 py-2 sm:py-3 text-left text-xs sm:text-sm font-semibold">Status</th>
-                  <th scope="col" className="py-3 pl-8 pr-4 text-center text-xs sm:text-sm font-semibold w-28 min-w-[6rem]">Actions</th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-left">
+                    Invoice #
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-left">
+                    Client
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-left">
+                    Date
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-center">
+                    Items
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-right">
+                    Total
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-left">
+                    Payment
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-left">
+                    Status
+                  </th>
+                  <th scope="col" className="px-4 py-2.5 text-xs sm:text-sm font-semibold whitespace-nowrap !text-center">
+                    Actions
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -379,77 +405,89 @@ const Orders = () => {
                     transition={{ delay: index * 0.05 }}
                     className="border-b border-secondary hover:bg-secondary/50 transition-colors"
                   >
-                    <td className="px-4 py-3 text-sm font-mono">{order.invoiceNumber}</td>
-                    <td className="px-4 py-3 text-sm">{order.clientName}</td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(order.createdAt)}</td>
-                    <td className="px-4 py-3 text-sm">{order.items.length}</td>
-                    <td className="px-4 py-3 text-sm font-semibold text-primary">
+                    <td className="px-4 py-2 text-sm font-mono tabular-nums !text-left align-middle text-foreground">
+                      {order.invoiceNumber}
+                    </td>
+                    <td className="px-4 py-2 text-sm !text-left align-middle text-foreground">{order.clientName}</td>
+                    <td className="px-4 py-2 text-sm tabular-nums !text-left align-middle text-foreground">
+                      {formatDate(order.createdAt)}
+                    </td>
+                    <td className="px-4 py-2 text-sm tabular-nums !text-center align-middle text-foreground">
+                      {order.items.length}
+                    </td>
+                    <td className="px-4 py-2 text-sm font-semibold tabular-nums !text-right align-middle text-foreground">
                       {settings.currency} {Number(order.total || 0).toLocaleString()}
                     </td>
-                    <td className="px-4 py-3 text-sm capitalize">{order.paymentMethod}</td>
-                    <td className="px-4 py-3">
-                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        order.status === 'paid'
-                          ? 'bg-green-500/20 text-green-500'
-                          : 'bg-white text-gray-900 border border-border'
-                      }`}>
+                    <td className="px-4 py-2 text-sm capitalize !text-left align-middle text-foreground">
+                      {order.paymentMethod}
+                    </td>
+                    <td className="px-4 py-2 !text-left align-middle">
+                      <span
+                        className={`inline-block px-2 py-0.5 rounded-full text-xs font-semibold ${
+                          order.status === 'paid'
+                            ? 'bg-green-500/20 text-green-500'
+                            : 'bg-white text-gray-900 border border-border'
+                        }`}
+                      >
                         {order.status === 'paid' ? 'Paid' : 'Unpaid'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-center align-middle w-28 min-w-[6rem]">
-                      <div className="inline-flex items-center justify-center gap-1 flex-wrap">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setInvoiceAction('view');
-                          }}
-                          className="p-1.5 hover:bg-secondary rounded-md text-blue-400 hover:text-blue-300"
-                          title="View"
-                        >
-                          <Eye className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setInvoiceAction('download');
-                          }}
-                          className="p-1.5 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground"
-                          title="Download PDF"
-                        >
-                          <Download className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedOrder(order);
-                            setInvoiceAction('print');
-                          }}
-                          className="p-1.5 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground"
-                          title="Print"
-                        >
-                          <Printer className="w-4 h-4" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (window.confirm(`Delete invoice ${order.invoiceNumber}?`)) {
-                              deleteInvoice(order.id);
-                              setSelectedOrder(null);
-                              toast({ title: 'Invoice deleted', description: 'Invoice has been removed.' });
-                            }
-                          }}
-                          className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                    <td className="px-4 py-2 !text-center align-middle">
+                      <div className="mx-auto flex w-full max-w-[8.5rem] flex-col items-center gap-1.5">
+                        <div className="flex items-center justify-center gap-0.5">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setInvoiceAction('view');
+                            }}
+                            className="p-1.5 hover:bg-secondary rounded-md text-blue-400 hover:text-blue-300"
+                            title="View"
+                          >
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setInvoiceAction('download');
+                            }}
+                            className="p-1.5 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground"
+                            title="Download PDF"
+                          >
+                            <Download className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedOrder(order);
+                              setInvoiceAction('print');
+                            }}
+                            className="p-1.5 hover:bg-secondary rounded-md text-muted-foreground hover:text-foreground"
+                            title="Print"
+                          >
+                            <Printer className="w-4 h-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              if (window.confirm(`Delete invoice ${order.invoiceNumber}?`)) {
+                                deleteInvoice(order.id);
+                                setSelectedOrder(null);
+                                toast({ title: 'Invoice deleted', description: 'Invoice has been removed.' });
+                              }
+                            }}
+                            className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
+                            title="Delete"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
                         {order.status !== 'paid' && (
                           <button
                             type="button"
                             onClick={() => updateInvoiceStatus(order.id, 'paid')}
-                            className="text-xs px-3 py-1 rounded-full bg-primary !text-white hover:bg-primary/90"
+                            className="w-full shrink-0 rounded-md bg-primary px-2 py-1 text-xs font-medium !text-white hover:bg-primary/90"
                           >
                             Mark Paid
                           </button>

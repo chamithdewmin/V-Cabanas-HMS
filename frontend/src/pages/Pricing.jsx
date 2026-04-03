@@ -149,15 +149,19 @@ const Pricing = () => {
         {/* List */}
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[36rem] border-collapse table-auto">
+              <colgroup>
+                <col className="min-w-[8rem]" />
+                <col className="min-w-[10rem]" />
+                <col className="w-[7rem]" />
+                <col className="w-[7.5rem]" />
+              </colgroup>
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Name</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-24">
-                    Price
-                  </th>
-                  <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold uppercase min-w-[6rem] w-28">
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-left">Name</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-left">Notes</th>
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Price</th>
+                  <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-center uppercase">
                     Actions
                   </th>
                 </tr>
@@ -193,15 +197,15 @@ const Pricing = () => {
                       transition={{ delay: index * 0.02 }}
                       className="border-b border-secondary hover:bg-secondary/50 transition-colors"
                     >
-                      <td className="px-4 py-3 text-sm text-left">{item.name}</td>
-                      <td className="px-4 py-3 text-sm text-left text-muted-foreground">
+                      <td className="px-4 py-3 text-sm !text-left align-top">{item.name}</td>
+                      <td className="px-4 py-3 text-sm !text-left text-muted-foreground align-top">
                         {item.notes || '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[5rem] w-24">
+                      <td className="px-4 py-3 text-sm font-semibold tabular-nums !text-right align-top">
                         {item.price.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-center min-w-[6rem] w-28 align-middle">
-                        <div className="inline-flex items-center justify-center gap-1">
+                      <td className="px-4 py-3 !text-center align-middle">
+                        <div className="inline-flex w-full items-center justify-center gap-1">
                           <button
                             type="button"
                             onClick={() => openEdit(item)}

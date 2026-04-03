@@ -136,13 +136,19 @@ const DailyNotes = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[36rem] border-collapse table-auto">
+              <colgroup>
+                <col className="w-[9.5rem]" />
+                <col className="w-[7.5rem]" />
+                <col className="min-w-[12rem]" />
+                <col className="w-[6.5rem]" />
+              </colgroup>
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Note</th>
-                  <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold">Actions</th>
+                  <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-left">Date</th>
+                  <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-right">Amount</th>
+                  <th className="px-4 py-2.5 text-sm font-semibold !text-left">Note</th>
+                  <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -161,15 +167,17 @@ const DailyNotes = () => {
                 ) : (
                   notes.map((n) => (
                     <tr key={n.id} className="border-b border-secondary hover:bg-secondary/30">
-                      <td className="px-4 py-3 text-sm text-left">{formatDate(n.noteDate)}</td>
-                      <td className="px-4 py-3 text-sm text-right tabular-nums">
+                      <td className="px-4 py-2 text-sm tabular-nums !text-left align-middle text-foreground">
+                        {formatDate(n.noteDate)}
+                      </td>
+                      <td className="px-4 py-2 text-sm tabular-nums !text-right align-middle text-foreground">
                         {n.amount != null ? Number(n.amount).toLocaleString() : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm text-left max-w-md truncate" title={n.note || ''}>
+                      <td className="px-4 py-2 text-sm !text-left align-middle text-foreground max-w-md truncate" title={n.note || ''}>
                         {n.note || '—'}
                       </td>
-                      <td className="px-4 py-3 text-center align-middle">
-                        <div className="inline-flex items-center justify-center gap-1">
+                      <td className="px-4 py-2 !text-center align-middle">
+                        <div className="inline-flex w-full items-center justify-center gap-1">
                           <button type="button" onClick={() => openEdit(n)} className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400" title="Edit">
                             <Pencil className="w-4 h-4" />
                           </button>

@@ -388,16 +388,25 @@ const Inventory = () => {
 
           <div className="bg-card rounded-lg border border-secondary overflow-hidden">
             <div className="overflow-x-auto">
-              <table className="w-full">
+              <table className="w-full min-w-[52rem] border-collapse table-auto">
+                <colgroup>
+                  <col className="w-[7.5rem]" />
+                  <col className="min-w-[8rem]" />
+                  <col className="w-[6.5rem]" />
+                  <col className="w-[5.5rem]" />
+                  <col className="min-w-[6rem]" />
+                  <col className="w-[8.5rem]" />
+                  <col className="w-[6.5rem]" />
+                </colgroup>
                 <thead className="bg-secondary">
                   <tr>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Category</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Payment</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Recurring</th>
-                    <th className="px-4 py-3 text-left text-sm font-semibold">Receipt</th>
-                    <th className="px-4 py-3 text-right text-sm font-semibold min-w-[5rem] w-28">Amount</th>
-                    <th className="py-3 pl-8 pr-4 text-center text-sm font-semibold w-24 min-w-[5rem]">Actions</th>
+                    <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-left">Date</th>
+                    <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-left">Category</th>
+                    <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-left">Payment</th>
+                    <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-center">Recurring</th>
+                    <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-left">Receipt</th>
+                    <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-right">Amount</th>
+                    <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-center">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -409,21 +418,21 @@ const Inventory = () => {
                       transition={{ delay: index * 0.02 }}
                       className="border-b border-secondary hover:bg-secondary/50 transition-colors"
                     >
-                      <td className="px-4 py-3 text-sm text-muted-foreground">
+                      <td className="px-4 py-2 text-sm tabular-nums !text-left align-middle text-foreground">
                         {new Date(exp.date).toLocaleDateString('en-US', {
                           year: 'numeric',
                           month: 'short',
                           day: 'numeric',
                         })}
                       </td>
-                      <td className="px-4 py-3 text-sm">{exp.category}</td>
-                      <td className="px-4 py-3 text-sm capitalize">
+                      <td className="px-4 py-2 text-sm !text-left align-middle text-foreground">{exp.category}</td>
+                      <td className="px-4 py-2 text-sm capitalize !text-left align-middle text-foreground">
                         {(exp.paymentMethod || 'cash').replace(/_/g, ' ')}
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-2 text-sm !text-center align-middle text-foreground">
                         {exp.isRecurring ? 'Yes' : 'No'}
                       </td>
-                      <td className="px-4 py-3 text-sm">
+                      <td className="px-4 py-2 text-sm !text-left align-middle text-foreground">
                         {exp.receipt?.dataUrl ? (
                           <a
                             href={exp.receipt.dataUrl}
@@ -438,11 +447,11 @@ const Inventory = () => {
                           '—'
                         )}
                       </td>
-                      <td className="px-4 py-3 text-sm font-semibold text-right tabular-nums min-w-[5rem] w-28">
+                      <td className="px-4 py-2 text-sm font-semibold tabular-nums !text-right align-middle text-foreground">
                         {settings.currency} {exp.amount.toLocaleString()}
                       </td>
-                      <td className="px-4 py-3 text-center align-middle w-24 min-w-[5rem]">
-                        <div className="inline-flex items-center justify-center gap-1 mx-auto">
+                      <td className="px-4 py-2 !text-center align-middle">
+                        <div className="inline-flex w-full items-center justify-center gap-1">
                           <button
                             type="button"
                             onClick={() => openEdit(exp)}
