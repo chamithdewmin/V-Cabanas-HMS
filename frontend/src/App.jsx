@@ -13,6 +13,7 @@ import ReportExpense from './pages/reports/ReportExpense';
 import ReportTax from './pages/reports/ReportTax';
 import ReportProfitLoss from './pages/reports/ReportProfitLoss';
 import ReportCashFlow from './pages/reports/ReportCashFlow';
+import ReportMonthly from './pages/reports/ReportMonthly';
 import CashFlow from './pages/CashFlow';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
@@ -88,6 +89,7 @@ function App() {
         <Route path="reports/income" element={<ReportIncome />} />
         <Route path="reports/expense" element={<ReportExpense />} />
         <Route path="reports/tax" element={<ReportTax />} />
+        <Route path="reports/monthly" element={<ReportMonthly />} />
         <Route path="users" element={<Users />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />

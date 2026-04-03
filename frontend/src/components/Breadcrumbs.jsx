@@ -4,6 +4,7 @@ import { ChevronRight } from 'lucide-react';
 
 const REPORT_LABELS = {
   overview: 'Overview',
+  monthly: 'Monthly Report',
   'profit-loss': 'Profit & Loss',
   'cash-flow': 'Cash Flow',
   income: 'Income',
