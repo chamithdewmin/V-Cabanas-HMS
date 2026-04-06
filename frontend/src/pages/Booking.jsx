@@ -33,7 +33,7 @@ const Booking = () => {
   const userRole = (user?.role || '').toLowerCase();
   const isAdmin = userRole === 'admin';
   /** Customer through Actions (incl. optional Net column). */
-  const tableColSpan = isAdmin ? 15 : 14;
+  const tableColSpan = isAdmin ? 13 : 12;
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
   const [pricingList, setPricingList] = useState([]);
@@ -217,15 +217,13 @@ const Booking = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[92rem] border-collapse table-auto">
+            <table className="w-full min-w-[76rem] border-collapse table-auto">
               <colgroup>
                 <col className="min-w-[9rem]" />
                 <col className="w-24" />
                 <col className="w-[5.5rem]" />
                 <col className="w-[5.5rem]" />
                 <col className="min-w-[10rem]" />
-                <col className="w-[7.5rem]" />
-                <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
@@ -263,12 +261,6 @@ const Booking = () => {
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
                     Booking.com (LKR)
-                  </th>
-                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
-                    Price (USD)
-                  </th>
-                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
-                    Booking.com (USD)
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
                     Income &amp; Profit
@@ -327,18 +319,6 @@ const Booking = () => {
                         {b.bookingComCommission != null
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
-                      </td>
-                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
-                        {(Number(b.priceUsd) || 0).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
-                      </td>
-                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
-                        {(Number(b.bookingComCommissionUsd) || 0).toLocaleString(undefined, {
-                          minimumFractionDigits: 2,
-                          maximumFractionDigits: 2,
-                        })}
                       </td>
                       <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle font-medium text-foreground">
                         {(b.incomeProfit != null ? b.incomeProfit : (Number(b.price) || 0) - (Number(b.bookingComCommission) || 0)).toLocaleString()}

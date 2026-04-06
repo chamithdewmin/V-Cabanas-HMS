@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet';
-import { RefreshCw } from 'lucide-react';
+import { ArrowLeftRight, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
@@ -58,6 +58,8 @@ export default function ReportMonthly() {
   const [month, setMonth] = useState(() => new Date().getMonth());
   const [bookings, setBookings] = useState([]);
   const [loading, setLoading] = useState(true);
+  /** Toggle: show saved LKR amounts vs saved USD amounts for booking price / Booking.com / TOTAL. */
+  const [showUsd, setShowUsd] = useState(false);
 
   const loadBookings = async () => {
     setLoading(true);
@@ -95,24 +97,38 @@ export default function ReportMonthly() {
   const totals = useMemo(() => {
     return filtered.reduce(
       (acc, b) => {
-        const price = Number(b.price) || 0;
-        const bc = Number(b.bookingComCommission) || 0;
         const mgr = Number(b.staffCommissionAmount) || 0;
-        const net =
-          b.netAfterStaffCommission != null
-            ? Number(b.netAfterStaffCommission)
-            : price - bc - mgr;
-        acc.bookingPrice += price;
-        acc.bookingCom += bc;
         acc.manager += mgr;
-        acc.total += net;
+        if (showUsd) {
+          const price = Number(b.priceUsd) || 0;
+          const bc = Number(b.bookingComCommissionUsd) || 0;
+          const net = price - bc;
+          acc.bookingPrice += price;
+          acc.bookingCom += bc;
+          acc.total += net;
+        } else {
+          const price = Number(b.price) || 0;
+          const bc = Number(b.bookingComCommission) || 0;
+          const net =
+            b.netAfterStaffCommission != null
+              ? Number(b.netAfterStaffCommission)
+              : price - bc - mgr;
+          acc.bookingPrice += price;
+          acc.bookingCom += bc;
+          acc.total += net;
+        }
         return acc;
       },
       { bookingPrice: 0, bookingCom: 0, manager: 0, total: 0 }
     );
-  }, [filtered]);
+  }, [filtered, showUsd]);
 
   const fmt = (n) => `${settings.currency} ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const fmtUsd = (n) =>
+    `USD ${Number(n).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+
+  const fmtCell = (n) => (showUsd ? fmtUsd(n) : fmt(n));
 
   return (
     <>
@@ -129,10 +145,21 @@ export default function ReportMonthly() {
               Bookings filtered by check-in date for the selected month.
             </p>
           </div>
-          <Button variant="outline" onClick={loadBookings} disabled={loading}>
-            <RefreshCw className="w-4 h-4 mr-2" />
-            Refresh
-          </Button>
+          <div className="flex flex-wrap items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowUsd((v) => !v)}
+              title={showUsd ? 'Show amounts in LKR' : 'Show booking amounts in USD'}
+            >
+              <ArrowLeftRight className="w-4 h-4 mr-2" />
+              {showUsd ? 'Convert to LKR' : 'Convert to USD'}
+            </Button>
+            <Button variant="outline" onClick={loadBookings} disabled={loading}>
+              <RefreshCw className="w-4 h-4 mr-2" />
+              Refresh
+            </Button>
+          </div>
         </div>
 
         <div className="rounded-lg border border-secondary bg-card p-4">
@@ -182,10 +209,16 @@ export default function ReportMonthly() {
                   <th className="px-4 py-3 text-sm font-semibold !text-left">No</th>
                   <th className="px-4 py-3 text-sm font-semibold !text-left">Name</th>
                   <th className="px-4 py-3 text-sm font-semibold !text-left">Check in date</th>
-                  <th className="px-4 py-3 text-sm font-semibold !text-right">Booking price</th>
-                  <th className="px-4 py-3 text-sm font-semibold !text-right">Booking.com price</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">
+                    Booking price{showUsd ? ' (USD)' : ''}
+                  </th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">
+                    Booking.com price{showUsd ? ' (USD)' : ''}
+                  </th>
                   <th className="px-4 py-3 text-sm font-semibold !text-right">Manager commission</th>
-                  <th className="px-4 py-3 text-sm font-semibold !text-right">TOTAL</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">
+                    TOTAL{showUsd ? ' (USD)' : ''}
+                  </th>
                 </tr>
               </thead>
               <tbody>
@@ -206,22 +239,31 @@ export default function ReportMonthly() {
                   </tr>
                 ) : (
                   filtered.map((b, idx) => {
-                    const price = Number(b.price) || 0;
-                    const bc = Number(b.bookingComCommission) || 0;
                     const mgr = Number(b.staffCommissionAmount) || 0;
-                    const total =
-                      b.netAfterStaffCommission != null
-                        ? Number(b.netAfterStaffCommission)
-                        : price - bc - mgr;
+                    let price;
+                    let bc;
+                    let total;
+                    if (showUsd) {
+                      price = Number(b.priceUsd) || 0;
+                      bc = Number(b.bookingComCommissionUsd) || 0;
+                      total = price - bc;
+                    } else {
+                      price = Number(b.price) || 0;
+                      bc = Number(b.bookingComCommission) || 0;
+                      total =
+                        b.netAfterStaffCommission != null
+                          ? Number(b.netAfterStaffCommission)
+                          : price - bc - mgr;
+                    }
                     return (
                       <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
                         <td className="px-4 py-3 text-sm tabular-nums">{idx + 1}</td>
                         <td className="px-4 py-3 text-sm">{b.customerName || '—'}</td>
                         <td className="px-4 py-3 text-sm">{formatCheckInDisplay(b.checkIn)}</td>
-                        <td className="px-4 py-3 text-right text-sm tabular-nums">{fmt(price)}</td>
-                        <td className="px-4 py-3 text-right text-sm tabular-nums">{fmt(bc)}</td>
+                        <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(price)}</td>
+                        <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(bc)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmt(mgr)}</td>
-                        <td className="px-4 py-3 text-right text-sm font-medium tabular-nums">{fmt(total)}</td>
+                        <td className="px-4 py-3 text-right text-sm font-medium tabular-nums">{fmtCell(total)}</td>
                       </tr>
                     );
                   })
@@ -233,10 +275,10 @@ export default function ReportMonthly() {
                     <td colSpan={3} className="px-4 py-3 text-sm font-semibold">
                       Totals
                     </td>
-                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmt(totals.bookingPrice)}</td>
-                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmt(totals.bookingCom)}</td>
+                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.bookingPrice)}</td>
+                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.bookingCom)}</td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmt(totals.manager)}</td>
-                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmt(totals.total)}</td>
+                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.total)}</td>
                   </tr>
                 </tfoot>
               )}
@@ -245,7 +287,14 @@ export default function ReportMonthly() {
         </div>
 
         <p className="text-xs text-muted-foreground">
-          TOTAL is net after Booking.com and manager commission (same as “Net after staff” on the Booking page).
+          {showUsd ? (
+            <>
+              USD view uses saved booking USD amounts. TOTAL (USD) is booking price minus Booking.com (both USD).
+              Manager commission stays in {settings.currency} (not converted).
+            </>
+          ) : (
+            <>TOTAL is net after Booking.com and manager commission (same as “Net after staff” on the Booking page).</>
+          )}
         </p>
       </div>
     </>
