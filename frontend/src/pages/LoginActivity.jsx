@@ -131,7 +131,7 @@ export default function LoginActivity() {
   return (
     <>
       <Helmet>
-        <title>Login / Logout History - V Cabanas HMS</title>
+        <title>Login Activity - V Cabanas HMS</title>
       </Helmet>
 
       <div className="space-y-6">
@@ -184,7 +184,7 @@ export default function LoginActivity() {
 
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Login / Logout History</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Login Activity</h1>
             <p className="text-muted-foreground text-sm mt-1">
               Sessions, active logins, and failed sign-in attempts (email, IP, and time).
             </p>

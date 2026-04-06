@@ -75,7 +75,7 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Analytics', icon: BarChart3, href: '/reports/overview', items: reportSubItems },
   { divider: true },
   { label: 'User Management', href: '/users', icon: UserPlus, adminOnly: true },
-  { label: 'Login / Logout History', href: '/login-activity', icon: History, adminOnly: true },
+  { label: 'Login Activity', href: '/login-activity', icon: History, adminOnly: true },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
