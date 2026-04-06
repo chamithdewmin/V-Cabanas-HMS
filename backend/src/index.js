@@ -161,6 +161,14 @@ async function initDb() {
   } catch (e) {
     console.warn('Login activity cleanup:', e.message);
   }
+  try {
+    const laFrPath = path.join(__dirname, '..', 'scripts', 'add-login-failure-reason.sql');
+    const laFrSql = fs.readFileSync(laFrPath, 'utf8');
+    await pool.query(laFrSql);
+    console.log('Login failure_reason column ready.');
+  } catch (e) {
+    console.warn('Login failure_reason migration:', e.message);
+  }
 }
 
 const app = express();

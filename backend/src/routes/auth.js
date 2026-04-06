@@ -18,12 +18,28 @@ function getClientIp(req) {
 }
 
 async function insertLoginActivity(values) {
-  const { userId, email, userName, role, ip } = values;
+  const {
+    userId = null,
+    email,
+    userName = null,
+    success,
+    role = null,
+    ip,
+    failureReason = null,
+  } = values;
   const { rows } = await pool.query(
-    `INSERT INTO login_activity (user_id, email, user_name, success, role, ip_address)
-     VALUES ($1, $2, $3, true, $4, $5)
+    `INSERT INTO login_activity (user_id, email, user_name, success, role, ip_address, failure_reason)
+     VALUES ($1, $2, $3, $4, $5, $6, $7)
      RETURNING id`,
-    [userId, email, userName, role || 'receptionist', ip]
+    [
+      userId,
+      email,
+      userName,
+      success,
+      role || null,
+      ip,
+      failureReason,
+    ]
   );
   return rows[0]?.id ?? null;
 }
@@ -124,11 +140,36 @@ router.post('/login', async (req, res) => {
 
     const user = rows[0];
     if (!user) {
+      try {
+        await insertLoginActivity({
+          email: emailTrimmed,
+          userName: null,
+          success: false,
+          role: null,
+          ip,
+          failureReason: 'user_not_found',
+        });
+      } catch (logErr) {
+        console.warn('login_activity insert:', logErr.message);
+      }
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
+      try {
+        await insertLoginActivity({
+          userId: user.id,
+          email: emailTrimmed,
+          userName: user.name,
+          success: false,
+          role: user.role || 'receptionist',
+          ip,
+          failureReason: 'invalid_password',
+        });
+      } catch (logErr) {
+        console.warn('login_activity insert:', logErr.message);
+      }
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
@@ -152,8 +193,10 @@ router.post('/login', async (req, res) => {
         userId: user.id,
         email: emailTrimmed,
         userName: user.name,
+        success: true,
         role: user.role || 'receptionist',
         ip,
+        failureReason: null,
       });
     } catch (logErr) {
       console.warn('login_activity insert:', logErr.message);
@@ -194,17 +237,44 @@ router.post('/logout', authMiddleware, async (req, res) => {
   }
 });
 
+router.get('/login-activity/stats', authMiddleware, async (req, res) => {
+  try {
+    if (!isAdmin(req)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const [totalUsersR, activeSessionsR, activeUsersR, totalSessionsR] = await Promise.all([
+      pool.query('SELECT COUNT(*)::int AS c FROM users'),
+      pool.query(
+        'SELECT COUNT(*)::int AS c FROM login_activity WHERE success = true AND logout_at IS NULL'
+      ),
+      pool.query(
+        `SELECT COUNT(DISTINCT user_id)::int AS c FROM login_activity
+         WHERE success = true AND logout_at IS NULL AND user_id IS NOT NULL`
+      ),
+      pool.query('SELECT COUNT(*)::int AS c FROM login_activity WHERE success = true'),
+    ]);
+    res.json({
+      totalUsers: totalUsersR.rows[0]?.c ?? 0,
+      activeSessions: activeSessionsR.rows[0]?.c ?? 0,
+      activeUsers: activeUsersR.rows[0]?.c ?? 0,
+      totalSessions: totalSessionsR.rows[0]?.c ?? 0,
+    });
+  } catch (err) {
+    console.error('login-activity/stats:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
 router.get('/login-activity', authMiddleware, async (req, res) => {
   try {
     if (!isAdmin(req)) {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const { rows } = await pool.query(
-      `SELECT id, user_id AS "userId", email, user_name AS "userName",
-              role, ip_address AS "ipAddress",
+      `SELECT id, user_id AS "userId", email, user_name AS "userName", success,
+              role, ip_address AS "ipAddress", failure_reason AS "failureReason",
               login_at AS "loginAt", logout_at AS "logoutAt"
        FROM login_activity
-       WHERE COALESCE(success, true) = true
        ORDER BY login_at DESC
        LIMIT 500`
     );

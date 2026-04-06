@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { Navigate } from 'react-router-dom';
-import { ArrowRight, RefreshCw } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Clock, LogIn, RefreshCw, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
@@ -46,11 +46,23 @@ function displayRole(role) {
   return r || '—';
 }
 
+/** API: success === false for failed sign-ins */
+function isFailedAttempt(r) {
+  return r.success === false;
+}
+
+function failureBadgeLabel(failureReason) {
+  if (failureReason === 'user_not_found') return 'Unauthorized';
+  if (failureReason === 'invalid_password') return 'Invalid password';
+  return 'Failed';
+}
+
 export default function LoginActivity() {
   const { user } = useAuth();
   const { toast } = useToast();
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState(null);
   const [userFilter, setUserFilter] = useState('');
 
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
@@ -58,8 +70,21 @@ export default function LoginActivity() {
   const load = async () => {
     setLoading(true);
     try {
-      const list = await api.auth.loginActivity();
+      const [list, s] = await Promise.all([
+        api.auth.loginActivity(),
+        api.auth.loginActivityStats().catch(() => null),
+      ]);
       setRows(Array.isArray(list) ? list : []);
+      setStats(
+        s && typeof s === 'object'
+          ? {
+              totalUsers: Number(s.totalUsers) || 0,
+              activeUsers: Number(s.activeUsers) || 0,
+              activeSessions: Number(s.activeSessions) || 0,
+              totalSessions: Number(s.totalSessions) || 0,
+            }
+          : null
+      );
     } catch (err) {
       toast({
         title: 'Could not load history',
@@ -67,6 +92,7 @@ export default function LoginActivity() {
         variant: 'destructive',
       });
       setRows([]);
+      setStats(null);
     } finally {
       setLoading(false);
     }
@@ -109,11 +135,58 @@ export default function LoginActivity() {
       </Helmet>
 
       <div className="space-y-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Total Users</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums mt-1">
+                {stats ? stats.totalUsers : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-lg bg-blue-500/10 p-2">
+              <User className="w-6 h-6 text-blue-400" strokeWidth={1.75} aria-hidden />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Active Users</p>
+              <p className="text-2xl font-bold text-green-500 tabular-nums mt-1">
+                {stats ? stats.activeUsers : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-full bg-green-500/15 p-2">
+              <CheckCircle2 className="w-6 h-6 text-green-500" strokeWidth={2} aria-hidden />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Active Sessions</p>
+              <p className="text-2xl font-bold text-sky-400 tabular-nums mt-1">
+                {stats ? stats.activeSessions : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-lg bg-sky-500/10 p-2">
+              <LogIn className="w-6 h-6 text-sky-400" strokeWidth={1.75} aria-hidden />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Total Sessions</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums mt-1">
+                {stats ? stats.totalSessions : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-lg bg-blue-500/10 p-2">
+              <Clock className="w-6 h-6 text-blue-400" strokeWidth={1.75} aria-hidden />
+            </div>
+          </div>
+        </div>
+
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Login / Logout History</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              Successful sign-ins and logouts. Active sessions show until the user signs out.
+              Sessions, active logins, and failed sign-in attempts (email, IP, and time).
             </p>
           </div>
           <div className="flex flex-wrap items-end gap-3 sm:justify-end">
@@ -173,40 +246,60 @@ export default function LoginActivity() {
                   </tr>
                 ) : (
                   filteredRows.map((r) => {
+                    const failed = isFailedAttempt(r);
                     const loginT = r.loginAt ? new Date(r.loginAt).getTime() : NaN;
                     const logoutT = r.logoutAt ? new Date(r.logoutAt).getTime() : null;
-                    const active = !r.logoutAt;
-                    const durationMs = Number.isFinite(loginT)
-                      ? (logoutT != null ? logoutT - loginT : Date.now() - loginT)
-                      : null;
+                    const active = !failed && r.success !== false && !r.logoutAt;
+                    const durationMs =
+                      failed || !Number.isFinite(loginT)
+                        ? null
+                        : logoutT != null
+                          ? logoutT - loginT
+                          : Date.now() - loginT;
 
                     return (
                       <tr key={r.id} className="border-b border-border/80 hover:bg-secondary/40 transition-colors">
                         <td className="px-4 py-3.5 align-top">
-                          <div className="font-semibold text-foreground">{r.userName || '—'}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">
-                            {r.email || '—'} <span className="text-border">•</span>{' '}
-                            <span className="capitalize">{displayRole(r.role)}</span>
-                          </div>
+                          {failed && !r.userName ? (
+                            <>
+                              <div className="font-semibold text-foreground">{r.email || '—'}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">No matching account</div>
+                            </>
+                          ) : (
+                            <>
+                              <div className="font-semibold text-foreground">{r.userName || r.email || '—'}</div>
+                              <div className="text-xs text-muted-foreground mt-0.5">
+                                {r.email || '—'} <span className="text-border">•</span>{' '}
+                                <span className="capitalize">{displayRole(r.role)}</span>
+                              </div>
+                            </>
+                          )}
                         </td>
                         <td className="px-4 py-3.5 align-top whitespace-nowrap tabular-nums">
                           <span className="inline-flex items-center gap-1.5">
-                            <ArrowRight className="w-3.5 h-3.5 text-green-500 shrink-0" aria-hidden />
+                            <ArrowRight
+                              className={cn('w-3.5 h-3.5 shrink-0', failed ? 'text-amber-500' : 'text-green-500')}
+                              aria-hidden
+                            />
                             {formatSessionTime(r.loginAt)}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 align-top whitespace-nowrap">
-                          {active ? (
+                        <td className="px-4 py-3.5 align-top whitespace-nowrap text-muted-foreground">
+                          {failed ? (
+                            '—'
+                          ) : active ? (
                             <span className="text-orange-500 font-medium">Active session</span>
                           ) : (
-                            <span className="inline-flex items-center gap-1.5 tabular-nums">
+                            <span className="inline-flex items-center gap-1.5 tabular-nums text-foreground">
                               <ArrowRight className="w-3.5 h-3.5 text-red-500 shrink-0" aria-hidden />
                               {formatSessionTime(r.logoutAt)}
                             </span>
                           )}
                         </td>
                         <td className="px-4 py-3.5 align-top whitespace-nowrap">
-                          {active ? (
+                          {failed ? (
+                            <span className="text-muted-foreground">—</span>
+                          ) : active ? (
                             <span className="text-sky-500 font-medium">Ongoing</span>
                           ) : (
                             <span className="tabular-nums text-foreground">{formatDurationMs(durationMs)}</span>
@@ -214,7 +307,11 @@ export default function LoginActivity() {
                         </td>
                         <td className="px-4 py-3.5 align-top font-mono text-xs text-foreground">{r.ipAddress || '—'}</td>
                         <td className="px-4 py-3.5 align-top">
-                          {active ? (
+                          {failed ? (
+                            <span className="inline-flex items-center rounded-full bg-red-600/20 text-red-400 border border-red-600/40 px-2.5 py-0.5 text-xs font-medium">
+                              {failureBadgeLabel(r.failureReason)}
+                            </span>
+                          ) : active ? (
                             <span className="inline-flex items-center rounded-full bg-green-600/20 text-green-400 border border-green-600/30 px-2.5 py-0.5 text-xs font-medium">
                               Active
                             </span>

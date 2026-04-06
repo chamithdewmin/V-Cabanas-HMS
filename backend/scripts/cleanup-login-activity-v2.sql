@@ -1,4 +1,2 @@
--- Session history only: remove failed attempts and bulky columns
-DELETE FROM login_activity WHERE success = false;
+-- Remove bulky user_agent only; failed attempts and failure_reason are kept for security audit
 ALTER TABLE login_activity DROP COLUMN IF EXISTS user_agent;
-ALTER TABLE login_activity DROP COLUMN IF EXISTS failure_reason;

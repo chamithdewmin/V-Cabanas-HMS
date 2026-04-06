@@ -64,6 +64,7 @@ export const api = {
     login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
     logout: (activityId) => postLogout(activityId),
     loginActivity: () => request('/auth/login-activity'),
+    loginActivityStats: () => request('/auth/login-activity/stats'),
     me: () => request('/auth/me'),
     forgotPassword: (phone) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
     verifyOtp: (phone, otp) => request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),
