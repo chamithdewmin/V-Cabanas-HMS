@@ -20,6 +20,8 @@ const emptyForm = () => ({
   checkOut: '',
   price: '',
   bookingComCommission: '',
+  priceUsd: '',
+  bookingComCommissionUsd: '',
   roomFeature: 'ac',
   roomType: 'single',
   addons: [],
@@ -31,7 +33,7 @@ const Booking = () => {
   const userRole = (user?.role || '').toLowerCase();
   const isAdmin = userRole === 'admin';
   /** Customer through Actions (incl. optional Net column). */
-  const tableColSpan = isAdmin ? 13 : 12;
+  const tableColSpan = isAdmin ? 15 : 14;
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
   const [pricingList, setPricingList] = useState([]);
@@ -93,6 +95,8 @@ const Booking = () => {
         checkOut: form.checkOut || null,
         price: form.price ? Number(form.price) : 0,
         bookingComCommission: form.bookingComCommission ? Number(form.bookingComCommission) : 0,
+        priceUsd: form.priceUsd ? Number(form.priceUsd) : 0,
+        bookingComCommissionUsd: form.bookingComCommissionUsd ? Number(form.bookingComCommissionUsd) : 0,
         addons: (form.addons || []).filter((a) => a.pricingId && a.name).map((a) => ({
           pricingId: a.pricingId,
           name: a.name,
@@ -130,6 +134,8 @@ const Booking = () => {
       checkOut: b.checkOut || '',
       price: b.price ?? '',
       bookingComCommission: b.bookingComCommission ?? '',
+      priceUsd: b.priceUsd ?? '',
+      bookingComCommissionUsd: b.bookingComCommissionUsd ?? '',
       roomFeature: b.roomFeature || 'ac',
       roomType: b.roomType || 'single',
       addons: (b.addons || []).map((a) => ({
@@ -211,13 +217,15 @@ const Booking = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[76rem] border-collapse table-auto">
+            <table className="w-full min-w-[92rem] border-collapse table-auto">
               <colgroup>
                 <col className="min-w-[9rem]" />
                 <col className="w-24" />
                 <col className="w-[5.5rem]" />
                 <col className="w-[5.5rem]" />
                 <col className="min-w-[10rem]" />
+                <col className="w-[7.5rem]" />
+                <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
@@ -251,10 +259,16 @@ const Booking = () => {
                     Check-out
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
-                    Price
+                    Price (LKR)
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
-                    Booking.com
+                    Booking.com (LKR)
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                    Price (USD)
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                    Booking.com (USD)
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
                     Income &amp; Profit
@@ -313,6 +327,18 @@ const Booking = () => {
                         {b.bookingComCommission != null
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
+                      </td>
+                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
+                        {(Number(b.priceUsd) || 0).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </td>
+                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
+                        {(Number(b.bookingComCommissionUsd) || 0).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
                       </td>
                       <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle font-medium text-foreground">
                         {(b.incomeProfit != null ? b.incomeProfit : (Number(b.price) || 0) - (Number(b.bookingComCommission) || 0)).toLocaleString()}
@@ -482,7 +508,7 @@ const Booking = () => {
               </div>
 
               <div className="space-y-1.5">
-                <Label htmlFor="price">Price</Label>
+                <Label htmlFor="price">Total price (LKR)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -490,13 +516,13 @@ const Booking = () => {
                   step="0.01"
                   value={form.price}
                   onChange={(e) => handleChange('price', e.target.value)}
-                  placeholder="Total price"
+                  placeholder="Total price in LKR"
                 />
               </div>
 
               <div className="space-y-1.5">
                 <Label htmlFor="bookingComCommission">
-                  Booking.com commission (if any)
+                  Booking.com commission (LKR, if any)
                 </Label>
                 <Input
                   id="bookingComCommission"
@@ -505,7 +531,35 @@ const Booking = () => {
                   step="0.01"
                   value={form.bookingComCommission}
                   onChange={(e) => handleChange('bookingComCommission', e.target.value)}
-                  placeholder="Commission amount"
+                  placeholder="Commission in LKR"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="priceUsd">Total price (USD)</Label>
+                <Input
+                  id="priceUsd"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.priceUsd}
+                  onChange={(e) => handleChange('priceUsd', e.target.value)}
+                  placeholder="Total price in USD"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <Label htmlFor="bookingComCommissionUsd">
+                  Booking.com commission (USD, if any)
+                </Label>
+                <Input
+                  id="bookingComCommissionUsd"
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={form.bookingComCommissionUsd}
+                  onChange={(e) => handleChange('bookingComCommissionUsd', e.target.value)}
+                  placeholder="Commission in USD"
                 />
               </div>
             </div>

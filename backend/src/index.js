@@ -137,6 +137,14 @@ async function initDb() {
   } catch (e) {
     console.warn('Booking add-ons migration:', e.message);
   }
+  try {
+    const usdPath = path.join(__dirname, '..', 'scripts', 'add-booking-usd-columns.sql');
+    const usdSql = fs.readFileSync(usdPath, 'utf8');
+    await pool.query(usdSql);
+    console.log('Booking USD columns ready.');
+  } catch (e) {
+    console.warn('Booking USD migration:', e.message);
+  }
 }
 
 const app = express();

@@ -233,6 +233,8 @@ CREATE TABLE IF NOT EXISTS bookings (
 );
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_feature VARCHAR(50) DEFAULT 'ac';
 ALTER TABLE bookings ADD COLUMN IF NOT EXISTS room_type VARCHAR(50) DEFAULT 'single';
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS price_usd DECIMAL(15,2) DEFAULT 0;
+ALTER TABLE bookings ADD COLUMN IF NOT EXISTS booking_com_commission_usd DECIMAL(15,2) DEFAULT 0;
 
 -- 18) Pricing (service/room price list)
 CREATE TABLE IF NOT EXISTS pricing (

@@ -11,6 +11,9 @@ const STAFF_ROLES = ['manager', 'receptionist'];
 const toBooking = (row, addons = []) => {
   const price = row.price != null ? parseFloat(row.price) : 0;
   const commission = row.booking_com_commission != null ? parseFloat(row.booking_com_commission) : 0;
+  const priceUsd = row.price_usd != null ? parseFloat(row.price_usd) : 0;
+  const commissionUsd =
+    row.booking_com_commission_usd != null ? parseFloat(row.booking_com_commission_usd) : 0;
   const staffCommission = row.staff_commission_amount != null ? parseFloat(row.staff_commission_amount) : 0;
   return {
     id: row.id,
@@ -26,6 +29,8 @@ const toBooking = (row, addons = []) => {
     checkOut: row.check_out,
     price,
     bookingComCommission: commission,
+    priceUsd,
+    bookingComCommissionUsd: commissionUsd,
     staffCommissionAmount: staffCommission,
     incomeProfit: price - commission,
     netAfterStaffCommission: price - commission - staffCommission,
@@ -129,8 +134,8 @@ router.post('/', async (req, res) => {
     const id = `BKG-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const clientId = d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null;
     await pool.query(
-      `INSERT INTO bookings (id, user_id, client_id, customer_name, room_number, adults, children, room_category, room_feature, room_type, check_in, check_out, price, booking_com_commission, staff_commission_amount)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15)`,
+      `INSERT INTO bookings (id, user_id, client_id, customer_name, room_number, adults, children, room_category, room_feature, room_type, check_in, check_out, price, booking_com_commission, price_usd, booking_com_commission_usd, staff_commission_amount)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
       [
         id,
         uid,
@@ -146,6 +151,8 @@ router.post('/', async (req, res) => {
         d.checkOut || null,
         price,
         d.bookingComCommission != null ? Number(d.bookingComCommission) : 0,
+        d.priceUsd != null ? Number(d.priceUsd) : 0,
+        d.bookingComCommissionUsd != null ? Number(d.bookingComCommissionUsd) : 0,
         staffCommissionAmount,
       ]
     );
@@ -210,6 +217,8 @@ router.put('/:id', async (req, res) => {
       d.checkOut || null,
       d.price != null ? Number(d.price) : null,
       d.bookingComCommission != null ? Number(d.bookingComCommission) : null,
+      d.priceUsd != null ? Number(d.priceUsd) : null,
+      d.bookingComCommissionUsd != null ? Number(d.bookingComCommissionUsd) : null,
     ];
     if (adm) {
       const updatesAdm = [id, ...rowFields, staffCommissionAmount];
@@ -225,9 +234,11 @@ router.put('/:id', async (req, res) => {
         check_out = COALESCE($10, check_out),
         price = COALESCE($11, price),
         booking_com_commission = COALESCE($12, booking_com_commission),
-        staff_commission_amount = $13`;
+        price_usd = COALESCE($13, price_usd),
+        booking_com_commission_usd = COALESCE($14, booking_com_commission_usd),
+        staff_commission_amount = $15`;
       if (clientId !== undefined) {
-        q += ', client_id = $14';
+        q += ', client_id = $16';
         updatesAdm.push(clientId);
       }
       q += ' WHERE id = $1';
@@ -246,12 +257,14 @@ router.put('/:id', async (req, res) => {
         check_out = COALESCE($10, check_out),
         price = COALESCE($11, price),
         booking_com_commission = COALESCE($12, booking_com_commission),
-        staff_commission_amount = $14`;
+        price_usd = COALESCE($13, price_usd),
+        booking_com_commission_usd = COALESCE($14, booking_com_commission_usd),
+        staff_commission_amount = $16`;
       if (clientId !== undefined) {
-        query += ', client_id = $15';
+        query += ', client_id = $17';
         updates.push(clientId);
       }
-      query += ` WHERE id = $1 AND user_id = $13`;
+      query += ` WHERE id = $1 AND user_id = $15`;
       await pool.query(query, updates);
     }
     if (Array.isArray(d.addons)) {
