@@ -153,6 +153,14 @@ async function initDb() {
   } catch (e) {
     console.warn('Login activity migration:', e.message);
   }
+  try {
+    const laCleanPath = path.join(__dirname, '..', 'scripts', 'cleanup-login-activity-v2.sql');
+    const laCleanSql = fs.readFileSync(laCleanPath, 'utf8');
+    await pool.query(laCleanSql);
+    console.log('Login activity cleanup applied.');
+  } catch (e) {
+    console.warn('Login activity cleanup:', e.message);
+  }
 }
 
 const app = express();

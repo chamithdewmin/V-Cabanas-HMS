@@ -26,6 +26,7 @@ const SalaryManagement = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState({
+    linkedUserId: '',
     employeeName: '',
     position: '',
     amount: '',
@@ -68,20 +69,67 @@ const SalaryManagement = () => {
   }, []);
 
   useEffect(() => {
-    if (isAdmin) {
-      loadStaffCommission();
-      api.users.list().then((list) => setUsersList(Array.isArray(list) ? list : [])).catch(() => setUsersList([]));
-    }
+    api.users.list().then((list) => setUsersList(Array.isArray(list) ? list : [])).catch(() => setUsersList([]));
+  }, []);
+
+  useEffect(() => {
+    if (isAdmin) loadStaffCommission();
   }, [isAdmin]);
+
+  const assignableUsers = React.useMemo(
+    () => usersList.filter((u) => (u.role || '').toLowerCase() !== 'admin'),
+    [usersList]
+  );
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleEmployeeSelect = (userIdStr) => {
+    if (!userIdStr) {
+      setForm((prev) => ({
+        ...prev,
+        linkedUserId: '',
+        employeeName: '',
+        position: '',
+        commissionRatePct: '',
+      }));
+      return;
+    }
+    const u = assignableUsers.find((x) => String(x.id) === userIdStr);
+    if (!u) return;
+    setForm((prev) => ({
+      ...prev,
+      linkedUserId: userIdStr,
+      employeeName: u.name || '',
+      position: u.role || 'receptionist',
+      commissionRatePct:
+        u.commission_rate_pct != null ? String(u.commission_rate_pct) : '10',
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const isSalaryMode = editingItem || !editingStaffUser;
-    if (isSalaryMode && (!form.employeeName.trim() || !form.amount)) {
+    const isLegacySalary =
+      isSalaryMode && editingItem && !editingItem.linkedUserId;
+    if (isSalaryMode && !editingStaffUser && !form.linkedUserId && !isLegacySalary) {
+      toast({
+        title: 'Select an employee',
+        description: 'Choose a staff member (admin accounts cannot be selected).',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (isSalaryMode && (!form.amount || String(form.amount).trim() === '')) {
+      toast({
+        title: 'Missing details',
+        description: 'Please enter the salary amount.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    if (isLegacySalary && (!form.employeeName.trim() || !form.amount)) {
       toast({
         title: 'Missing details',
         description: 'Please enter employee name and amount.',
@@ -101,13 +149,29 @@ const SalaryManagement = () => {
     setSaving(true);
     try {
       if (editingItem || isSalaryMode) {
-        const payload = {
-          employeeName: form.employeeName.trim(),
-          position: (form.position || '').trim(),
+        const basePayload = {
           amount: Number(form.amount) || 0,
           period: form.period || 'monthly',
           notes: (form.notes || '').trim(),
         };
+        const rate =
+          form.commissionRatePct !== '' && form.commissionRatePct != null
+            ? Math.min(100, Math.max(0, parseFloat(form.commissionRatePct)))
+            : undefined;
+        let payload;
+        if (isLegacySalary) {
+          payload = {
+            ...basePayload,
+            employeeName: form.employeeName.trim(),
+            position: (form.position || '').trim(),
+          };
+        } else {
+          payload = {
+            ...basePayload,
+            linkedUserId: form.linkedUserId ? Number(form.linkedUserId) : undefined,
+            commissionRatePct: rate,
+          };
+        }
         if (editingItem) {
           await api.salary.update(editingItem.id, payload);
           toast({ title: 'Salary updated', description: 'Salary record has been updated.' });
@@ -116,7 +180,7 @@ const SalaryManagement = () => {
           toast({ title: 'Salary added', description: 'New salary record has been saved.' });
         }
       }
-      if (editingStaffUser && form.commissionRatePct !== '') {
+      if (editingStaffUser && form.commissionRatePct !== '' && !editingItem) {
         const rate = Math.min(100, Math.max(0, parseFloat(form.commissionRatePct) || 0));
         const userRow = usersList.find((u) => u.id === editingStaffUser.userId);
         if (userRow) {
@@ -129,7 +193,7 @@ const SalaryManagement = () => {
           toast({ title: 'Commission rate updated', description: `Rate set to ${rate}%.` });
         }
       }
-      setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+      setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
       setEditingItem(null);
       setEditingStaffUser(null);
       setIsDialogOpen(false);
@@ -147,13 +211,21 @@ const SalaryManagement = () => {
     const staffUser = row.staffUser || null;
     setEditingItem(salaryRecord);
     setEditingStaffUser(staffUser);
+    let crPct = '';
+    if (salaryRecord?.linkedUserId) {
+      const u = usersList.find((x) => x.id === salaryRecord.linkedUserId);
+      crPct = u ? String(u.commission_rate_pct ?? 10) : '10';
+    } else if (staffUser) {
+      crPct = String(staffUser.commissionRatePct ?? 10);
+    }
     setForm({
+      linkedUserId: salaryRecord?.linkedUserId ? String(salaryRecord.linkedUserId) : '',
       employeeName: row.name || salaryRecord?.employeeName || '',
       position: row.roleOrPosition || salaryRecord?.position || '',
       amount: salaryRecord ? String(salaryRecord.amount ?? '') : '',
       period: salaryRecord?.period || 'monthly',
       notes: salaryRecord?.notes || '',
-      commissionRatePct: staffUser ? String(staffUser.commissionRatePct ?? 10) : '',
+      commissionRatePct: crPct,
     });
     setIsDialogOpen(true);
   };
@@ -188,7 +260,9 @@ const SalaryManagement = () => {
     const salaryUsed = new Set();
     staffCommissionList.forEach((s) => {
       const match = items.find(
-        (item) => normalizeName(item.employeeName) === normalizeName(s.name)
+        (item) =>
+          (item.linkedUserId && item.linkedUserId === s.userId) ||
+          normalizeName(item.employeeName) === normalizeName(s.name)
       );
       if (match) salaryUsed.add(match.id);
       rows.push({
@@ -253,7 +327,7 @@ const SalaryManagement = () => {
               onClick={() => {
                 setEditingItem(null);
                 setEditingStaffUser(null);
-                setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+                setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
                 setIsDialogOpen(true);
               }}
             >
@@ -333,7 +407,7 @@ const SalaryManagement = () => {
                         onAction={() => {
                           setEditingItem(null);
                           setEditingStaffUser(null);
-                          setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+                          setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
                           setIsDialogOpen(true);
                         }}
                       />
@@ -416,7 +490,7 @@ const SalaryManagement = () => {
           if (!open) {
             setEditingItem(null);
             setEditingStaffUser(null);
-            setForm({ employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+            setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
           }
         }}
       >
@@ -427,63 +501,11 @@ const SalaryManagement = () => {
             </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-2">
-              <Label>Employee name</Label>
-              <Input
-                value={form.employeeName}
-                onChange={(e) => handleChange('employeeName', e.target.value)}
-                placeholder="Full name"
-                readOnly={!!editingStaffUser && !editingItem}
-                required={!editingStaffUser || !!editingItem}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Position / Role</Label>
-              <Input
-                value={form.position}
-                onChange={(e) => handleChange('position', e.target.value)}
-                placeholder="e.g. Manager, Receptionist"
-                readOnly={!!editingStaffUser && !editingItem}
-              />
-            </div>
-            {(!editingStaffUser || editingItem) && (
-              <>
-                <div className="space-y-2">
-                  <Label>Amount</Label>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    value={form.amount}
-                    onChange={(e) => handleChange('amount', e.target.value)}
-                    placeholder="Salary amount"
-                    required={!editingStaffUser || !!editingItem}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Period</Label>
-                  <select
-                    className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                    value={form.period}
-                    onChange={(e) => handleChange('period', e.target.value)}
-                  >
-                    <option value="monthly">Monthly</option>
-                    <option value="weekly">Weekly</option>
-                  </select>
-                </div>
-                <div className="space-y-2">
-                  <Label>Notes (optional)</Label>
-                  <textarea
-                    className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-[60px]"
-                    value={form.notes}
-                    onChange={(e) => handleChange('notes', e.target.value)}
-                    placeholder="Additional notes"
-                  />
-                </div>
-              </>
-            )}
-            {editingStaffUser && isAdmin && (
+            {editingStaffUser && !editingItem ? (
               <div className="space-y-2">
+                <p className="text-sm text-muted-foreground">
+                  {editingStaffUser.name} — {editingStaffUser.role}
+                </p>
                 <Label>Commission rate (%)</Label>
                 <Input
                   type="number"
@@ -496,6 +518,105 @@ const SalaryManagement = () => {
                 />
                 <p className="text-xs text-muted-foreground">Percentage of booking price earned as commission.</p>
               </div>
+            ) : (
+              <>
+                {editingItem && !editingItem.linkedUserId ? (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Employee name</Label>
+                      <Input
+                        value={form.employeeName}
+                        onChange={(e) => handleChange('employeeName', e.target.value)}
+                        placeholder="Full name"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Position / Role</Label>
+                      <Input
+                        value={form.position}
+                        onChange={(e) => handleChange('position', e.target.value)}
+                        placeholder="e.g. Manager, Receptionist"
+                      />
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="space-y-2">
+                      <Label htmlFor="salary-employee">Employee</Label>
+                      <select
+                        id="salary-employee"
+                        className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={form.linkedUserId}
+                        onChange={(e) => handleEmployeeSelect(e.target.value)}
+                        required
+                      >
+                        <option value="">Select staff member (admins excluded)</option>
+                        {assignableUsers.map((u) => (
+                          <option key={u.id} value={u.id}>
+                            {u.name} — {u.email}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Position / Role</Label>
+                      <Input readOnly value={form.position} placeholder="From user account" className="opacity-90" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Commission rate (%)</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        max="100"
+                        step="0.5"
+                        value={form.commissionRatePct}
+                        onChange={(e) => handleChange('commissionRatePct', e.target.value)}
+                        placeholder="10"
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Saved to this user&apos;s profile; used when they create bookings.
+                      </p>
+                    </div>
+                  </>
+                )}
+                {(!editingStaffUser || editingItem) && (
+                  <>
+                    <div className="space-y-2">
+                      <Label>Amount</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.amount}
+                        onChange={(e) => handleChange('amount', e.target.value)}
+                        placeholder="Salary amount"
+                        required
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Period</Label>
+                      <select
+                        className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                        value={form.period}
+                        onChange={(e) => handleChange('period', e.target.value)}
+                      >
+                        <option value="monthly">Monthly</option>
+                        <option value="weekly">Weekly</option>
+                      </select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Notes (optional)</Label>
+                      <textarea
+                        className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary min-h-[60px]"
+                        value={form.notes}
+                        onChange={(e) => handleChange('notes', e.target.value)}
+                        placeholder="Additional notes"
+                      />
+                    </div>
+                  </>
+                )}
+              </>
             )}
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>

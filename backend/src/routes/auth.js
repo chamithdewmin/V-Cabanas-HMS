@@ -17,27 +17,13 @@ function getClientIp(req) {
   return String(rip).replace(/^::ffff:/, '').slice(0, 45);
 }
 
-function getUserAgent(req) {
-  const ua = req.headers['user-agent'];
-  return ua ? String(ua).slice(0, 2000) : '';
-}
-
 async function insertLoginActivity(values) {
-  const {
-    userId = null,
-    email,
-    userName = null,
-    success,
-    failureReason = null,
-    role = null,
-    ip,
-    ua,
-  } = values;
+  const { userId, email, userName, role, ip } = values;
   const { rows } = await pool.query(
-    `INSERT INTO login_activity (user_id, email, user_name, success, failure_reason, role, ip_address, user_agent)
-     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+    `INSERT INTO login_activity (user_id, email, user_name, success, role, ip_address)
+     VALUES ($1, $2, $3, true, $4, $5)
      RETURNING id`,
-    [userId, email, userName, success, failureReason, role, ip, ua]
+    [userId, email, userName, role || 'receptionist', ip]
   );
   return rows[0]?.id ?? null;
 }
@@ -121,7 +107,6 @@ const sendOtpSms = async (phone, otp, purpose = 'password change') => {
 
 router.post('/login', async (req, res) => {
   const ip = getClientIp(req);
-  const ua = getUserAgent(req);
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -139,36 +124,11 @@ router.post('/login', async (req, res) => {
 
     const user = rows[0];
     if (!user) {
-      try {
-        await insertLoginActivity({
-          email: emailTrimmed,
-          success: false,
-          failureReason: 'user_not_found',
-          ip,
-          ua,
-        });
-      } catch (logErr) {
-        console.warn('login_activity insert:', logErr.message);
-      }
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
-      try {
-        await insertLoginActivity({
-          userId: user.id,
-          email: emailTrimmed,
-          userName: user.name,
-          success: false,
-          failureReason: 'invalid_password',
-          role: user.role || 'receptionist',
-          ip,
-          ua,
-        });
-      } catch (logErr) {
-        console.warn('login_activity insert:', logErr.message);
-      }
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
@@ -192,10 +152,8 @@ router.post('/login', async (req, res) => {
         userId: user.id,
         email: emailTrimmed,
         userName: user.name,
-        success: true,
         role: user.role || 'receptionist',
         ip,
-        ua,
       });
     } catch (logErr) {
       console.warn('login_activity insert:', logErr.message);
@@ -242,10 +200,11 @@ router.get('/login-activity', authMiddleware, async (req, res) => {
       return res.status(403).json({ error: 'Forbidden' });
     }
     const { rows } = await pool.query(
-      `SELECT id, user_id AS "userId", email, user_name AS "userName", success, failure_reason AS "failureReason",
-              role, ip_address AS "ipAddress", user_agent AS "userAgent",
+      `SELECT id, user_id AS "userId", email, user_name AS "userName",
+              role, ip_address AS "ipAddress",
               login_at AS "loginAt", logout_at AS "logoutAt"
        FROM login_activity
+       WHERE COALESCE(success, true) = true
        ORDER BY login_at DESC
        LIMIT 500`
     );
