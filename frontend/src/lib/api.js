@@ -15,6 +15,27 @@ function getApiBase() {
 
 const getToken = () => localStorage.getItem('token');
 
+/** Logout without using request() so 401 does not recurse; optional activity row update. */
+async function postLogout(activityId) {
+  const base = getApiBase();
+  const token = getToken();
+  if (!token) return;
+  try {
+    await fetch(`${base}/auth/logout`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(
+        activityId != null && activityId !== '' ? { activityId: Number(activityId) } : {}
+      ),
+    });
+  } catch {
+    /* ignore network errors */
+  }
+}
+
 const request = async (path, options = {}) => {
   const base = getApiBase();
   const url = `${base}${path}`;
@@ -41,6 +62,8 @@ const request = async (path, options = {}) => {
 export const api = {
   auth: {
     login: (email, password) => request('/auth/login', { method: 'POST', body: JSON.stringify({ email, password }) }),
+    logout: (activityId) => postLogout(activityId),
+    loginActivity: () => request('/auth/login-activity'),
     me: () => request('/auth/me'),
     forgotPassword: (phone) => request('/auth/forgot-password', { method: 'POST', body: JSON.stringify({ phone }) }),
     verifyOtp: (phone, otp) => request('/auth/verify-otp', { method: 'POST', body: JSON.stringify({ phone, otp }) }),

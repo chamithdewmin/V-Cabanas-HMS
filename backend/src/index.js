@@ -145,10 +145,20 @@ async function initDb() {
   } catch (e) {
     console.warn('Booking USD migration:', e.message);
   }
+  try {
+    const laPath = path.join(__dirname, '..', 'scripts', 'add-login-activity.sql');
+    const laSql = fs.readFileSync(laPath, 'utf8');
+    await pool.query(laSql);
+    console.log('Login activity table ready.');
+  } catch (e) {
+    console.warn('Login activity migration:', e.message);
+  }
 }
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+
+app.set('trust proxy', 1);
 
 app.use(cors({
   origin: process.env.FRONTEND_URL || 'https://app.vcabanasyala.com',

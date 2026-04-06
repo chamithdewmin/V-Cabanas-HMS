@@ -18,6 +18,7 @@ import CashFlow from './pages/CashFlow';
 import Settings from './pages/Settings';
 import Profile from './pages/Profile';
 import Users from './pages/Users';
+import LoginActivity from './pages/LoginActivity';
 import Dashboard from './pages/Dashboard';
 import Calendar from './pages/Calendar';
 import Booking from './pages/Booking';
@@ -85,6 +86,7 @@ function App() {
         <Route path="reports/tax" element={<ReportTax />} />
         <Route path="reports/monthly" element={<ReportMonthly />} />
         <Route path="users" element={<Users />} />
+        <Route path="login-activity" element={<LoginActivity />} />
         <Route path="profile" element={<Profile />} />
         <Route path="settings" element={<Settings />} />
       </Route>

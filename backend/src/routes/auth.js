@@ -3,8 +3,44 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import pool from '../config/db.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { isAdmin } from '../lib/roleScope.js';
 
 const router = express.Router();
+
+function getClientIp(req) {
+  const xff = req.headers['x-forwarded-for'];
+  if (xff) {
+    const first = String(xff).split(',')[0].trim();
+    if (first) return first.slice(0, 45);
+  }
+  const rip = req.socket?.remoteAddress || req.connection?.remoteAddress || req.ip || '';
+  return String(rip).replace(/^::ffff:/, '').slice(0, 45);
+}
+
+function getUserAgent(req) {
+  const ua = req.headers['user-agent'];
+  return ua ? String(ua).slice(0, 2000) : '';
+}
+
+async function insertLoginActivity(values) {
+  const {
+    userId = null,
+    email,
+    userName = null,
+    success,
+    failureReason = null,
+    role = null,
+    ip,
+    ua,
+  } = values;
+  const { rows } = await pool.query(
+    `INSERT INTO login_activity (user_id, email, user_name, success, failure_reason, role, ip_address, user_agent)
+     VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+     RETURNING id`,
+    [userId, email, userName, success, failureReason, role, ip, ua]
+  );
+  return rows[0]?.id ?? null;
+}
 const OTP_EXPIRY_MINUTES = 5;
 const RESET_TOKEN_EXPIRY = '15m';
 
@@ -84,6 +120,8 @@ const sendOtpSms = async (phone, otp, purpose = 'password change') => {
 };
 
 router.post('/login', async (req, res) => {
+  const ip = getClientIp(req);
+  const ua = getUserAgent(req);
   try {
     const { email, password } = req.body;
     if (!email || !password) {
@@ -101,18 +139,67 @@ router.post('/login', async (req, res) => {
 
     const user = rows[0];
     if (!user) {
+      try {
+        await insertLoginActivity({
+          email: emailTrimmed,
+          success: false,
+          failureReason: 'user_not_found',
+          ip,
+          ua,
+        });
+      } catch (logErr) {
+        console.warn('login_activity insert:', logErr.message);
+      }
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
     const valid = await bcrypt.compare(password, user.password_hash);
     if (!valid) {
+      try {
+        await insertLoginActivity({
+          userId: user.id,
+          email: emailTrimmed,
+          userName: user.name,
+          success: false,
+          failureReason: 'invalid_password',
+          role: user.role || 'receptionist',
+          ip,
+          ua,
+        });
+      } catch (logErr) {
+        console.warn('login_activity insert:', logErr.message);
+      }
       return res.status(401).json({ success: false, error: 'Invalid credentials' });
     }
 
-    // Increment token_version to invalidate all other sessions (single-session)
-    await pool.query('UPDATE users SET token_version = COALESCE(token_version, 0) + 1 WHERE id = $1', [user.id]);
-    const { rows: vrows } = await pool.query('SELECT token_version FROM users WHERE id = $1', [user.id]);
-    const tokenVersion = vrows[0]?.token_version ?? 1;
+    const roleLower = (user.role || 'receptionist').toLowerCase();
+    let tokenVersion;
+    if (roleLower === 'admin') {
+      const { rows: cur } = await pool.query(
+        'SELECT COALESCE(token_version, 0) AS token_version FROM users WHERE id = $1',
+        [user.id]
+      );
+      tokenVersion = cur[0]?.token_version ?? 0;
+    } else {
+      await pool.query('UPDATE users SET token_version = COALESCE(token_version, 0) + 1 WHERE id = $1', [user.id]);
+      const { rows: vrows } = await pool.query('SELECT token_version FROM users WHERE id = $1', [user.id]);
+      tokenVersion = vrows[0]?.token_version ?? 1;
+    }
+
+    let loginActivityId = null;
+    try {
+      loginActivityId = await insertLoginActivity({
+        userId: user.id,
+        email: emailTrimmed,
+        userName: user.name,
+        success: true,
+        role: user.role || 'receptionist',
+        ip,
+        ua,
+      });
+    } catch (logErr) {
+      console.warn('login_activity insert:', logErr.message);
+    }
 
     const token = jwt.sign(
       { id: user.id, email: user.email, v: tokenVersion },
@@ -123,10 +210,48 @@ router.post('/login', async (req, res) => {
     res.json({
       success: true,
       token,
+      loginActivityId,
       user: { id: user.id, email: user.email, name: user.name, role: user.role || 'receptionist' },
     });
   } catch (err) {
     console.error('Login error:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.post('/logout', authMiddleware, async (req, res) => {
+  try {
+    const raw = req.body?.activityId ?? req.body?.loginActivityId;
+    const activityId = raw != null ? parseInt(String(raw), 10) : null;
+    if (activityId && Number.isFinite(activityId)) {
+      await pool.query(
+        'UPDATE login_activity SET logout_at = NOW() WHERE id = $1 AND user_id = $2 AND logout_at IS NULL',
+        [activityId, req.user.id]
+      );
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Logout log:', err);
+    res.status(500).json({ error: 'Server error' });
+  }
+});
+
+router.get('/login-activity', authMiddleware, async (req, res) => {
+  try {
+    if (!isAdmin(req)) {
+      return res.status(403).json({ error: 'Forbidden' });
+    }
+    const { rows } = await pool.query(
+      `SELECT id, user_id AS "userId", email, user_name AS "userName", success, failure_reason AS "failureReason",
+              role, ip_address AS "ipAddress", user_agent AS "userAgent",
+              login_at AS "loginAt", logout_at AS "logoutAt"
+       FROM login_activity
+       ORDER BY login_at DESC
+       LIMIT 500`
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error('login-activity:', err);
     res.status(500).json({ error: 'Server error' });
   }
 });

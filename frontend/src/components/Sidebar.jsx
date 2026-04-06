@@ -23,6 +23,7 @@ import {
   Tag,
   Banknote,
   StickyNote,
+  History,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
@@ -74,6 +75,7 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Analytics', icon: BarChart3, href: '/reports/overview', items: reportSubItems },
   { divider: true },
   { label: 'User Management', href: '/users', icon: UserPlus, adminOnly: true },
+  { label: 'Login activity', href: '/login-activity', icon: History, adminOnly: true },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
 
@@ -189,8 +191,8 @@ export default function Sidebar() {
   const canManageUsers = userRole === 'admin';
   const navEntries = NAV_ITEMS_WITH_DIVIDERS;
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/login');
   };
 

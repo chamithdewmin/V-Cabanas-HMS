@@ -13,6 +13,7 @@ export const AuthProvider = ({ children }) => {
       setIsAuthenticated(false);
       setUser(null);
       localStorage.removeItem('token');
+      localStorage.removeItem('loginActivityId');
     };
     window.addEventListener('auth:logout', handleLogout);
     return () => window.removeEventListener('auth:logout', handleLogout);
@@ -64,6 +65,11 @@ export const AuthProvider = ({ children }) => {
       const data = await api.auth.login(email, password);
       if (data.success && data.token) {
         localStorage.setItem('token', data.token);
+        if (data.loginActivityId != null) {
+          localStorage.setItem('loginActivityId', String(data.loginActivityId));
+        } else {
+          localStorage.removeItem('loginActivityId');
+        }
         setIsAuthenticated(true);
         setUser(data.user);
         window.dispatchEvent(new CustomEvent('auth:login'));
@@ -82,10 +88,19 @@ export const AuthProvider = ({ children }) => {
     return { success: false, error: 'Invalid credentials' };
   };
 
-  const logout = () => {
+  const logout = async () => {
+    const activityId = localStorage.getItem('loginActivityId');
+    try {
+      if (activityId && localStorage.getItem('token')) {
+        await api.auth.logout(activityId);
+      }
+    } catch {
+      /* still clear session */
+    }
+    localStorage.removeItem('loginActivityId');
+    localStorage.removeItem('token');
     setIsAuthenticated(false);
     setUser(null);
-    localStorage.removeItem('token');
   };
 
   return (
