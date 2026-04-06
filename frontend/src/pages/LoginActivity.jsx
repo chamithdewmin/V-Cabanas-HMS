@@ -135,53 +135,6 @@ export default function LoginActivity() {
       </Helmet>
 
       <div className="space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
-          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted-foreground">Total Users</p>
-              <p className="text-2xl font-bold text-foreground tabular-nums mt-1">
-                {stats ? stats.totalUsers : loading ? '—' : 0}
-              </p>
-            </div>
-            <div className="shrink-0 rounded-lg bg-blue-500/10 p-2">
-              <User className="w-6 h-6 text-blue-400" strokeWidth={1.75} aria-hidden />
-            </div>
-          </div>
-          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted-foreground">Active Users</p>
-              <p className="text-2xl font-bold text-green-500 tabular-nums mt-1">
-                {stats ? stats.activeUsers : loading ? '—' : 0}
-              </p>
-            </div>
-            <div className="shrink-0 rounded-full bg-green-500/15 p-2">
-              <CheckCircle2 className="w-6 h-6 text-green-500" strokeWidth={2} aria-hidden />
-            </div>
-          </div>
-          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted-foreground">Active Sessions</p>
-              <p className="text-2xl font-bold text-sky-400 tabular-nums mt-1">
-                {stats ? stats.activeSessions : loading ? '—' : 0}
-              </p>
-            </div>
-            <div className="shrink-0 rounded-lg bg-sky-500/10 p-2">
-              <LogIn className="w-6 h-6 text-sky-400" strokeWidth={1.75} aria-hidden />
-            </div>
-          </div>
-          <div className="rounded-xl border border-border bg-card/80 p-4 flex items-start justify-between gap-3 shadow-sm">
-            <div className="min-w-0">
-              <p className="text-xs font-medium text-muted-foreground">Total Sessions</p>
-              <p className="text-2xl font-bold text-foreground tabular-nums mt-1">
-                {stats ? stats.totalSessions : loading ? '—' : 0}
-              </p>
-            </div>
-            <div className="shrink-0 rounded-lg bg-blue-500/10 p-2">
-              <Clock className="w-6 h-6 text-blue-400" strokeWidth={1.75} aria-hidden />
-            </div>
-          </div>
-        </div>
-
         <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Login Activity</h1>
@@ -212,6 +165,53 @@ export default function LoginActivity() {
               <RefreshCw className={cn('w-4 h-4 mr-2', loading && 'animate-spin')} />
               Refresh
             </Button>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
+          <div className="rounded-xl border border-border/80 bg-zinc-950/90 dark:bg-[#121212] p-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Total Users</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums mt-1">
+                {stats ? stats.totalUsers : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-lg bg-blue-950/80 p-2.5 border border-blue-900/40">
+              <User className="w-6 h-6 text-blue-400" strokeWidth={1.75} aria-hidden />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/80 bg-zinc-950/90 dark:bg-[#121212] p-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Active Users</p>
+              <p className="text-2xl font-bold text-green-500 tabular-nums mt-1">
+                {stats ? stats.activeUsers : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-lg bg-green-950/70 p-2.5 border border-green-900/40">
+              <CheckCircle2 className="w-6 h-6 text-green-500" strokeWidth={2} aria-hidden />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/80 bg-zinc-950/90 dark:bg-[#121212] p-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Active Sessions</p>
+              <p className="text-2xl font-bold text-sky-400 tabular-nums mt-1">
+                {stats ? stats.activeSessions : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-lg bg-blue-950/80 p-2.5 border border-blue-900/40">
+              <LogIn className="w-6 h-6 text-sky-400" strokeWidth={1.75} aria-hidden />
+            </div>
+          </div>
+          <div className="rounded-xl border border-border/80 bg-zinc-950/90 dark:bg-[#121212] p-4 flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <p className="text-xs font-medium text-muted-foreground">Total Sessions</p>
+              <p className="text-2xl font-bold text-foreground tabular-nums mt-1">
+                {stats ? stats.totalSessions : loading ? '—' : 0}
+              </p>
+            </div>
+            <div className="shrink-0 rounded-lg bg-blue-950/80 p-2.5 border border-blue-900/40">
+              <Clock className="w-6 h-6 text-blue-400" strokeWidth={1.75} aria-hidden />
+            </div>
           </div>
         </div>
 
