@@ -363,14 +363,6 @@ const SalaryManagement = () => {
           </div>
         </div>
 
-        <div>
-          <h2 className="text-xl font-semibold mb-2">Staff &amp; salary</h2>
-          <p className="text-muted-foreground text-sm mb-4">
-            {isAdmin
-              ? 'Commission from bookings and salary records in one place. Match by employee name.'
-              : 'Your salary records.'}
-          </p>
-        </div>
         <div className="max-w-xl">
           <Input
             placeholder="Search by name, email, position..."
