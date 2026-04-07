@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const ALLOWED_ROOM_TYPES = ['double', 'triple'];
 const normalizeRoomTypeForForm = (v) => {
@@ -33,7 +34,10 @@ const emptyForm = () => ({
 
 const Booking = () => {
   const { toast } = useToast();
-  const tableColSpan = 13;
+  const { user } = useAuth();
+  const userRole = (user?.role || '').toLowerCase();
+  const isAdmin = userRole === 'admin';
+  const tableColSpan = 11;
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
   const [pricingList, setPricingList] = useState([]);
@@ -247,11 +251,8 @@ const Booking = () => {
         </div>
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
-          <p className="border-b border-secondary px-4 py-2 text-xs text-muted-foreground lg:hidden">
-            Scroll horizontally to see Income &amp; Profit, staff commission, and net columns.
-          </p>
-          <div className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[76rem] border-collapse table-auto">
+          <div className="overflow-x-auto">
+            <table className="w-full min-w-[64rem] border-collapse table-auto">
               <colgroup>
                 <col className="min-w-[9rem]" />
                 <col className="w-24" />
@@ -263,8 +264,6 @@ const Booking = () => {
                 <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[8.5rem]" />
-                <col className="w-[8.5rem]" />
-                <col className="w-[9rem]" />
                 <col className="w-[10rem]" />
               </colgroup>
               <thead className="bg-secondary">
@@ -297,13 +296,7 @@ const Booking = () => {
                     Booking.com (LKR)
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
-                    Income &amp; Profit
-                  </th>
-                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
                     Staff commission
-                  </th>
-                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
-                    Net (after staff)
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-center">
                     Actions
@@ -352,14 +345,8 @@ const Booking = () => {
                           ? Number(b.bookingComCommission).toLocaleString()
                           : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle font-medium text-foreground">
-                        {(b.incomeProfit != null ? b.incomeProfit : (Number(b.price) || 0) - (Number(b.bookingComCommission) || 0)).toLocaleString()}
-                      </td>
                       <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
                         {(b.staffCommissionAmount != null ? Number(b.staffCommissionAmount) : 0).toLocaleString()}
-                      </td>
-                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle font-medium text-foreground">
-                        {(b.netAfterStaffCommission != null ? Number(b.netAfterStaffCommission) : (b.incomeProfit != null ? b.incomeProfit : 0) - (b.staffCommissionAmount != null ? Number(b.staffCommissionAmount) : 0)).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 !text-center align-middle">
                         <div className="inline-flex w-full flex-wrap items-center justify-center gap-0.5">
@@ -674,16 +661,18 @@ const Booking = () => {
                     ).toLocaleString()}
                   </dd>
                 </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Net (after staff)</dt>
-                  <dd className="tabular-nums font-medium text-right">
-                    {(detailBooking.netAfterStaffCommission != null
-                      ? Number(detailBooking.netAfterStaffCommission)
-                      : (detailBooking.incomeProfit != null ? detailBooking.incomeProfit : 0) -
-                        (detailBooking.staffCommissionAmount != null ? Number(detailBooking.staffCommissionAmount) : 0)
-                    ).toLocaleString()}
-                  </dd>
-                </div>
+                {isAdmin && (
+                  <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                    <dt className="text-muted-foreground">Net (after staff)</dt>
+                    <dd className="tabular-nums font-medium text-right">
+                      {(detailBooking.netAfterStaffCommission != null
+                        ? Number(detailBooking.netAfterStaffCommission)
+                        : (detailBooking.incomeProfit != null ? detailBooking.incomeProfit : 0) -
+                          (detailBooking.staffCommissionAmount != null ? Number(detailBooking.staffCommissionAmount) : 0)
+                      ).toLocaleString()}
+                    </dd>
+                  </div>
+                )}
                 <div className="flex justify-between gap-4 border-b border-secondary pb-2">
                   <dt className="text-muted-foreground">Booking ID</dt>
                   <dd className="font-mono text-xs text-right break-all">{detailBooking.id}</dd>
