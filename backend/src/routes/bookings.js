@@ -8,6 +8,12 @@ router.use(authMiddleware);
 
 const STAFF_ROLES = ['manager', 'receptionist'];
 
+const ALLOWED_ROOM_TYPES = new Set(['double', 'triple']);
+function roomTypeForWrite(v) {
+  const x = v != null ? String(v).trim().toLowerCase() : '';
+  return ALLOWED_ROOM_TYPES.has(x) ? x : 'double';
+}
+
 const toBooking = (row, addons = []) => {
   const price = row.price != null ? parseFloat(row.price) : 0;
   const commission = row.booking_com_commission != null ? parseFloat(row.booking_com_commission) : 0;
@@ -24,7 +30,7 @@ const toBooking = (row, addons = []) => {
     children: row.children ?? 0,
     roomCategory: row.room_category || 'ac',
     roomFeature: row.room_feature || 'ac',
-    roomType: row.room_type || 'single',
+    roomType: row.room_type || 'double',
     checkIn: row.check_in,
     checkOut: row.check_out,
     price,
@@ -146,7 +152,7 @@ router.post('/', async (req, res) => {
         parseInt(d.children, 10) || 0,
         d.roomCategory || d.roomFeature || 'ac',
         d.roomFeature || 'ac',
-        d.roomType || 'single',
+        roomTypeForWrite(d.roomType),
         d.checkIn || null,
         d.checkOut || null,
         price,
@@ -212,7 +218,7 @@ router.put('/:id', async (req, res) => {
       d.children != null ? parseInt(d.children, 10) : null,
       (d.roomCategory || d.roomFeature) != null ? (d.roomCategory || d.roomFeature) : null,
       d.roomFeature != null ? d.roomFeature : null,
-      d.roomType != null ? d.roomType : null,
+      d.roomType != null ? roomTypeForWrite(d.roomType) : null,
       d.checkIn || null,
       d.checkOut || null,
       d.price != null ? Number(d.price) : null,

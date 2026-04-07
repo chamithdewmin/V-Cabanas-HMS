@@ -10,6 +10,12 @@ import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
+const ALLOWED_ROOM_TYPES = ['double', 'triple'];
+const normalizeRoomTypeForForm = (v) => {
+  const x = typeof v === 'string' ? v.trim().toLowerCase() : '';
+  return ALLOWED_ROOM_TYPES.includes(x) ? x : 'double';
+};
+
 const emptyForm = () => ({
   clientId: '',
   customerName: '',
@@ -23,7 +29,7 @@ const emptyForm = () => ({
   priceUsd: '',
   bookingComCommissionUsd: '',
   roomFeature: 'ac',
-  roomType: 'single',
+  roomType: 'double',
   addons: [],
 });
 
@@ -90,7 +96,7 @@ const Booking = () => {
         adults: form.adults ? Number(form.adults) : 0,
         children: form.children ? Number(form.children) : 0,
         roomFeature: form.roomFeature || 'ac',
-        roomType: form.roomType || 'single',
+        roomType: normalizeRoomTypeForForm(form.roomType),
         checkIn: form.checkIn || null,
         checkOut: form.checkOut || null,
         price: form.price ? Number(form.price) : 0,
@@ -137,7 +143,7 @@ const Booking = () => {
       priceUsd: b.priceUsd ?? '',
       bookingComCommissionUsd: b.bookingComCommissionUsd ?? '',
       roomFeature: b.roomFeature || 'ac',
-      roomType: b.roomType || 'single',
+      roomType: normalizeRoomTypeForForm(b.roomType),
       addons: (b.addons || []).map((a) => ({
         pricingId: a.pricingId,
         name: a.name || '',
@@ -461,9 +467,8 @@ const Booking = () => {
                   onChange={(e) => handleChange('roomType', e.target.value)}
                   className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
-                  <option value="single">Single</option>
                   <option value="double">Double</option>
-                  <option value="family">Family</option>
+                  <option value="triple">Triple</option>
                 </select>
               </div>
 
