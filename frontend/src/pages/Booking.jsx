@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { Plus, Pencil, Trash2, RefreshCw } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Eye, CirclePlus } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,6 @@ const emptyForm = () => ({
   bookingComCommissionUsd: '',
   roomFeature: 'ac',
   roomType: 'double',
-  addons: [],
 });
 
 const Booking = () => {
@@ -48,6 +47,10 @@ const Booking = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingBooking, setEditingBooking] = useState(null);
   const [form, setForm] = useState(emptyForm());
+  const [detailBooking, setDetailBooking] = useState(null);
+  const [addonDialogBooking, setAddonDialogBooking] = useState(null);
+  const [addonRows, setAddonRows] = useState([]);
+  const [addonSaving, setAddonSaving] = useState(false);
 
   const loadBookings = async () => {
     setLoading(true);
@@ -103,12 +106,6 @@ const Booking = () => {
         bookingComCommission: form.bookingComCommission ? Number(form.bookingComCommission) : 0,
         priceUsd: form.priceUsd ? Number(form.priceUsd) : 0,
         bookingComCommissionUsd: form.bookingComCommissionUsd ? Number(form.bookingComCommissionUsd) : 0,
-        addons: (form.addons || []).filter((a) => a.pricingId && a.name).map((a) => ({
-          pricingId: a.pricingId,
-          name: a.name,
-          unitPrice: Number(a.unitPrice) || 0,
-          quantity: Math.max(1, Number(a.quantity) || 1),
-        })),
       };
       if (editingBooking) {
         await api.bookings.update(editingBooking.id, payload);
@@ -144,44 +141,77 @@ const Booking = () => {
       bookingComCommissionUsd: b.bookingComCommissionUsd ?? '',
       roomFeature: b.roomFeature || 'ac',
       roomType: normalizeRoomTypeForForm(b.roomType),
-      addons: (b.addons || []).map((a) => ({
-        pricingId: a.pricingId,
-        name: a.name || '',
-        unitPrice: a.unitPrice ?? '',
-        quantity: a.quantity ?? 1,
-      })),
     });
     setIsDialogOpen(true);
   };
 
-  const addAddonRow = () => {
-    setForm((prev) => ({
-      ...prev,
-      addons: [...(prev.addons || []), { pricingId: '', name: '', unitPrice: '', quantity: 1 }],
-    }));
+  const openAddonDialog = (b) => {
+    setAddonDialogBooking(b);
+    setAddonRows(
+      (b.addons || []).length > 0
+        ? b.addons.map((a) => ({
+            pricingId: a.pricingId,
+            name: a.name || '',
+            unitPrice: a.unitPrice ?? '',
+            quantity: a.quantity ?? 1,
+          }))
+        : [{ pricingId: '', name: '', unitPrice: '', quantity: 1 }]
+    );
   };
 
-  const updateAddon = (index, field, value) => {
-    setForm((prev) => {
-      const next = [...(prev.addons || [])];
+  const addAddonRowPopup = () => {
+    setAddonRows((rows) => [...rows, { pricingId: '', name: '', unitPrice: '', quantity: 1 }]);
+  };
+
+  const updateAddonRowPopup = (index, field, value) => {
+    setAddonRows((prev) => {
+      const next = [...prev];
       if (!next[index]) return prev;
       next[index] = { ...next[index], [field]: value };
       if (field === 'pricingId') {
         const p = pricingList.find((x) => x.id === value);
         if (p) {
-          next[index].name = p.name || '';
-          next[index].unitPrice = p.price ?? '';
+          next[index] = { ...next[index], name: p.name || '', unitPrice: p.price ?? '' };
         }
       }
-      return { ...prev, addons: next };
+      return next;
     });
   };
 
-  const removeAddon = (index) => {
-    setForm((prev) => ({
-      ...prev,
-      addons: (prev.addons || []).filter((_, i) => i !== index),
-    }));
+  const removeAddonRowPopup = (index) => {
+    setAddonRows((rows) => rows.filter((_, i) => i !== index));
+  };
+
+  const saveAddonDialog = async () => {
+    if (!addonDialogBooking) return;
+    const payload = {
+      addons: addonRows
+        .filter((a) => a.pricingId && a.name)
+        .map((a) => ({
+          pricingId: a.pricingId,
+          name: a.name,
+          unitPrice: Number(a.unitPrice) || 0,
+          quantity: Math.max(1, Number(a.quantity) || 1),
+        })),
+    };
+    setAddonSaving(true);
+    try {
+      await api.bookings.update(addonDialogBooking.id, payload);
+      toast({ title: 'Add-ons saved', description: 'Booking add-ons have been updated.' });
+      setAddonDialogBooking(null);
+      setAddonRows([]);
+      loadBookings();
+    } catch (err) {
+      toast({ title: 'Save failed', description: err.message || 'Could not save add-ons', variant: 'destructive' });
+    } finally {
+      setAddonSaving(false);
+    }
+  };
+
+  const formatDateShort = (v) => {
+    if (!v) return '—';
+    if (typeof v === 'string' && v.includes('T')) return v.slice(0, 10);
+    return v;
   };
 
   const handleDelete = async (b) => {
@@ -237,7 +267,7 @@ const Booking = () => {
                 <col className="w-[8.5rem]" />
                 <col className="w-[8.5rem]" />
                 {isAdmin && <col className="w-[9rem]" />}
-                <col className="w-[7.5rem]" />
+                <col className="w-[10rem]" />
               </colgroup>
               <thead className="bg-secondary">
                 <tr>
@@ -338,7 +368,13 @@ const Booking = () => {
                         </td>
                       )}
                       <td className="px-4 py-3 !text-center align-middle">
-                        <div className="inline-flex w-full items-center justify-center gap-1">
+                        <div className="inline-flex w-full flex-wrap items-center justify-center gap-0.5">
+                          <button type="button" onClick={() => setDetailBooking(b)} className="p-1.5 hover:bg-secondary rounded-md text-sky-400 hover:text-sky-300" title="View details">
+                            <Eye className="w-4 h-4" />
+                          </button>
+                          <button type="button" onClick={() => openAddonDialog(b)} className="p-1.5 hover:bg-secondary rounded-md text-primary hover:text-primary/90" title="Add-ons">
+                            <CirclePlus className="w-4 h-4" />
+                          </button>
                           <button type="button" onClick={() => openEdit(b)} className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400" title="Edit">
                             <Pencil className="w-4 h-4" />
                           </button>
@@ -549,45 +585,210 @@ const Booking = () => {
               </div>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <Label>Add-ons (breakfast, lunch, tour, etc.)</Label>
-                  <p className="text-xs text-muted-foreground mt-0.5">Add breakfast, lunch, tours from Pricing.</p>
+            <div className="flex justify-end gap-3 pt-4">
+              <Button type="button" variant="outline" onClick={() => setForm(emptyForm())}>
+                Clear
+              </Button>
+              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (editingBooking ? 'Update booking' : 'Save booking')}</Button>
+            </div>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* View booking details */}
+      <Dialog open={!!detailBooking} onOpenChange={(open) => !open && setDetailBooking(null)}>
+        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Booking details</DialogTitle>
+          </DialogHeader>
+          {detailBooking && (
+            <div className="space-y-4 text-sm">
+              <dl className="grid grid-cols-1 gap-3">
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Customer</dt>
+                  <dd className="font-medium text-right">{detailBooking.customerName || '—'}</dd>
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={addAddonRow} className="gap-1">
-                  <Plus className="w-4 h-4" />
-                  Add
-                </Button>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Client (invoice)</dt>
+                  <dd className="text-right">
+                    {detailBooking.clientId
+                      ? clients.find((c) => c.id === detailBooking.clientId)?.name || detailBooking.clientId
+                      : '—'}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Room no</dt>
+                  <dd className="font-medium text-right">{detailBooking.roomNumber || '—'}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Feature</dt>
+                  <dd className="text-right">{detailBooking.roomFeature === 'non_ac' ? 'Non AC' : 'AC'}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Type</dt>
+                  <dd className="text-right capitalize">{detailBooking.roomType || '—'}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Guests</dt>
+                  <dd className="text-right">
+                    {detailBooking.adults || 0} adults, {detailBooking.children || 0} children
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Check-in</dt>
+                  <dd className="tabular-nums text-right">{formatDateShort(detailBooking.checkIn)}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Check-out</dt>
+                  <dd className="tabular-nums text-right">{formatDateShort(detailBooking.checkOut)}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Price (LKR)</dt>
+                  <dd className="tabular-nums text-right">{Number(detailBooking.price || 0).toLocaleString()}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Booking.com (LKR)</dt>
+                  <dd className="tabular-nums text-right">
+                    {Number(detailBooking.bookingComCommission || 0).toLocaleString()}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Price (USD)</dt>
+                  <dd className="tabular-nums text-right">{Number(detailBooking.priceUsd || 0).toLocaleString()}</dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Booking.com (USD)</dt>
+                  <dd className="tabular-nums text-right">
+                    {Number(detailBooking.bookingComCommissionUsd || 0).toLocaleString()}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Income &amp; profit</dt>
+                  <dd className="tabular-nums font-medium text-right">
+                    {(detailBooking.incomeProfit != null
+                      ? detailBooking.incomeProfit
+                      : (Number(detailBooking.price) || 0) - (Number(detailBooking.bookingComCommission) || 0)
+                    ).toLocaleString()}
+                  </dd>
+                </div>
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Staff commission</dt>
+                  <dd className="tabular-nums text-right">
+                    {(detailBooking.staffCommissionAmount != null
+                      ? Number(detailBooking.staffCommissionAmount)
+                      : 0
+                    ).toLocaleString()}
+                  </dd>
+                </div>
+                {isAdmin && (
+                  <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                    <dt className="text-muted-foreground">Net (after staff)</dt>
+                    <dd className="tabular-nums font-medium text-right">
+                      {(detailBooking.netAfterStaffCommission != null
+                        ? Number(detailBooking.netAfterStaffCommission)
+                        : (detailBooking.incomeProfit != null ? detailBooking.incomeProfit : 0) -
+                          (detailBooking.staffCommissionAmount != null ? Number(detailBooking.staffCommissionAmount) : 0)
+                      ).toLocaleString()}
+                    </dd>
+                  </div>
+                )}
+                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
+                  <dt className="text-muted-foreground">Booking ID</dt>
+                  <dd className="font-mono text-xs text-right break-all">{detailBooking.id}</dd>
+                </div>
+                {detailBooking.createdAt && (
+                  <div className="flex justify-between gap-4 pb-2">
+                    <dt className="text-muted-foreground">Created</dt>
+                    <dd className="tabular-nums text-right text-xs">
+                      {typeof detailBooking.createdAt === 'string'
+                        ? detailBooking.createdAt.replace('T', ' ').slice(0, 19)
+                        : String(detailBooking.createdAt)}
+                    </dd>
+                  </div>
+                )}
+              </dl>
+              <div>
+                <h4 className="text-sm font-medium mb-2">Add-ons</h4>
+                {(detailBooking.addons || []).length === 0 ? (
+                  <p className="text-muted-foreground text-sm">No add-ons. Use the add-ons button on the row to add packages from Pricing.</p>
+                ) : (
+                  <ul className="rounded-md border border-secondary divide-y divide-secondary">
+                    {detailBooking.addons.map((a) => (
+                      <li key={a.id || `${a.pricingId}-${a.name}`} className="px-3 py-2 flex justify-between gap-2 text-sm">
+                        <span>{a.name}</span>
+                        <span className="tabular-nums text-muted-foreground shrink-0">
+                          {a.quantity} × {Number(a.unitPrice || 0).toLocaleString()} ={' '}
+                          {(Number(a.quantity || 0) * Number(a.unitPrice || 0)).toLocaleString()}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                )}
               </div>
-              {(form.addons || []).length > 0 && (
-                <div className="rounded-md border border-secondary overflow-hidden">
-                  <table className="w-full text-sm">
-                    <thead className="bg-secondary">
-                      <tr>
-                        <th className="px-3 py-2 text-left font-medium">Package</th>
-                        <th className="px-3 py-2 text-right font-medium w-24">Qty</th>
-                        <th className="px-3 py-2 text-right font-medium w-28">Unit price</th>
-                        <th className="px-3 py-2 text-right font-medium w-28">Amount</th>
-                        <th className="w-10" />
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {form.addons.map((a, idx) => {
-                        const qty = Number(a.quantity) || 0;
-                        const unit = Number(a.unitPrice) || 0;
-                        const amount = qty * unit;
-                        return (
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Add-ons (from Pricing) */}
+      <Dialog
+        open={!!addonDialogBooking}
+        onOpenChange={(open) => {
+          if (!open) {
+            setAddonDialogBooking(null);
+            setAddonRows([]);
+          }
+        }}
+      >
+        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add-ons</DialogTitle>
+            {addonDialogBooking && (
+              <p className="text-sm text-muted-foreground font-normal">
+                {addonDialogBooking.customerName} · Room {addonDialogBooking.roomNumber}
+              </p>
+            )}
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <p className="text-xs text-muted-foreground">Add breakfast, lunch, tours from Pricing.</p>
+            </div>
+            <div className="flex justify-end">
+              <Button type="button" variant="outline" size="sm" onClick={addAddonRowPopup} className="gap-1">
+                <Plus className="w-4 h-4" />
+                Add
+              </Button>
+            </div>
+            {addonRows.length > 0 && (
+              <div className="rounded-md border border-secondary overflow-hidden">
+                <table className="w-full text-sm">
+                  <thead className="bg-secondary">
+                    <tr>
+                      <th className="px-3 py-2 text-left font-medium">Package</th>
+                      <th className="px-3 py-2 text-right font-medium w-24">Qty</th>
+                      <th className="px-3 py-2 text-right font-medium w-28">Unit price</th>
+                      <th className="px-3 py-2 text-right font-medium w-28">Amount</th>
+                      <th className="w-10" />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {addonRows.map((a, idx) => {
+                      const qty = Number(a.quantity) || 0;
+                      const unit = Number(a.unitPrice) || 0;
+                      const amount = qty * unit;
+                      return (
                         <tr key={idx} className="border-t border-secondary">
                           <td className="px-3 py-2">
                             <select
                               value={a.pricingId}
-                              onChange={(e) => updateAddon(idx, 'pricingId', e.target.value)}
+                              onChange={(e) => updateAddonRowPopup(idx, 'pricingId', e.target.value)}
                               className="w-full px-2 py-1.5 bg-secondary border border-secondary rounded text-sm"
                             >
                               <option value="">Select...</option>
                               {pricingList.map((p) => (
-                                <option key={p.id} value={p.id}>{p.name} – {Number(p.price).toLocaleString()}</option>
+                                <option key={p.id} value={p.id}>
+                                  {p.name} – {Number(p.price).toLocaleString()}
+                                </option>
                               ))}
                             </select>
                           </td>
@@ -597,7 +798,7 @@ const Booking = () => {
                               min="1"
                               className="w-20 text-right h-8"
                               value={a.quantity}
-                              onChange={(e) => updateAddon(idx, 'quantity', e.target.value)}
+                              onChange={(e) => updateAddonRowPopup(idx, 'quantity', e.target.value)}
                             />
                           </td>
                           <td className="px-3 py-2 text-right">
@@ -607,33 +808,36 @@ const Booking = () => {
                               step="0.01"
                               className="w-24 text-right h-8"
                               value={a.unitPrice}
-                              onChange={(e) => updateAddon(idx, 'unitPrice', e.target.value)}
+                              onChange={(e) => updateAddonRowPopup(idx, 'unitPrice', e.target.value)}
                             />
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums font-medium">
-                            {amount.toLocaleString()}
-                          </td>
+                          <td className="px-3 py-2 text-right tabular-nums font-medium">{amount.toLocaleString()}</td>
                           <td className="px-2 py-2">
-                            <button type="button" onClick={() => removeAddon(idx)} className="p-1.5 hover:bg-secondary rounded text-red-500" title="Remove">
+                            <button
+                              type="button"
+                              onClick={() => removeAddonRowPopup(idx)}
+                              className="p-1.5 hover:bg-secondary rounded text-red-500"
+                              title="Remove"
+                            >
                               <Trash2 className="w-4 h-4" />
                             </button>
                           </td>
                         </tr>
                       );
-                      })}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setForm(emptyForm())}>
-                Clear
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+            <div className="flex justify-end gap-3 pt-2">
+              <Button type="button" variant="outline" onClick={() => { setAddonDialogBooking(null); setAddonRows([]); }}>
+                Cancel
               </Button>
-              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (editingBooking ? 'Update booking' : 'Save booking')}</Button>
+              <Button type="button" onClick={saveAddonDialog} disabled={addonSaving}>
+                {addonSaving ? 'Saving...' : 'Save add-ons'}
+              </Button>
             </div>
-          </form>
+          </div>
         </DialogContent>
       </Dialog>
     </>
