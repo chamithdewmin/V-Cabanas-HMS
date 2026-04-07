@@ -102,24 +102,24 @@ export default function ReportMonthly() {
         if (showUsd) {
           const price = Number(b.priceUsd) || 0;
           const bc = Number(b.bookingComCommissionUsd) || 0;
-          const net = price - bc;
+          const sub = price - bc;
           acc.bookingPrice += price;
           acc.bookingCom += bc;
-          acc.total += net;
+          acc.subtotal += sub;
+          /* USD view: manager is stored in LKR; TOTAL stays USD gross-after-Booking.com (same as subtotal). */
+          acc.total += sub;
         } else {
           const price = Number(b.price) || 0;
           const bc = Number(b.bookingComCommission) || 0;
-          const net =
-            b.netAfterStaffCommission != null
-              ? Number(b.netAfterStaffCommission)
-              : price - bc - mgr;
+          const sub = price - bc;
           acc.bookingPrice += price;
           acc.bookingCom += bc;
-          acc.total += net;
+          acc.subtotal += sub;
+          acc.total += sub - mgr;
         }
         return acc;
       },
-      { bookingPrice: 0, bookingCom: 0, manager: 0, total: 0 }
+      { bookingPrice: 0, bookingCom: 0, subtotal: 0, manager: 0, total: 0 }
     );
   }, [filtered, showUsd]);
 
@@ -215,6 +215,9 @@ export default function ReportMonthly() {
                   <th className="px-4 py-3 text-sm font-semibold !text-right">
                     Booking.com price{showUsd ? ' (USD)' : ''}
                   </th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">
+                    Sub total{showUsd ? ' (USD)' : ''}
+                  </th>
                   <th className="px-4 py-3 text-sm font-semibold !text-right">Manager commission</th>
                   <th className="px-4 py-3 text-sm font-semibold !text-right">
                     TOTAL{showUsd ? ' (USD)' : ''}
@@ -224,13 +227,13 @@ export default function ReportMonthly() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={7} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">
                       Loading…
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="p-0 align-top">
+                    <td colSpan={8} className="p-0 align-top">
                       <EmptyState
                         title="No bookings this month"
                         description="No check-ins fall in the selected month. Try another year or month."
@@ -242,18 +245,18 @@ export default function ReportMonthly() {
                     const mgr = Number(b.staffCommissionAmount) || 0;
                     let price;
                     let bc;
+                    let subtotal;
                     let total;
                     if (showUsd) {
                       price = Number(b.priceUsd) || 0;
                       bc = Number(b.bookingComCommissionUsd) || 0;
-                      total = price - bc;
+                      subtotal = price - bc;
+                      total = subtotal;
                     } else {
                       price = Number(b.price) || 0;
                       bc = Number(b.bookingComCommission) || 0;
-                      total =
-                        b.netAfterStaffCommission != null
-                          ? Number(b.netAfterStaffCommission)
-                          : price - bc - mgr;
+                      subtotal = price - bc;
+                      total = subtotal - mgr;
                     }
                     return (
                       <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
@@ -262,6 +265,7 @@ export default function ReportMonthly() {
                         <td className="px-4 py-3 text-sm">{formatCheckInDisplay(b.checkIn)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(price)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(bc)}</td>
+                        <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(subtotal)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmt(mgr)}</td>
                         <td className="px-4 py-3 text-right text-sm font-medium tabular-nums">{fmtCell(total)}</td>
                       </tr>
@@ -277,6 +281,7 @@ export default function ReportMonthly() {
                     </td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.bookingPrice)}</td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.bookingCom)}</td>
+                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.subtotal)}</td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmt(totals.manager)}</td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.total)}</td>
                   </tr>
@@ -289,11 +294,13 @@ export default function ReportMonthly() {
         <p className="text-xs text-muted-foreground">
           {showUsd ? (
             <>
-              USD view uses saved booking USD amounts. TOTAL (USD) is booking price minus Booking.com (both USD).
-              Manager commission stays in {settings.currency} (not converted).
+              USD view uses saved booking USD amounts. Sub total (USD) is booking price minus Booking.com (both USD).
+              Manager commission stays in {settings.currency} (not converted). TOTAL (USD) matches Sub total (manager is not applied in USD figures).
             </>
           ) : (
-            <>TOTAL is net after Booking.com and manager commission (same as “Net after staff” on the Booking page).</>
+            <>
+              Sub total is booking price minus Booking.com price. TOTAL is Sub total minus manager commission (same as “Net after staff” on the Booking page).
+            </>
           )}
         </p>
       </div>
