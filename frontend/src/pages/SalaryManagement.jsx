@@ -230,14 +230,40 @@ const SalaryManagement = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDelete = async (item) => {
+  const handleDeleteSalary = async (item) => {
     if (!window.confirm(`Delete salary record for "${item.employeeName}"?`)) return;
     try {
       await api.salary.delete(item.id);
       toast({ title: 'Salary deleted', description: `Record for "${item.employeeName}" has been removed.` });
       loadItems();
+      if (isAdmin) loadStaffCommission();
     } catch (err) {
       toast({ title: 'Delete failed', description: err.message || 'Could not delete', variant: 'destructive' });
+    }
+  };
+
+  const handleDeleteStaffUser = async (row) => {
+    const su = row.staffUser;
+    if (!isAdmin || !su?.userId) return;
+    if (user?.id != null && Number(su.userId) === Number(user.id)) {
+      toast({ title: 'Cannot delete own account', description: 'Remove another user from User management or ask another admin.', variant: 'destructive' });
+      return;
+    }
+    if (
+      !window.confirm(
+        `Permanently delete user "${su.name}" (${su.email})? Their login and related data for this account will be removed. This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    try {
+      await api.users.delete(su.userId);
+      toast({ title: 'User removed', description: `${su.name} has been deleted.` });
+      loadItems();
+      loadStaffCommission();
+      api.users.list().then((list) => setUsersList(Array.isArray(list) ? list : [])).catch(() => setUsersList([]));
+    } catch (err) {
+      toast({ title: 'Delete failed', description: err.message || 'Could not delete user', variant: 'destructive' });
     }
   };
 
@@ -369,7 +395,7 @@ const SalaryManagement = () => {
                 <col className="w-[8.5rem]" />
                 <col className="w-[6.5rem]" />
                 <col className="min-w-[6rem]" />
-                <col className="w-[10rem]" />
+                <col className="min-w-[12rem]" />
               </colgroup>
               <thead className="bg-secondary">
                 <tr>
@@ -447,7 +473,7 @@ const SalaryManagement = () => {
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground !text-left align-top">{row.salaryRecord?.notes || '—'}</td>
                       <td className="px-4 py-3 !text-center align-top whitespace-nowrap">
-                        <div className="inline-flex items-center justify-center gap-2">
+                        <div className="inline-flex flex-wrap items-center justify-center gap-2">
                           {(row.staffUser || row.salaryRecord) && (
                             <button
                               type="button"
@@ -463,13 +489,25 @@ const SalaryManagement = () => {
                           {row.salaryRecord && (
                             <button
                               type="button"
-                              onClick={() => handleDelete(row.salaryRecord)}
+                              onClick={() => handleDeleteSalary(row.salaryRecord)}
                               className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-red-500 hover:text-red-400 text-sm"
-                              title="Delete salary"
-                              aria-label="Delete salary"
+                              title="Delete salary record only"
+                              aria-label="Delete salary record"
                             >
                               <Trash2 className="w-4 h-4" />
-                              <span>Delete</span>
+                              <span>{isAdmin && row.staffUser ? 'Delete salary' : 'Delete'}</span>
+                            </button>
+                          )}
+                          {isAdmin && row.staffUser && (user?.id == null || Number(row.staffUser.userId) !== Number(user.id)) && (
+                            <button
+                              type="button"
+                              onClick={() => handleDeleteStaffUser(row)}
+                              className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-red-500 hover:text-red-400 text-sm"
+                              title="Delete user account (login removed)"
+                              aria-label="Delete user account"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                              <span>{row.salaryRecord ? 'Delete user' : 'Delete'}</span>
                             </button>
                           )}
                         </div>

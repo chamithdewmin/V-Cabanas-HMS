@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { Plus, Pencil, Trash2, RefreshCw, Eye, CirclePlus } from 'lucide-react';
+import { Plus, Pencil, Trash2, RefreshCw, Eye, PlusCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -373,7 +373,7 @@ const Booking = () => {
                             <Eye className="w-4 h-4" />
                           </button>
                           <button type="button" onClick={() => openAddonDialog(b)} className="p-1.5 hover:bg-secondary rounded-md text-primary hover:text-primary/90" title="Add-ons">
-                            <CirclePlus className="w-4 h-4" />
+                            <PlusCircle className="w-4 h-4" />
                           </button>
                           <button type="button" onClick={() => openEdit(b)} className="p-1.5 hover:bg-secondary rounded-md text-green-500 hover:text-green-400" title="Edit">
                             <Pencil className="w-4 h-4" />
