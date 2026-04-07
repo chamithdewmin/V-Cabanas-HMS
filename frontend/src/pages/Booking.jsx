@@ -252,15 +252,15 @@ const Booking = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[64rem] border-collapse table-auto">
+            <table className="w-full min-w-[68rem] border-collapse table-auto">
               <colgroup>
                 <col className="min-w-[9rem]" />
                 <col className="w-24" />
                 <col className="w-[5.5rem]" />
                 <col className="w-[5.5rem]" />
                 <col className="min-w-[10rem]" />
-                <col className="w-[7.5rem]" />
-                <col className="w-[7.5rem]" />
+                <col className="min-w-[9.5rem] w-[9.5rem]" />
+                <col className="min-w-[9.5rem] w-[9.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[8.5rem]" />
@@ -331,10 +331,10 @@ const Booking = () => {
                       <td className="px-4 py-3 text-sm !text-left align-middle whitespace-nowrap text-foreground">
                         {b.adults || 0} adults, {b.children || 0} children
                       </td>
-                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground">
+                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground whitespace-nowrap">
                         {b.checkIn ? (typeof b.checkIn === 'string' && b.checkIn.includes('T') ? b.checkIn.slice(0, 10) : b.checkIn) : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground">
+                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground whitespace-nowrap">
                         {b.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '—'}
                       </td>
                       <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
