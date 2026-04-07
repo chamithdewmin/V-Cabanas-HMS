@@ -11,6 +11,18 @@ import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
+const SALARY_PERIOD_LABELS = {
+  always: 'Every booking',
+  monthly: 'Monthly',
+  weekly: 'Weekly',
+};
+
+function formatSalaryPeriod(p) {
+  if (p == null || p === '') return '—';
+  const key = String(p).toLowerCase();
+  return SALARY_PERIOD_LABELS[key] || String(p);
+}
+
 const SalaryManagement = () => {
   const { toast } = useToast();
   const { user } = useAuth();
@@ -121,10 +133,14 @@ const SalaryManagement = () => {
       });
       return;
     }
-    if (isSalaryMode && (!form.amount || String(form.amount).trim() === '')) {
+    if (
+      isSalaryMode &&
+      form.period !== 'always' &&
+      (!form.amount || String(form.amount).trim() === '')
+    ) {
       toast({
         title: 'Missing details',
-        description: 'Please enter the salary amount.',
+        description: 'Please enter the salary amount (or choose Period: Every booking and use 0 if commission only).',
         variant: 'destructive',
       });
       return;
@@ -460,8 +476,8 @@ const SalaryManagement = () => {
                       <td className="px-4 py-3 text-sm tabular-nums font-medium !text-right align-top">
                         {row.salaryRecord?.amount != null ? Number(row.salaryRecord.amount).toLocaleString() : '—'}
                       </td>
-                      <td className="px-4 py-3 text-sm capitalize !text-left align-top whitespace-nowrap">
-                        {row.salaryRecord?.period || '—'}
+                      <td className="px-4 py-3 text-sm !text-left align-top whitespace-nowrap">
+                        {formatSalaryPeriod(row.salaryRecord?.period)}
                       </td>
                       <td className="px-4 py-3 text-sm text-muted-foreground !text-left align-top">{row.salaryRecord?.notes || '—'}</td>
                       <td className="px-4 py-3 !text-center align-top whitespace-nowrap">
@@ -605,7 +621,8 @@ const SalaryManagement = () => {
                         placeholder="10"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Saved to this user&apos;s profile; used when they create bookings.
+                        Saved on this staff member&apos;s account. Manager and receptionist roles earn this percentage on
+                        each booking they create (booking price × rate).
                       </p>
                     </div>
                   </>
@@ -613,15 +630,15 @@ const SalaryManagement = () => {
                 {(!editingStaffUser || editingItem) && (
                   <>
                     <div className="space-y-2">
-                      <Label>Amount</Label>
+                      <Label>Amount{form.period === 'always' ? ' (optional if commission only)' : ''}</Label>
                       <Input
                         type="number"
                         min="0"
                         step="0.01"
                         value={form.amount}
                         onChange={(e) => handleChange('amount', e.target.value)}
-                        placeholder="Salary amount"
-                        required
+                        placeholder={form.period === 'always' ? '0 or salary amount' : 'Salary amount'}
+                        required={form.period !== 'always'}
                       />
                     </div>
                     <div className="space-y-2">
@@ -631,9 +648,15 @@ const SalaryManagement = () => {
                         value={form.period}
                         onChange={(e) => handleChange('period', e.target.value)}
                       >
-                        <option value="monthly">Monthly</option>
-                        <option value="weekly">Weekly</option>
+                        <option value="always">Every booking (commission on each booking)</option>
+                        <option value="monthly">Monthly (salary)</option>
+                        <option value="weekly">Weekly (salary)</option>
                       </select>
+                      <p className="text-xs text-muted-foreground">
+                        {form.period === 'always'
+                          ? 'Commission rate is stored on the user and applied to every booking they enter. Salary amount can be 0 if you only track commission.'
+                          : 'Salary amount is for this pay cycle. The commission rate above still applies on each booking they create.'}
+                      </p>
                     </div>
                     <div className="space-y-2">
                       <Label>Notes (optional)</Label>
