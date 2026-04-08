@@ -835,8 +835,8 @@ const CashFlow = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Date</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Source / Recipient</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Category</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Amount</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold whitespace-nowrap">Status</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Amount</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Status</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Notes</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold uppercase whitespace-nowrap">Actions</th>
                 </tr>
@@ -869,15 +869,15 @@ const CashFlow = () => {
                     <td className="px-4 py-3 text-sm align-middle">
                       <span className="block truncate">{tx.category}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-right whitespace-nowrap tabular-nums align-middle">
+                    <td className="px-4 py-3 text-sm font-semibold text-left whitespace-nowrap tabular-nums align-middle">
                       <span className={tx.type === 'inflow' ? 'text-green-500' : 'text-red-500'}>
                         {tx.type === 'inflow' ? '+' : '-'}
                         {settings.currency} {tx.amount.toLocaleString()}
                       </span>
                     </td>
-                    <td className="px-4 py-3 align-middle text-center">
+                    <td className="px-4 py-3 align-middle text-left">
                       <span
-                        className={`inline-flex min-w-[78px] justify-center items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                           tx.status === 'received' || tx.status === 'paid'
                             ? 'bg-green-500/20 text-green-500'
                             : tx.status === 'overdue'
