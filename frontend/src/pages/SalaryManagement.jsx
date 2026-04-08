@@ -361,7 +361,7 @@ const SalaryManagement = () => {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-end gap-x-5 gap-y-3">
+        <div className="flex flex-wrap items-end gap-4">
           <div className="w-full max-w-xl">
             <Input
               placeholder="Search by name, email, position..."
@@ -371,15 +371,13 @@ const SalaryManagement = () => {
           </div>
           {isAdmin && (
             <>
-              <div className="space-y-1.5">
-                <Label htmlFor="salary-year" className="text-sm">
-                  Year
-                </Label>
+              <div className="flex items-center gap-2.5">
+                <Label htmlFor="salary-year">Year</Label>
                 <select
                   id="salary-year"
                   value={selectedYear}
                   onChange={(e) => setSelectedYear(Number(e.target.value))}
-                  className="h-10 min-w-[9rem] rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="h-10 min-w-[7rem] rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   {yearOptions.map((y) => (
                     <option key={y} value={y}>
@@ -388,15 +386,13 @@ const SalaryManagement = () => {
                   ))}
                 </select>
               </div>
-              <div className="space-y-1.5">
-                <Label htmlFor="salary-month" className="text-sm">
-                  Month
-                </Label>
+              <div className="flex items-center gap-2.5">
+                <Label htmlFor="salary-month">Month</Label>
                 <select
                   id="salary-month"
                   value={selectedMonth}
                   onChange={(e) => setSelectedMonth(Number(e.target.value))}
-                  className="h-10 min-w-[11rem] rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  className="h-10 min-w-[9rem] rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                 >
                   {MONTHS.map((m) => (
                     <option key={m.value} value={m.value}>
