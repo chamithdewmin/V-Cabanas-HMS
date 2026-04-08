@@ -16,6 +16,20 @@ const SALARY_PERIOD_LABELS = {
   monthly: 'Monthly',
   weekly: 'Weekly',
 };
+const MONTHS = [
+  { value: 1, label: 'January' },
+  { value: 2, label: 'February' },
+  { value: 3, label: 'March' },
+  { value: 4, label: 'April' },
+  { value: 5, label: 'May' },
+  { value: 6, label: 'June' },
+  { value: 7, label: 'July' },
+  { value: 8, label: 'August' },
+  { value: 9, label: 'September' },
+  { value: 10, label: 'October' },
+  { value: 11, label: 'November' },
+  { value: 12, label: 'December' },
+];
 
 function formatSalaryPeriod(p) {
   if (p == null || p === '') return '—';
@@ -35,6 +49,8 @@ const SalaryManagement = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [search, setSearch] = useState('');
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState({
@@ -47,12 +63,21 @@ const SalaryManagement = () => {
     commissionRatePct: '',
   });
   const [usersList, setUsersList] = useState([]);
+  const yearOptions = React.useMemo(() => {
+    const y = new Date().getFullYear();
+    const years = [];
+    for (let i = y - 5; i <= y + 1; i += 1) years.push(i);
+    return years;
+  }, []);
 
   const loadStaffCommission = async () => {
     if (!isAdmin) return;
     setStaffCommissionLoading(true);
     try {
-      const list = await api.salary.staffCommission();
+      const list = await api.salary.staffCommission({
+        year: selectedYear,
+        month: selectedMonth,
+      });
       setStaffCommissionList(Array.isArray(list) ? list : []);
     } catch (err) {
       toast({ title: 'Failed to load staff commission', description: err.message || 'Could not fetch', variant: 'destructive' });
@@ -85,7 +110,7 @@ const SalaryManagement = () => {
 
   useEffect(() => {
     if (isAdmin) loadStaffCommission();
-  }, [isAdmin]);
+  }, [isAdmin, selectedYear, selectedMonth]);
 
   const assignableUsers = React.useMemo(
     () => usersList.filter((u) => (u.role || '').toLowerCase() !== 'admin'),
@@ -336,12 +361,48 @@ const SalaryManagement = () => {
           </div>
         </div>
 
-        <div className="max-w-xl">
-          <Input
-            placeholder="Search by name, email, position..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
+        <div className="flex flex-wrap items-end gap-3">
+          <div className="w-full max-w-xl">
+            <Input
+              placeholder="Search by name, email, position..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+            />
+          </div>
+          {isAdmin && (
+            <>
+              <div className="space-y-1">
+                <Label htmlFor="salary-year">Year</Label>
+                <select
+                  id="salary-year"
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(Number(e.target.value))}
+                  className="h-10 min-w-[7rem] rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  {yearOptions.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="salary-month">Month</Label>
+                <select
+                  id="salary-month"
+                  value={selectedMonth}
+                  onChange={(e) => setSelectedMonth(Number(e.target.value))}
+                  className="h-10 min-w-[9rem] rounded-md border border-secondary bg-secondary px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  {MONTHS.map((m) => (
+                    <option key={m.value} value={m.value}>
+                      {m.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </>
+          )}
         </div>
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
@@ -372,7 +433,7 @@ const SalaryManagement = () => {
                   {isAdmin && (
                     <>
                       <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Commission rate</th>
-                      <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Total commission</th>
+                      <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Monthly commission</th>
                     </>
                   )}
                   <th className="px-4 py-3 text-sm font-semibold whitespace-nowrap !text-right">Salary amount</th>
@@ -446,24 +507,22 @@ const SalaryManagement = () => {
                             <button
                               type="button"
                               onClick={() => openEdit(row)}
-                              className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-green-500 hover:text-green-400 text-sm"
+                              className="inline-flex items-center justify-center p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-green-500 hover:text-green-400 text-sm"
                               title="Edit"
                               aria-label="Edit"
                             >
                               <Pencil className="w-4 h-4" />
-                              <span>Edit</span>
                             </button>
                           )}
                           {row.salaryRecord && (
                             <button
                               type="button"
                               onClick={() => handleDeleteSalary(row.salaryRecord)}
-                              className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-red-500 hover:text-red-400 text-sm"
+                              className="inline-flex items-center justify-center p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-red-500 hover:text-red-400 text-sm"
                               title="Remove this row from the list (does not delete the user account)"
                               aria-label="Remove salary record from list"
                             >
                               <Trash2 className="w-4 h-4" />
-                              <span>Delete</span>
                             </button>
                           )}
                         </div>
@@ -548,9 +607,9 @@ const SalaryManagement = () => {
                         placeholder="10"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Saved on this staff member&apos;s account. For each booking they create, commission is{' '}
-                        <span className="text-foreground/90">(room price LKR + add-ons LKR) × rate</span> — the same total
-                        the guest pays for the room and extras.
+                        Saved on this staff member&apos;s account. Commission formula:{' '}
+                        <span className="text-foreground/90">(subtotal / 100) × rate</span>, where subtotal is
+                        booking price minus Booking.com.
                       </p>
                     </div>
                   </>
@@ -581,8 +640,8 @@ const SalaryManagement = () => {
                       </select>
                       <p className="text-xs text-muted-foreground">
                         {form.period === 'always'
-                          ? 'Every booking: commission = guest total (room + add-ons in LKR) × your rate. Salary amount can be 0 if you only track commission.'
-                          : 'Salary amount is for this pay cycle. Commission on each booking still uses room + add-ons total (LKR) × rate.'}
+                          ? 'Every booking: commission = (subtotal / 100) × rate. Salary amount can be 0 if you only track commission.'
+                          : 'Salary amount is for this pay cycle. Booking commission still uses (subtotal / 100) × rate.'}
                       </p>
                     </div>
                     <div className="space-y-2">

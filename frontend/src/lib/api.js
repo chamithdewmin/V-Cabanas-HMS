@@ -157,7 +157,13 @@ export const api = {
   },
   salary: {
     list: () => request('/salary'),
-    staffCommission: () => request('/salary/staff-commission'),
+    staffCommission: ({ year, month } = {}) => {
+      const qp = new URLSearchParams();
+      if (Number.isFinite(year)) qp.set('year', String(year));
+      if (Number.isFinite(month)) qp.set('month', String(month));
+      const query = qp.toString();
+      return request(`/salary/staff-commission${query ? `?${query}` : ''}`);
+    },
     create: (data) => request('/salary', { method: 'POST', body: JSON.stringify(data) }),
     update: (id, data) => request(`/salary/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
     delete: (id) => request(`/salary/${id}`, { method: 'DELETE' }),

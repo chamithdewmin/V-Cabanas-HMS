@@ -39,15 +39,34 @@ router.get('/staff-commission', async (req, res) => {
     if (role !== 'admin') {
       return res.status(403).json({ error: 'Admin only' });
     }
+    const yearRaw = req.query.year;
+    const monthRaw = req.query.month;
+    const year = Number.parseInt(String(yearRaw ?? ''), 10);
+    const month = Number.parseInt(String(monthRaw ?? ''), 10); // 1-12
+    const hasYear = Number.isFinite(year);
+    const hasMonth = Number.isFinite(month) && month >= 1 && month <= 12;
+
+    const params = [];
+    let joinFilter = '';
+    if (hasYear) {
+      params.push(year);
+      joinFilter += ` AND EXTRACT(YEAR FROM COALESCE(b.check_in::timestamp, b.created_at)) = $${params.length}`;
+    }
+    if (hasMonth) {
+      params.push(month);
+      joinFilter += ` AND EXTRACT(MONTH FROM COALESCE(b.check_in::timestamp, b.created_at)) = $${params.length}`;
+    }
+
     const { rows } = await pool.query(
       `SELECT u.id AS user_id, u.name, u.email, COALESCE(u.role, 'receptionist') AS role,
        COALESCE(u.commission_rate_pct, 10) AS commission_rate_pct,
        COALESCE(SUM(b.staff_commission_amount), 0)::numeric(15,2) AS total_commission
        FROM users u
-       LEFT JOIN bookings b ON b.user_id = u.id
+       LEFT JOIN bookings b ON b.user_id = u.id ${joinFilter}
        WHERE LOWER(COALESCE(u.role, 'receptionist')) IN ('manager', 'receptionist')
        GROUP BY u.id, u.name, u.email, u.role, u.commission_rate_pct
-       ORDER BY u.name`
+       ORDER BY u.name`,
+      params
     );
     res.json(rows.map((r) => ({
       userId: r.user_id,
