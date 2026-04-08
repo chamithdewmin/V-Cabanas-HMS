@@ -15,9 +15,6 @@ import {
   CalendarRange,
   Banknote,
   Receipt,
-  Percent,
-  Calculator,
-  Wallet,
   Package,
   Hash,
   Clock,
@@ -649,18 +646,14 @@ const Booking = () => {
                 ? clients.find((c) => c.id === d.clientId)?.name || d.clientId
                 : null;
               const priceLkr = Number(d.price) || 0;
-              const bcLkr = Number(d.bookingComCommission) || 0;
-              const subLkr = priceLkr - bcLkr;
               const addonsTotalLkr = (d.addons || []).reduce(
                 (sum, a) => sum + Number(a.quantity || 0) * Number(a.unitPrice || 0),
                 0
               );
-              const staffLkr = Number(d.staffCommissionAmount) || 0;
-              const totalLkr = subLkr + addonsTotalLkr - staffLkr;
+              /** What the guest pays: room total + extras (no internal fees / profit). */
+              const customerPayLkr = priceLkr + addonsTotalLkr;
               const priceUsd = Number(d.priceUsd) || 0;
-              const bcUsd = Number(d.bookingComCommissionUsd) || 0;
-              const subUsd = priceUsd - bcUsd;
-              const showUsdBlock = priceUsd > 0 || bcUsd > 0;
+              const showUsdBlock = priceUsd > 0;
               const fmtN = (n) => Number(n).toLocaleString();
 
               return (
@@ -710,20 +703,11 @@ const Booking = () => {
                     </div>
                   </div>
 
-                  {/* Totals at a glance */}
-                  <div className="grid grid-cols-2 gap-2">
-                    <div className="rounded-lg border border-secondary bg-secondary/30 px-3 py-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Sub total (LKR)</p>
-                      <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">{fmtN(subLkr)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Price − Booking.com</p>
-                    </div>
-                    <div className="rounded-lg border border-primary/30 bg-primary/[0.08] px-3 py-2.5">
-                      <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Total (LKR)</p>
-                      <p className="mt-0.5 text-base font-bold tabular-nums text-foreground">{fmtN(totalLkr)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">
-                        Sub total + add-ons − staff
-                      </p>
-                    </div>
+                  {/* Guest total to pay */}
+                  <div className="rounded-xl border border-primary/35 bg-primary/[0.1] px-4 py-3.5 shadow-sm">
+                    <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Total guest pays (LKR)</p>
+                    <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-foreground">{fmtN(customerPayLkr)}</p>
+                    <p className="text-xs text-muted-foreground mt-1">Room booking + add-ons (amount charged to the guest)</p>
                   </div>
 
                   {clientLabel && (
@@ -734,47 +718,29 @@ const Booking = () => {
                     </DetailSection>
                   )}
 
-                  <DetailSection icon={Banknote} title="Amounts (LKR)">
-                    <DetailRow icon={Banknote} label="Booking price">
+                  <DetailSection icon={Banknote} title="Guest payment (LKR)">
+                    <DetailRow icon={Banknote} label="Room booking price">
                       {fmtN(priceLkr)}
                     </DetailRow>
-                    <DetailRow icon={Percent} label="Booking.com commission">
-                      {fmtN(bcLkr)}
-                    </DetailRow>
-                    <DetailRow icon={Calculator} label="Sub total">
-                      {fmtN(subLkr)}
-                    </DetailRow>
-                    <DetailRow icon={Package} label="Add-ons total">
+                    <DetailRow icon={Package} label="Add-ons">
                       {fmtN(addonsTotalLkr)}
                     </DetailRow>
-                    <DetailRow icon={Wallet} label="Staff commission">
-                      {fmtN(staffLkr)}
-                    </DetailRow>
-                    <DetailRow icon={Receipt} label="Total (net)" emphasize>
-                      {fmtN(totalLkr)}
+                    <DetailRow icon={Receipt} label="Total to pay" emphasize>
+                      {fmtN(customerPayLkr)}
                     </DetailRow>
                   </DetailSection>
 
                   {showUsdBlock && (
-                    <DetailSection icon={CircleDollarSign} title="Amounts (USD)">
-                      <DetailRow icon={CircleDollarSign} label="Booking price (USD)">
+                    <DetailSection icon={CircleDollarSign} title="Guest payment (USD)">
+                      <DetailRow icon={CircleDollarSign} label="Room booking price (USD)">
                         {fmtN(priceUsd)}
                       </DetailRow>
-                      <DetailRow icon={Percent} label="Booking.com (USD)">
-                        {fmtN(bcUsd)}
-                      </DetailRow>
-                      <DetailRow icon={Calculator} label="Sub total (USD)">
-                        {fmtN(subUsd)}
-                      </DetailRow>
                       {addonsTotalLkr > 0 && (
-                        <DetailRow icon={Package} label="Add-ons (LKR)" mutedValue>
-                          {fmtN(addonsTotalLkr)}
-                        </DetailRow>
+                        <p className="px-3 py-2 text-[11px] leading-relaxed text-muted-foreground border-t border-secondary/80">
+                          Add-ons are stored in LKR ({fmtN(addonsTotalLkr)}). The full amount the guest pays is{' '}
+                          <span className="font-medium text-foreground">{fmtN(customerPayLkr)} LKR</span> (room + add-ons).
+                        </p>
                       )}
-                      <p className="px-3 py-2 text-[11px] leading-relaxed text-muted-foreground border-t border-secondary/80">
-                        Staff commission and add-on amounts are in LKR. The LKR total (net) above includes add-ons:
-                        sub total + add-ons − staff.
-                      </p>
                     </DetailSection>
                   )}
 
