@@ -820,14 +820,14 @@ const CashFlow = () => {
         {/* Table */}
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[980px] table-fixed">
+            <table className="w-full min-w-[980px] table-fixed [&_th]:align-middle [&_td]:align-middle">
               <colgroup>
                 <col className="w-[120px]" />
                 <col className="w-[220px]" />
                 <col className="w-[140px]" />
-                <col className="w-[170px]" />
-                <col className="w-[140px]" />
-                <col className="w-[170px]" />
+                <col className="w-[150px]" />
+                <col className="w-[120px]" />
+                <col className="w-[150px]" />
                 <col className="w-[170px]" />
                 <col className="w-[110px]" />
               </colgroup>
@@ -836,20 +836,17 @@ const CashFlow = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Date</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Source / Recipient</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Category</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap tabular-nums">Amount</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Amount</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold whitespace-nowrap">Status</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap tabular-nums">Balance</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Balance</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Notes</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold uppercase whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
-                {transactionsWithBalance.map((tx, index) => (
-                  <motion.tr
+                {transactionsWithBalance.map((tx) => (
+                  <tr
                     key={`${tx.sourceType}-${tx.id}`}
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: index * 0.02 }}
                     className={`border-b border-secondary transition-colors ${
                       (() => {
                         const d = new Date(tx.date);
@@ -874,7 +871,7 @@ const CashFlow = () => {
                     <td className="px-4 py-3 text-sm align-middle">
                       <span className="block truncate">{tx.category}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-right whitespace-nowrap align-middle tabular-nums">
+                    <td className="px-4 py-3 text-sm font-semibold text-right whitespace-nowrap align-middle">
                       <span className={tx.type === 'inflow' ? 'text-green-500' : 'text-red-500'}>
                         {tx.type === 'inflow' ? '+' : '-'}
                         {settings.currency} {tx.amount.toLocaleString()}
@@ -895,7 +892,7 @@ const CashFlow = () => {
                         {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium text-right whitespace-nowrap align-middle tabular-nums">
+                    <td className="px-4 py-3 text-sm font-medium text-right whitespace-nowrap align-middle">
                       {tx.runningBalance !== null
                         ? `${settings.currency} ${tx.runningBalance.toLocaleString()}`
                         : '—'}
@@ -940,7 +937,7 @@ const CashFlow = () => {
                         ) : null}
                       </div>
                     </td>
-                  </motion.tr>
+                  </tr>
                 ))}
               </tbody>
             </table>
