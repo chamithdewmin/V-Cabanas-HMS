@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { User, Building2, Landmark, Upload, Eye, EyeOff, Save } from 'lucide-react';
+import { User, Building2, Upload, Eye, EyeOff, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -23,7 +23,7 @@ function formatPhoneDisplay(phone) {
 }
 
 const Profile = () => {
-  const { settings, updateSettings, saveBankDetails } = useFinance();
+  const { settings, updateSettings } = useFinance();
   const { user } = useAuth();
   const { toast } = useToast();
   const [local, setLocal] = useState(() => ({
@@ -39,7 +39,6 @@ const Profile = () => {
     website: settings?.website || '',
     ...settings,
   }));
-  const [bankForm, setBankForm] = useState({ accountNumber: '', accountName: '', bankName: '', branch: '' });
   const [savingBusiness, setSavingBusiness] = useState(false);
   const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -78,18 +77,6 @@ const Profile = () => {
       };
     });
   }, [settings, user]);
-
-  useEffect(() => {
-    const b = settings?.bankDetails;
-    if (b) {
-      setBankForm({
-        accountNumber: b.accountNumber || '',
-        accountName: b.accountName || '',
-        bankName: b.bankName || '',
-        branch: b.branch || '',
-      });
-    }
-  }, [settings?.bankDetails]);
 
   const debouncedSave = useCallback(
     (partial) => {
@@ -183,13 +170,6 @@ const Profile = () => {
   };
 
   const s = local;
-  const savedBank = settings?.bankDetails || {};
-  const bankFormChanged =
-    (bankForm.accountNumber || '').trim() !== (savedBank.accountNumber || '').trim() ||
-    (bankForm.accountName || '').trim() !== (savedBank.accountName || '').trim() ||
-    (bankForm.bankName || '').trim() !== (savedBank.bankName || '').trim() ||
-    (bankForm.branch || '').trim() !== (savedBank.branch || '').trim();
-
   const businessProfileChanged =
     (s.businessName || '').trim() !== (settings?.businessName || '').trim() ||
     (s.phone || '').trim() !== (settings?.phone || '').trim() ||
@@ -197,7 +177,7 @@ const Profile = () => {
     (s.address || '').trim() !== (settings?.address || '').trim() ||
     (s.website || '').trim() !== (settings?.website || '').trim();
 
-  const hasBusinessChanges = businessProfileChanged || bankFormChanged;
+  const hasBusinessChanges = businessProfileChanged;
 
   const handleSaveBusinessAndBank = async () => {
     setSavingBusiness(true);
@@ -213,24 +193,9 @@ const Profile = () => {
         });
       }
 
-      // Save bank details
-      if (bankFormChanged) {
-        const an = String(bankForm.accountNumber || '').trim();
-        const aname = String(bankForm.accountName || '').trim();
-        const bname = String(bankForm.bankName || '').trim();
-        if (an && aname && bname) {
-          await saveBankDetails({
-            accountNumber: an,
-            accountName: aname,
-            bankName: bname,
-            branch: bankForm.branch?.trim() || null,
-          });
-        }
-      }
-
       toast({
         title: 'Saved',
-        description: 'Business profile and bank details have been saved successfully.',
+        description: 'Business profile has been saved successfully.',
       });
     } catch (err) {
       toast({
@@ -253,7 +218,7 @@ const Profile = () => {
     <>
       <Helmet>
         <title>Profile - V Cabanas HMS</title>
-        <meta name="description" content="Manage your profile, business details, bank account, and branding" />
+        <meta name="description" content="Manage your profile, business details, and branding" />
       </Helmet>
 
       <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto min-w-0 px-0 sm:px-2">
@@ -421,7 +386,7 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* 2. Business Profile & Bank Account */}
+          {/* 2. Business Profile */}
           <div className="bg-card rounded-lg p-4 sm:p-6 border border-border">
             {/* Business Profile Section */}
             <div className="mb-6">
@@ -500,53 +465,6 @@ const Profile = () => {
                       setLocal((prev) => ({ ...prev, website: e.target.value }));
                     }}
                     placeholder="www.logozodev.com"
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* Bank Account Section */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Landmark className="w-5 h-5 text-primary shrink-0" />
-                <h2 className="text-base sm:text-lg font-semibold">Bank Account</h2>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">For Bank Transfer invoices. Account details are encrypted.</p>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="bank-account-number">Account Number *</Label>
-                  <Input
-                    id="bank-account-number"
-                    value={bankForm.accountNumber}
-                    onChange={(e) => setBankForm((p) => ({ ...p, accountNumber: e.target.value }))}
-                    placeholder="1234567890"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bank-account-name">Account Name *</Label>
-                  <Input
-                    id="bank-account-name"
-                    value={bankForm.accountName}
-                    onChange={(e) => setBankForm((p) => ({ ...p, accountName: e.target.value }))}
-                    placeholder="Your Business Name"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bank-name">Bank Name *</Label>
-                  <Input
-                    id="bank-name"
-                    value={bankForm.bankName}
-                    onChange={(e) => setBankForm((p) => ({ ...p, bankName: e.target.value }))}
-                    placeholder="Commercial Bank"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="bank-branch">Branch (optional)</Label>
-                  <Input
-                    id="bank-branch"
-                    value={bankForm.branch}
-                    onChange={(e) => setBankForm((p) => ({ ...p, branch: e.target.value }))}
-                    placeholder="Colombo Main"
                   />
                 </div>
               </div>
