@@ -825,9 +825,9 @@ const CashFlow = () => {
                 <col className="w-[120px]" />
                 <col className="w-[220px]" />
                 <col className="w-[140px]" />
-                <col className="w-[150px]" />
-                <col className="w-[120px]" />
-                <col className="w-[150px]" />
+                <col className="w-[170px]" />
+                <col className="w-[140px]" />
+                <col className="w-[170px]" />
                 <col className="w-[170px]" />
                 <col className="w-[110px]" />
               </colgroup>
@@ -836,9 +836,9 @@ const CashFlow = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Date</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Source / Recipient</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Category</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Amount</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap tabular-nums">Amount</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold whitespace-nowrap">Status</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Balance</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap tabular-nums">Balance</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Notes</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold uppercase whitespace-nowrap">Actions</th>
                 </tr>
@@ -874,7 +874,7 @@ const CashFlow = () => {
                     <td className="px-4 py-3 text-sm align-middle">
                       <span className="block truncate">{tx.category}</span>
                     </td>
-                    <td className="px-4 py-3 text-sm font-semibold text-right whitespace-nowrap align-middle">
+                    <td className="px-4 py-3 text-sm font-semibold text-right whitespace-nowrap align-middle tabular-nums">
                       <span className={tx.type === 'inflow' ? 'text-green-500' : 'text-red-500'}>
                         {tx.type === 'inflow' ? '+' : '-'}
                         {settings.currency} {tx.amount.toLocaleString()}
@@ -895,7 +895,7 @@ const CashFlow = () => {
                         {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium text-right whitespace-nowrap align-middle">
+                    <td className="px-4 py-3 text-sm font-medium text-right whitespace-nowrap align-middle tabular-nums">
                       {tx.runningBalance !== null
                         ? `${settings.currency} ${tx.runningBalance.toLocaleString()}`
                         : '—'}
