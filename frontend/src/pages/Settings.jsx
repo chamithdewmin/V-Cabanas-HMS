@@ -65,6 +65,24 @@ const Settings = () => {
 
   const s = local;
 
+  const handleThemeToggle = async () => {
+    const nextTheme = s.theme === 'dark' ? 'light' : 'dark';
+    setLocal((prev) => ({ ...prev, theme: nextTheme }));
+    setSaving((prev) => ({ ...prev, appearance: true }));
+    try {
+      await updateSettings({ theme: nextTheme });
+    } catch (err) {
+      setLocal((prev) => ({ ...prev, theme: s.theme || 'dark' }));
+      toast({
+        title: 'Error',
+        description: err.message || 'Failed to change theme.',
+        variant: 'destructive',
+      });
+    } finally {
+      setSaving((prev) => ({ ...prev, appearance: false }));
+    }
+  };
+
   return (
     <>
       <Helmet>
@@ -97,7 +115,7 @@ const Settings = () => {
               </div>
               <button
                 type="button"
-                onClick={() => setLocal((prev) => ({ ...prev, theme: prev.theme === 'dark' ? 'light' : 'dark' }))}
+                onClick={handleThemeToggle}
                 className={cn(
                   'relative inline-flex h-7 w-14 items-center rounded-full border transition-colors',
                   s.theme === 'dark' ? 'bg-primary border-primary' : 'bg-muted border-secondary',
@@ -109,17 +127,9 @@ const Settings = () => {
                 )} />
               </button>
             </div>
-            <div className="flex justify-end">
-              <Button
-                size="sm"
-                disabled={!hasChanges(['theme']) || saving.appearance}
-                onClick={() => handleSaveSection('Appearance', ['theme'])}
-                className="gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {saving.appearance ? 'Saving...' : 'Save'}
-              </Button>
-            </div>
+            <p className="text-xs text-muted-foreground">
+              Theme changes are applied instantly.
+            </p>
           </div>
 
           {/* 2. Format Settings */}
