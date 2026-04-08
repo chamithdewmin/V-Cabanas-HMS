@@ -918,7 +918,7 @@ const Booking = () => {
                       const selectedPricing = findPricingById(a.pricingId);
                       return (
                         <tr key={idx} className="border-t border-secondary">
-                          <td className="px-3 py-2">
+                          <td className="px-3 py-2 align-middle">
                             <select
                               value={String(a.pricingId || '')}
                               onChange={(e) => updateAddonRowPopup(idx, 'pricingId', e.target.value)}
@@ -931,13 +931,8 @@ const Booking = () => {
                                 </option>
                               ))}
                             </select>
-                            <p className="mt-1 text-[11px] text-muted-foreground leading-tight">
-                              {selectedPricing
-                                ? `${selectedPricing.name} selected`
-                                : 'Choose a package to auto-fill name and price'}
-                            </p>
                           </td>
-                          <td className="px-3 py-2 text-right">
+                          <td className="px-3 py-2 text-right align-middle">
                             <Input
                               type="number"
                               min="1"
@@ -946,7 +941,7 @@ const Booking = () => {
                               onChange={(e) => updateAddonRowPopup(idx, 'quantity', e.target.value)}
                             />
                           </td>
-                          <td className="px-3 py-2 text-right">
+                          <td className="px-3 py-2 text-right align-middle">
                             <Input
                               type="number"
                               min="0"
@@ -956,8 +951,8 @@ const Booking = () => {
                               onChange={(e) => updateAddonRowPopup(idx, 'unitPrice', e.target.value)}
                             />
                           </td>
-                          <td className="px-3 py-2 text-right tabular-nums font-medium">{amount.toLocaleString()}</td>
-                          <td className="px-2 py-2">
+                          <td className="px-3 py-2 text-right tabular-nums font-medium align-middle">{amount.toLocaleString()}</td>
+                          <td className="px-2 py-2 align-middle">
                             <button
                               type="button"
                               onClick={() => removeAddonRowPopup(idx)}
