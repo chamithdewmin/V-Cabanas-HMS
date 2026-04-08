@@ -651,8 +651,12 @@ const Booking = () => {
               const priceLkr = Number(d.price) || 0;
               const bcLkr = Number(d.bookingComCommission) || 0;
               const subLkr = priceLkr - bcLkr;
+              const addonsTotalLkr = (d.addons || []).reduce(
+                (sum, a) => sum + Number(a.quantity || 0) * Number(a.unitPrice || 0),
+                0
+              );
               const staffLkr = Number(d.staffCommissionAmount) || 0;
-              const totalLkr = subLkr - staffLkr;
+              const totalLkr = subLkr + addonsTotalLkr - staffLkr;
               const priceUsd = Number(d.priceUsd) || 0;
               const bcUsd = Number(d.bookingComCommissionUsd) || 0;
               const subUsd = priceUsd - bcUsd;
@@ -716,7 +720,9 @@ const Booking = () => {
                     <div className="rounded-lg border border-primary/30 bg-primary/[0.08] px-3 py-2.5">
                       <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Total (LKR)</p>
                       <p className="mt-0.5 text-base font-bold tabular-nums text-foreground">{fmtN(totalLkr)}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">Sub total − Staff</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">
+                        Sub total + add-ons − staff
+                      </p>
                     </div>
                   </div>
 
@@ -738,6 +744,9 @@ const Booking = () => {
                     <DetailRow icon={Calculator} label="Sub total">
                       {fmtN(subLkr)}
                     </DetailRow>
+                    <DetailRow icon={Package} label="Add-ons total">
+                      {fmtN(addonsTotalLkr)}
+                    </DetailRow>
                     <DetailRow icon={Wallet} label="Staff commission">
                       {fmtN(staffLkr)}
                     </DetailRow>
@@ -757,8 +766,14 @@ const Booking = () => {
                       <DetailRow icon={Calculator} label="Sub total (USD)">
                         {fmtN(subUsd)}
                       </DetailRow>
+                      {addonsTotalLkr > 0 && (
+                        <DetailRow icon={Package} label="Add-ons (LKR)" mutedValue>
+                          {fmtN(addonsTotalLkr)}
+                        </DetailRow>
+                      )}
                       <p className="px-3 py-2 text-[11px] leading-relaxed text-muted-foreground border-t border-secondary/80">
-                        Staff commission is recorded in LKR. Use the LKR total above for net after staff.
+                        Staff commission and add-on amounts are in LKR. The LKR total (net) above includes add-ons:
+                        sub total + add-ons − staff.
                       </p>
                     </DetailSection>
                   )}
