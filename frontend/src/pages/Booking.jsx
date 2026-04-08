@@ -870,7 +870,7 @@ const Booking = () => {
           }
         }}
       >
-        <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add-ons</DialogTitle>
             {addonDialogBooking && (
@@ -893,13 +893,20 @@ const Booking = () => {
             </div>
             {addonRows.length > 0 && (
               <div className="rounded-md border border-secondary overflow-hidden">
-                <table className="w-full text-sm">
+                <table className="w-full min-w-[820px] table-fixed text-sm">
+                  <colgroup>
+                    <col className="w-[42%]" />
+                    <col className="w-[14%]" />
+                    <col className="w-[20%]" />
+                    <col className="w-[18%]" />
+                    <col className="w-[6%]" />
+                  </colgroup>
                   <thead className="bg-secondary">
                     <tr>
                       <th className="px-3 py-2 text-left font-medium">Package</th>
-                      <th className="px-3 py-2 text-right font-medium w-24">Qty</th>
-                      <th className="px-3 py-2 text-right font-medium w-32">Unit price (LKR)</th>
-                      <th className="px-3 py-2 text-right font-medium w-32">Amount (LKR)</th>
+                      <th className="px-3 py-2 text-right font-medium">Qty</th>
+                      <th className="px-3 py-2 text-right font-medium">Unit price (LKR)</th>
+                      <th className="px-3 py-2 text-right font-medium">Amount (LKR)</th>
                       <th className="w-10" />
                     </tr>
                   </thead>
@@ -934,7 +941,7 @@ const Booking = () => {
                             <Input
                               type="number"
                               min="1"
-                              className="w-20 text-right h-8"
+                              className="w-full text-right h-8"
                               value={a.quantity}
                               onChange={(e) => updateAddonRowPopup(idx, 'quantity', e.target.value)}
                             />
@@ -944,7 +951,7 @@ const Booking = () => {
                               type="number"
                               min="0"
                               step="0.01"
-                              className="w-24 text-right h-8"
+                              className="w-full text-right h-8"
                               value={a.unitPrice}
                               onChange={(e) => updateAddonRowPopup(idx, 'unitPrice', e.target.value)}
                             />
