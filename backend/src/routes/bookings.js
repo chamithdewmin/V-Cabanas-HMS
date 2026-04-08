@@ -51,11 +51,30 @@ const toBooking = (row, addons = []) => {
   };
 };
 
-function computeStaffCommission(role, ratePct, price) {
+function computeStaffCommission(role, ratePct, commissionBaseLkr) {
   if (!STAFF_ROLES.includes((role || '').toLowerCase())) return 0;
   const rate = parseFloat(ratePct);
   if (!Number.isFinite(rate) || rate <= 0) return 0;
-  return Math.round((price * rate / 100) * 100) / 100;
+  const base = Number(commissionBaseLkr) || 0;
+  return Math.round((base * rate) / 100 * 100) / 100;
+}
+
+/** LKR total from add-on lines (guest extras); used with room price for staff commission. */
+function sumAddonsFromPayload(addons) {
+  if (!Array.isArray(addons)) return 0;
+  return addons.reduce((sum, a) => {
+    const unit = Number(a.unitPrice) || Number(a.price) || 0;
+    const qty = Math.max(1, parseInt(a.quantity, 10) || 1);
+    return sum + unit * qty;
+  }, 0);
+}
+
+async function sumAddonsInDb(pool, bookingId) {
+  const { rows } = await pool.query(
+    'SELECT COALESCE(SUM(unit_price * quantity), 0)::numeric AS s FROM booking_addons WHERE booking_id = $1',
+    [bookingId]
+  );
+  return parseFloat(rows[0]?.s) || 0;
 }
 
 async function getAddonsForBooking(pool, bookingId) {
@@ -136,7 +155,9 @@ router.post('/', async (req, res) => {
     const ratePct = req.user.commission_rate_pct;
     const d = req.body;
     const price = d.price != null ? Number(d.price) : 0;
-    const staffCommissionAmount = computeStaffCommission(role, ratePct, price);
+    const addonsTotalLkr = sumAddonsFromPayload(d.addons);
+    const everyBookingTotalLkr = price + addonsTotalLkr;
+    const staffCommissionAmount = computeStaffCommission(role, ratePct, everyBookingTotalLkr);
     const id = `BKG-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const clientId = d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null;
     await pool.query(
@@ -209,7 +230,11 @@ router.put('/:id', async (req, res) => {
         ownerRate = urows[0].commission_rate_pct;
       }
     }
-    const staffCommissionAmount = computeStaffCommission(ownerRole, ownerRate, price);
+    const addonsTotalLkr = Array.isArray(d.addons)
+      ? sumAddonsFromPayload(d.addons)
+      : await sumAddonsInDb(pool, id);
+    const everyBookingTotalLkr = price + addonsTotalLkr;
+    const staffCommissionAmount = computeStaffCommission(ownerRole, ownerRate, everyBookingTotalLkr);
     const clientId = d.clientId !== undefined ? (d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null) : undefined;
     const rowFields = [
       d.customerName != null ? String(d.customerName).trim() : null,

@@ -548,8 +548,9 @@ const SalaryManagement = () => {
                         placeholder="10"
                       />
                       <p className="text-xs text-muted-foreground">
-                        Saved on this staff member&apos;s account. Manager and receptionist roles earn this percentage on
-                        each booking they create (booking price × rate).
+                        Saved on this staff member&apos;s account. For each booking they create, commission is{' '}
+                        <span className="text-foreground/90">(room price LKR + add-ons LKR) × rate</span> — the same total
+                        the guest pays for the room and extras.
                       </p>
                     </div>
                   </>
@@ -580,8 +581,8 @@ const SalaryManagement = () => {
                       </select>
                       <p className="text-xs text-muted-foreground">
                         {form.period === 'always'
-                          ? 'Commission rate is stored on the user and applied to every booking they enter. Salary amount can be 0 if you only track commission.'
-                          : 'Salary amount is for this pay cycle. The commission rate above still applies on each booking they create.'}
+                          ? 'Every booking: commission = guest total (room + add-ons in LKR) × your rate. Salary amount can be 0 if you only track commission.'
+                          : 'Salary amount is for this pay cycle. Commission on each booking still uses room + add-ons total (LKR) × rate.'}
                       </p>
                     </div>
                     <div className="space-y-2">
