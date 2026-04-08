@@ -1,13 +1,15 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, DollarSign, Receipt, FileText, TrendingUp } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, DollarSign, Receipt, FileText, TrendingUp, BedDouble } from 'lucide-react';
 import { useFinance } from '@/contexts/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { api } from '@/lib/api';
 
 const Calendar = () => {
   const { incomes, expenses, invoices, settings, loadData } = useFinance();
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [bookings, setBookings] = useState([]);
   const currency = settings?.currency || 'LKR';
 
   const year = currentDate.getFullYear();
@@ -39,11 +41,12 @@ const Calendar = () => {
   // Get transactions for a specific date (compare local dates so timezone doesn't shift the day)
   const getTransactionsForDate = (date) => {
     const dateStr = toLocalDateString(date);
-    if (!dateStr) return { incomes: [], expenses: [], invoices: [] };
+    if (!dateStr) return { incomes: [], expenses: [], invoices: [], bookings: [] };
     const dayTransactions = {
       incomes: [],
       expenses: [],
       invoices: [],
+      bookings: [],
     };
 
     incomes.forEach(income => {
@@ -65,6 +68,12 @@ const Calendar = () => {
       }
     });
 
+    bookings.forEach((booking) => {
+      if (booking.checkIn && toLocalDateString(booking.checkIn) === dateStr) {
+        dayTransactions.bookings.push(booking);
+      }
+    });
+
     return dayTransactions;
   };
 
@@ -77,7 +86,13 @@ const Calendar = () => {
       .filter(inv => inv.status !== 'paid')
       .reduce((sum, inv) => sum + (inv.total || 0), 0);
     
-    return { incomeTotal, expenseTotal, invoiceTotal, net: incomeTotal - expenseTotal };
+    return {
+      incomeTotal,
+      expenseTotal,
+      invoiceTotal,
+      bookingCount: transactions.bookings.length,
+      net: incomeTotal - expenseTotal,
+    };
   };
 
   const navigateMonth = (direction) => {
@@ -118,6 +133,10 @@ const Calendar = () => {
 
   useEffect(() => {
     loadData?.();
+    api.bookings
+      .list()
+      .then((list) => setBookings(Array.isArray(list) ? list : []))
+      .catch(() => setBookings([]));
   }, []);
 
   return (
@@ -136,7 +155,7 @@ const Calendar = () => {
               Calendar
             </h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              View your income, expenses, and invoices by date
+              View your income, expenses, invoices, and bookings by date
             </p>
           </div>
         </div>
@@ -193,7 +212,11 @@ const Calendar = () => {
               }
 
               const totals = getDateTotals(date);
-              const hasTransactions = totals.incomeTotal > 0 || totals.expenseTotal > 0 || totals.invoiceTotal > 0;
+              const hasTransactions =
+                totals.incomeTotal > 0 ||
+                totals.expenseTotal > 0 ||
+                totals.invoiceTotal > 0 ||
+                totals.bookingCount > 0;
               const isSelected = selectedDate && 
                 date.getDate() === selectedDate.getDate() &&
                 date.getMonth() === selectedDate.getMonth() &&
@@ -236,6 +259,12 @@ const Calendar = () => {
                           <div className="text-yellow-500 flex items-center gap-1">
                             <FileText className="w-3 h-3" />
                             <span className="truncate">{totals.invoiceTotal.toLocaleString()}</span>
+                          </div>
+                        )}
+                        {totals.bookingCount > 0 && (
+                          <div className="text-sky-400 flex items-center gap-1">
+                            <BedDouble className="w-3 h-3" />
+                            <span className="truncate">{totals.bookingCount} booking{totals.bookingCount > 1 ? 's' : ''}</span>
                           </div>
                         )}
                       </div>
@@ -372,9 +401,38 @@ const Calendar = () => {
                 </div>
               )}
 
+              {/* Bookings */}
+              {selectedTransactions.bookings.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-sky-400 mb-2 flex items-center gap-2">
+                    <BedDouble className="w-4 h-4" />
+                    Bookings ({selectedTransactions.bookings.length})
+                  </h4>
+                  <div className="space-y-2">
+                    {selectedTransactions.bookings.map((booking) => (
+                      <div
+                        key={booking.id}
+                        className="bg-secondary/30 rounded-lg p-3 flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="font-medium">{booking.customerName || 'Unknown guest'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Room {booking.roomNumber || '—'} • Check-in
+                          </p>
+                        </div>
+                        <p className="font-bold text-sky-400">
+                          {currency} {(Number(booking.price) || 0).toLocaleString()}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {selectedTransactions.incomes.length === 0 &&
                 selectedTransactions.expenses.length === 0 &&
-                selectedTransactions.invoices.length === 0 && (
+                selectedTransactions.invoices.length === 0 &&
+                selectedTransactions.bookings.length === 0 && (
                   <p className="text-muted-foreground text-center py-8">
                     No transactions on this date
                   </p>
