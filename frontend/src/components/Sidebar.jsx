@@ -28,7 +28,6 @@ import {
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
-import sidebarIcon from '@/assets/icon.png';
 import {
   Sidebar as SidebarRoot,
   SidebarHeader,
@@ -220,9 +219,6 @@ export default function Sidebar() {
           {...(collapsed && { onClick: (e) => { if (e.target.closest('button')) return; toggleCollapsed(); } })}
         >
           <div className={cn('flex items-center gap-2.5 min-w-0 flex-1', collapsed && 'justify-center')}>
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-primary/20 text-primary font-bold text-sm">
-              <img src={sidebarIcon} alt="" className="h-4 w-4 object-contain" />
-            </div>
             {!collapsed && (
               <span className="sidebar-label text-base font-semibold text-foreground truncate">V Cabanas HMS</span>
             )}
