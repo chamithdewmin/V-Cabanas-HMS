@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import {
@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useFinance } from '@/contexts/FinanceContext';
+import { api } from '@/lib/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
@@ -69,6 +70,7 @@ const CashFlow = () => {
   const [addType, setAddType] = useState('inflow'); // inflow | outflow
   const [editingTx, setEditingTx] = useState(null);
   const [refreshLoading, setRefreshLoading] = useState(false);
+  const [bookings, setBookings] = useState([]);
   const [form, setForm] = useState({
     source: '',
     category: '',
@@ -144,8 +146,29 @@ const CashFlow = () => {
         });
       });
 
+    bookings.forEach((b) => {
+      const bookingPrice = Number(b.price) || 0;
+      const bookingCom = Number(b.bookingComCommission) || 0;
+      const staffCommission = Number(b.staffCommissionAmount) || 0;
+      const subtotal = bookingPrice - bookingCom;
+      const bookingTotal = subtotal - staffCommission;
+      txList.push({
+        id: b.id,
+        type: 'inflow',
+        date: b.checkIn || b.createdAt || new Date().toISOString(),
+        source: b.customerName || b.clientName || 'Booking',
+        category: 'Booking',
+        amount: Math.max(0, bookingTotal),
+        status: 'received',
+        notes: `Room ${b.roomNumber || '—'} booking total`,
+        isRecurring: false,
+        raw: b,
+        sourceType: 'booking',
+      });
+    });
+
     return txList;
-  }, [incomes, expenses, invoices]);
+  }, [incomes, expenses, invoices, bookings]);
 
   // Sort transactions
   const sortedTransactions = useMemo(() => {
@@ -378,11 +401,24 @@ const CashFlow = () => {
   }, [filteredTransactions]);
 
   const allCategories = useMemo(() => {
-    const cats = new Set(['Sales', 'Invoice']);
+    const cats = new Set(['Sales', 'Invoice', 'Booking']);
     incomes.forEach((i) => i.serviceType && cats.add(i.serviceType));
     expenses.forEach((e) => e.category && cats.add(e.category));
     return Array.from(cats).sort();
   }, [incomes, expenses]);
+
+  const loadBookings = async () => {
+    try {
+      const list = await api.bookings.list();
+      setBookings(Array.isArray(list) ? list : []);
+    } catch {
+      setBookings([]);
+    }
+  };
+
+  useEffect(() => {
+    loadBookings();
+  }, []);
 
   const openAdd = (type) => {
     setAddType(type);
@@ -601,7 +637,7 @@ const CashFlow = () => {
               onClick={async () => {
                 setRefreshLoading(true);
                 try {
-                  await loadData();
+                  await Promise.all([loadData(), loadBookings()]);
                   toast({ title: 'Refreshed', description: 'Data refreshed.' });
                 } finally {
                   setRefreshLoading(false);
@@ -908,6 +944,8 @@ const CashFlow = () => {
                           >
                             <ArrowUpCircle className="w-4 h-4" />
                           </button>
+                        ) : tx.sourceType === 'booking' ? (
+                          <span className="text-xs text-muted-foreground">From booking</span>
                         ) : tx.sourceType !== 'invoice' ? (
                           <>
                             <button
