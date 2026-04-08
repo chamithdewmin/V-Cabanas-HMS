@@ -48,6 +48,7 @@ const toBooking = (row, addons = []) => {
       quantity: a.quantity ?? 1,
     })),
     createdAt: row.created_at,
+    staffUserId: row.user_id != null ? row.user_id : null,
   };
 };
 
@@ -75,6 +76,49 @@ async function sumAddonsInDb(pool, bookingId) {
     [bookingId]
   );
   return parseFloat(rows[0]?.s) || 0;
+}
+
+/** Manager/receptionist id for commission; rejects admin and invalid ids. */
+async function assertValidCommissionStaffId(pool, rawId) {
+  const sid = parseInt(String(rawId), 10);
+  if (!Number.isFinite(sid)) {
+    const e = new Error('Invalid staff user id');
+    e.statusCode = 400;
+    throw e;
+  }
+  const { rows } = await pool.query(
+    `SELECT id, COALESCE(role, 'receptionist') AS role FROM users WHERE id = $1`,
+    [sid]
+  );
+  if (!rows[0]) {
+    const e = new Error('Staff user not found');
+    e.statusCode = 400;
+    throw e;
+  }
+  const r = (rows[0].role || '').toLowerCase();
+  if (r === 'admin') {
+    const e = new Error('Choose a manager or receptionist for commission, not an admin account');
+    e.statusCode = 400;
+    throw e;
+  }
+  if (!STAFF_ROLES.includes(r)) {
+    const e = new Error('Commission applies to manager or receptionist accounts only');
+    e.statusCode = 400;
+    throw e;
+  }
+  return sid;
+}
+
+async function loadUserCommissionFields(pool, userId) {
+  const { rows } = await pool.query(
+    `SELECT COALESCE(role, 'receptionist') AS role, COALESCE(commission_rate_pct, 10) AS commission_rate_pct FROM users WHERE id = $1`,
+    [userId]
+  );
+  if (!rows[0]) return { role: 'receptionist', ratePct: 10 };
+  return {
+    role: rows[0].role,
+    ratePct: parseFloat(rows[0].commission_rate_pct) || 10,
+  };
 }
 
 async function getAddonsForBooking(pool, bookingId) {
@@ -150,13 +194,29 @@ router.get('/', async (req, res) => {
 
 router.post('/', async (req, res) => {
   try {
-    const uid = req.user.id;
-    const role = (req.user.role || '').toLowerCase();
-    const ratePct = req.user.commission_rate_pct;
     const d = req.body;
     const price = d.price != null ? Number(d.price) : 0;
     const addonsTotalLkr = sumAddonsFromPayload(d.addons);
     const everyBookingTotalLkr = price + addonsTotalLkr;
+
+    let bookingUserId = req.user.id;
+    let role = (req.user.role || '').toLowerCase();
+    let ratePct = req.user.commission_rate_pct;
+
+    if (isAdmin(req)) {
+      const raw = d.assignedStaffUserId;
+      if (raw == null || String(raw).trim() === '') {
+        return res.status(400).json({
+          error:
+            'Select which staff member this booking is for. Their commission rate (e.g. 10%) applies to room + add-ons. Admins do not earn booking commission.',
+        });
+      }
+      bookingUserId = await assertValidCommissionStaffId(pool, raw);
+      const u = await loadUserCommissionFields(pool, bookingUserId);
+      role = (u.role || '').toLowerCase();
+      ratePct = u.ratePct;
+    }
+
     const staffCommissionAmount = computeStaffCommission(role, ratePct, everyBookingTotalLkr);
     const id = `BKG-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const clientId = d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null;
@@ -165,7 +225,7 @@ router.post('/', async (req, res) => {
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
       [
         id,
-        uid,
+        bookingUserId,
         clientId,
         (d.customerName || '').trim(),
         (d.roomNumber || '').trim(),
@@ -198,6 +258,9 @@ router.post('/', async (req, res) => {
     const { rows } = await pool.query('SELECT * FROM bookings WHERE id = $1', [id]);
     res.status(201).json(toBooking(rows[0], addonsRows));
   } catch (err) {
+    if (err.statusCode === 400) {
+      return res.status(400).json({ error: err.message });
+    }
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
@@ -207,8 +270,6 @@ router.put('/:id', async (req, res) => {
   try {
     const uid = req.user.id;
     const adm = isAdmin(req);
-    const role = (req.user.role || '').toLowerCase();
-    const ratePct = req.user.commission_rate_pct;
     const { id } = req.params;
     const d = req.body;
     const priceParam = d.price != null ? Number(d.price) : null;
@@ -218,18 +279,17 @@ router.put('/:id', async (req, res) => {
     );
     if (!existing[0]) return res.status(404).json({ error: 'Not found' });
     const price = priceParam != null ? priceParam : parseFloat(existing[0].price) || 0;
-    let ownerRole = role;
-    let ownerRate = ratePct;
-    if (adm && existing[0].user_id != null) {
-      const { rows: urows } = await pool.query(
-        `SELECT COALESCE(role, 'receptionist') AS role, COALESCE(commission_rate_pct, 10) AS commission_rate_pct FROM users WHERE id = $1`,
-        [existing[0].user_id]
-      );
-      if (urows[0]) {
-        ownerRole = urows[0].role;
-        ownerRate = urows[0].commission_rate_pct;
-      }
+
+    let ownerId = existing[0].user_id;
+    if (adm && d.assignedStaffUserId !== undefined && d.assignedStaffUserId !== null && String(d.assignedStaffUserId).trim() !== '') {
+      ownerId = await assertValidCommissionStaffId(pool, d.assignedStaffUserId);
     }
+    if (adm && ownerId !== existing[0].user_id) {
+      await pool.query('UPDATE bookings SET user_id = $2 WHERE id = $1', [id, ownerId]);
+    }
+
+    const { role: ownerRoleRaw, ratePct: ownerRate } = await loadUserCommissionFields(pool, ownerId);
+    const ownerRole = (ownerRoleRaw || '').toLowerCase();
     const addonsTotalLkr = Array.isArray(d.addons)
       ? sumAddonsFromPayload(d.addons)
       : await sumAddonsInDb(pool, id);
@@ -319,6 +379,9 @@ router.put('/:id', async (req, res) => {
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });
     res.json(toBooking(rows[0], addonsRows));
   } catch (err) {
+    if (err.statusCode === 400) {
+      return res.status(400).json({ error: err.message });
+    }
     console.error(err);
     res.status(500).json({ error: 'Server error' });
   }
