@@ -820,17 +820,27 @@ const CashFlow = () => {
         {/* Table */}
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full min-w-[980px] table-fixed">
+              <colgroup>
+                <col className="w-[120px]" />
+                <col className="w-[220px]" />
+                <col className="w-[140px]" />
+                <col className="w-[150px]" />
+                <col className="w-[120px]" />
+                <col className="w-[150px]" />
+                <col className="w-[170px]" />
+                <col className="w-[110px]" />
+              </colgroup>
               <thead className="bg-secondary">
                 <tr>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Date</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Source / Recipient</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Category</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Status</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold">Balance</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold">Notes</th>
-                  <th className="px-4 py-3 text-center text-sm font-semibold uppercase">Actions</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Date</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Source / Recipient</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Category</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Amount</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Status</th>
+                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Balance</th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Notes</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold uppercase whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -849,28 +859,30 @@ const CashFlow = () => {
                       })()
                     }`}
                   >
-                    <td className="px-4 py-3 text-sm text-muted-foreground">{formatDate(tx.date)}</td>
-                    <td className="px-4 py-3 text-sm">
-                      <div className="flex items-center gap-2">
+                    <td className="px-4 py-3 text-sm text-muted-foreground whitespace-nowrap align-middle">{formatDate(tx.date)}</td>
+                    <td className="px-4 py-3 text-sm align-middle">
+                      <div className="flex items-center gap-2 min-w-0">
                         {tx.type === 'inflow' ? (
                           <ArrowUpCircle className="w-4 h-4 text-green-500 flex-shrink-0" />
                         ) : (
                           <ArrowDownCircle className="w-4 h-4 text-red-500 flex-shrink-0" />
                         )}
-                        {tx.source}
+                        <span className="truncate">{tx.source}</span>
                         {tx.isRecurring && <Repeat className="w-3 h-3 text-muted-foreground" title="Recurring" />}
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-sm">{tx.category}</td>
-                    <td className="px-4 py-3 text-sm font-semibold text-right">
+                    <td className="px-4 py-3 text-sm align-middle">
+                      <span className="block truncate">{tx.category}</span>
+                    </td>
+                    <td className="px-4 py-3 text-sm font-semibold text-right whitespace-nowrap align-middle">
                       <span className={tx.type === 'inflow' ? 'text-green-500' : 'text-red-500'}>
                         {tx.type === 'inflow' ? '+' : '-'}
                         {settings.currency} {tx.amount.toLocaleString()}
                       </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 align-middle">
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                           tx.status === 'received' || tx.status === 'paid'
                             ? 'bg-green-500/20 text-green-500'
                             : tx.status === 'overdue'
@@ -883,15 +895,17 @@ const CashFlow = () => {
                         {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                       </span>
                     </td>
-                    <td className="px-4 py-3 text-sm font-medium text-right">
+                    <td className="px-4 py-3 text-sm font-medium text-right whitespace-nowrap align-middle">
                       {tx.runningBalance !== null
                         ? `${settings.currency} ${tx.runningBalance.toLocaleString()}`
                         : '—'}
                     </td>
-                    <td className="px-4 py-3 text-sm text-muted-foreground max-w-[180px] truncate">
+                    <td className="px-4 py-3 text-sm text-muted-foreground align-middle">
+                      <span className="block truncate">
                       {tx.notes || '—'}
+                      </span>
                     </td>
-                    <td className="px-4 py-3">
+                    <td className="px-4 py-3 align-middle">
                       <div className="flex items-center justify-center gap-1">
                         {tx.isProjected ? (
                           <span className="text-xs text-muted-foreground">Projected</span>
