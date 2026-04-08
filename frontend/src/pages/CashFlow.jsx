@@ -823,13 +823,12 @@ const CashFlow = () => {
             <table className="w-full min-w-[1100px] table-fixed border-collapse [&_th]:align-middle [&_td]:align-middle">
               <colgroup>
                 <col className="w-[10%]" />
+                <col className="w-[20%]" />
+                <col className="w-[13%]" />
+                <col className="w-[16%]" />
+                <col className="w-[13%]" />
                 <col className="w-[18%]" />
-                <col className="w-[12%]" />
-                <col className="w-[14%]" />
-                <col className="w-[12%]" />
-                <col className="w-[14%]" />
-                <col className="w-[12%]" />
-                <col className="w-[8%]" />
+                <col className="w-[10%]" />
               </colgroup>
               <thead className="bg-secondary">
                 <tr>
@@ -838,7 +837,6 @@ const CashFlow = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Category</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Amount</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold whitespace-nowrap">Status</th>
-                  <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Balance</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Notes</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold uppercase whitespace-nowrap">Actions</th>
                 </tr>
@@ -891,11 +889,6 @@ const CashFlow = () => {
                       >
                         {tx.status.charAt(0).toUpperCase() + tx.status.slice(1)}
                       </span>
-                    </td>
-                    <td className="px-4 py-3 text-sm font-medium text-right whitespace-nowrap tabular-nums align-middle">
-                      {tx.runningBalance !== null
-                        ? `${settings.currency} ${tx.runningBalance.toLocaleString()}`
-                        : '—'}
                     </td>
                     <td className="px-4 py-3 text-sm text-muted-foreground align-middle">
                       <span className="block truncate">
