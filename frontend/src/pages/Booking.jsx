@@ -1,6 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { Plus, Pencil, Trash2, RefreshCw, Eye, PlusCircle } from 'lucide-react';
+import {
+  Plus,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Eye,
+  PlusCircle,
+  User,
+  Users,
+  Building2,
+  DoorOpen,
+  BedDouble,
+  CalendarRange,
+  Banknote,
+  Receipt,
+  Percent,
+  Calculator,
+  Wallet,
+  Package,
+  Hash,
+  Clock,
+  CircleDollarSign,
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
@@ -8,13 +30,51 @@ import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
+import { cn } from '@/lib/utils';
 
 const ALLOWED_ROOM_TYPES = ['double', 'triple'];
 const normalizeRoomTypeForForm = (v) => {
   const x = typeof v === 'string' ? v.trim().toLowerCase() : '';
   return ALLOWED_ROOM_TYPES.includes(x) ? x : 'double';
 };
+
+function DetailSection({ icon: Icon, title, children, className }) {
+  return (
+    <div className={cn('rounded-xl border border-secondary bg-card overflow-hidden', className)}>
+      <div className="flex items-center gap-2 px-3.5 py-2.5 bg-secondary/60 border-b border-secondary">
+        {Icon ? <Icon className="h-4 w-4 text-primary shrink-0" aria-hidden /> : null}
+        <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{title}</h3>
+      </div>
+      <div className="px-1">{children}</div>
+    </div>
+  );
+}
+
+function DetailRow({ icon: Icon, label, children, emphasize, mutedValue }) {
+  return (
+    <div
+      className={cn(
+        'flex items-start justify-between gap-3 py-2.5 px-3 border-b border-secondary/70 last:border-b-0',
+        emphasize && 'bg-primary/[0.07] rounded-lg border-b-0 my-0.5'
+      )}
+    >
+      <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
+        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden /> : null}
+        <span className="text-sm leading-snug">{label}</span>
+      </div>
+      <div
+        className={cn(
+          'text-sm text-right tabular-nums shrink-0 max-w-[65%]',
+          emphasize && 'font-semibold text-foreground',
+          !emphasize && !mutedValue && 'font-medium text-foreground',
+          mutedValue && 'text-muted-foreground font-normal'
+        )}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
 
 const emptyForm = () => ({
   clientId: '',
@@ -34,9 +94,6 @@ const emptyForm = () => ({
 
 const Booking = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
-  const userRole = (user?.role || '').toLowerCase();
-  const isAdmin = userRole === 'admin';
   const tableColSpan = 11;
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
@@ -578,136 +635,174 @@ const Booking = () => {
 
       {/* View booking details */}
       <Dialog open={!!detailBooking} onOpenChange={(open) => !open && setDetailBooking(null)}>
-        <DialogContent className="max-w-lg max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Booking details</DialogTitle>
+        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">
+          <DialogHeader className="space-y-1">
+            <DialogTitle className="flex items-center gap-2 text-xl">
+              <Eye className="h-5 w-5 text-primary shrink-0" aria-hidden />
+              Booking details
+            </DialogTitle>
           </DialogHeader>
-          {detailBooking && (
-            <div className="space-y-4 text-sm">
-              <dl className="grid grid-cols-1 gap-3">
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Customer</dt>
-                  <dd className="font-medium text-right">{detailBooking.customerName || '—'}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Client (invoice)</dt>
-                  <dd className="text-right">
-                    {detailBooking.clientId
-                      ? clients.find((c) => c.id === detailBooking.clientId)?.name || detailBooking.clientId
-                      : '—'}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Room no</dt>
-                  <dd className="font-medium text-right">{detailBooking.roomNumber || '—'}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Feature</dt>
-                  <dd className="text-right">{detailBooking.roomFeature === 'non_ac' ? 'Non AC' : 'AC'}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Type</dt>
-                  <dd className="text-right capitalize">{detailBooking.roomType || '—'}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Guests</dt>
-                  <dd className="text-right">
-                    {detailBooking.adults || 0} adults, {detailBooking.children || 0} children
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Check-in</dt>
-                  <dd className="tabular-nums text-right">{formatDateShort(detailBooking.checkIn)}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Check-out</dt>
-                  <dd className="tabular-nums text-right">{formatDateShort(detailBooking.checkOut)}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Price (LKR)</dt>
-                  <dd className="tabular-nums text-right">{Number(detailBooking.price || 0).toLocaleString()}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Booking.com (LKR)</dt>
-                  <dd className="tabular-nums text-right">
-                    {Number(detailBooking.bookingComCommission || 0).toLocaleString()}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Price (USD)</dt>
-                  <dd className="tabular-nums text-right">{Number(detailBooking.priceUsd || 0).toLocaleString()}</dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Booking.com (USD)</dt>
-                  <dd className="tabular-nums text-right">
-                    {Number(detailBooking.bookingComCommissionUsd || 0).toLocaleString()}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Income &amp; profit</dt>
-                  <dd className="tabular-nums font-medium text-right">
-                    {(detailBooking.incomeProfit != null
-                      ? detailBooking.incomeProfit
-                      : (Number(detailBooking.price) || 0) - (Number(detailBooking.bookingComCommission) || 0)
-                    ).toLocaleString()}
-                  </dd>
-                </div>
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Staff commission</dt>
-                  <dd className="tabular-nums text-right">
-                    {(detailBooking.staffCommissionAmount != null
-                      ? Number(detailBooking.staffCommissionAmount)
-                      : 0
-                    ).toLocaleString()}
-                  </dd>
-                </div>
-                {isAdmin && (
-                  <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                    <dt className="text-muted-foreground">Net (after staff)</dt>
-                    <dd className="tabular-nums font-medium text-right">
-                      {(detailBooking.netAfterStaffCommission != null
-                        ? Number(detailBooking.netAfterStaffCommission)
-                        : (detailBooking.incomeProfit != null ? detailBooking.incomeProfit : 0) -
-                          (detailBooking.staffCommissionAmount != null ? Number(detailBooking.staffCommissionAmount) : 0)
-                      ).toLocaleString()}
-                    </dd>
+          {detailBooking &&
+            (() => {
+              const d = detailBooking;
+              const clientLabel = d.clientId
+                ? clients.find((c) => c.id === d.clientId)?.name || d.clientId
+                : null;
+              const priceLkr = Number(d.price) || 0;
+              const bcLkr = Number(d.bookingComCommission) || 0;
+              const subLkr = priceLkr - bcLkr;
+              const staffLkr = Number(d.staffCommissionAmount) || 0;
+              const totalLkr = subLkr - staffLkr;
+              const priceUsd = Number(d.priceUsd) || 0;
+              const bcUsd = Number(d.bookingComCommissionUsd) || 0;
+              const subUsd = priceUsd - bcUsd;
+              const showUsdBlock = priceUsd > 0 || bcUsd > 0;
+              const fmtN = (n) => Number(n).toLocaleString();
+
+              return (
+                <div className="space-y-4 text-sm">
+                  {/* Primary: guest + stay */}
+                  <div className="rounded-xl border border-primary/25 bg-gradient-to-br from-primary/[0.12] via-secondary/40 to-card p-4 shadow-sm">
+                    <div className="flex gap-3">
+                      <div
+                        className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"
+                        aria-hidden
+                      >
+                        <User className="h-6 w-6" />
+                      </div>
+                      <div className="min-w-0 flex-1 space-y-2">
+                        <div>
+                          <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">Guest</p>
+                          <p className="truncate text-lg font-semibold leading-tight text-foreground">
+                            {d.customerName || '—'}
+                          </p>
+                        </div>
+                        <div className="flex flex-wrap gap-x-3 gap-y-1.5 text-xs text-muted-foreground sm:text-sm">
+                          <span className="inline-flex items-center gap-1.5">
+                            <DoorOpen className="h-3.5 w-3.5 text-primary/90 shrink-0" aria-hidden />
+                            <span className="text-foreground font-medium">Room {d.roomNumber || '—'}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <BedDouble className="h-3.5 w-3.5 text-primary/90 shrink-0" aria-hidden />
+                            <span className="capitalize">{d.roomType || '—'}</span>
+                            <span className="text-muted-foreground">·</span>
+                            <span>{d.roomFeature === 'non_ac' ? 'Non AC' : 'AC'}</span>
+                          </span>
+                          <span className="inline-flex items-center gap-1.5">
+                            <Users className="h-3.5 w-3.5 text-primary/90 shrink-0" aria-hidden />
+                            {d.adults || 0} adults, {d.children || 0} children
+                          </span>
+                        </div>
+                        <div className="flex items-start gap-2 rounded-lg bg-background/50 px-2.5 py-2 text-sm border border-secondary/80">
+                          <CalendarRange className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
+                          <div className="tabular-nums leading-snug">
+                            <span className="text-muted-foreground">Stay</span>{' '}
+                            <span className="font-medium text-foreground">{formatDateShort(d.checkIn)}</span>
+                            <span className="text-muted-foreground"> → </span>
+                            <span className="font-medium text-foreground">{formatDateShort(d.checkOut)}</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div className="flex justify-between gap-4 border-b border-secondary pb-2">
-                  <dt className="text-muted-foreground">Booking ID</dt>
-                  <dd className="font-mono text-xs text-right break-all">{detailBooking.id}</dd>
-                </div>
-                {detailBooking.createdAt && (
-                  <div className="flex justify-between gap-4 pb-2">
-                    <dt className="text-muted-foreground">Created</dt>
-                    <dd className="tabular-nums text-right text-xs">
-                      {typeof detailBooking.createdAt === 'string'
-                        ? detailBooking.createdAt.replace('T', ' ').slice(0, 19)
-                        : String(detailBooking.createdAt)}
-                    </dd>
+
+                  {/* Totals at a glance */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="rounded-lg border border-secondary bg-secondary/30 px-3 py-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Sub total (LKR)</p>
+                      <p className="mt-0.5 text-base font-semibold tabular-nums text-foreground">{fmtN(subLkr)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Price − Booking.com</p>
+                    </div>
+                    <div className="rounded-lg border border-primary/30 bg-primary/[0.08] px-3 py-2.5">
+                      <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Total (LKR)</p>
+                      <p className="mt-0.5 text-base font-bold tabular-nums text-foreground">{fmtN(totalLkr)}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5">Sub total − Staff</p>
+                    </div>
                   </div>
-                )}
-              </dl>
-              <div>
-                <h4 className="text-sm font-medium mb-2">Add-ons</h4>
-                {(detailBooking.addons || []).length === 0 ? (
-                  <p className="text-muted-foreground text-sm">No add-ons. Use the add-ons button on the row to add packages from Pricing.</p>
-                ) : (
-                  <ul className="rounded-md border border-secondary divide-y divide-secondary">
-                    {detailBooking.addons.map((a) => (
-                      <li key={a.id || `${a.pricingId}-${a.name}`} className="px-3 py-2 flex justify-between gap-2 text-sm">
-                        <span>{a.name}</span>
-                        <span className="tabular-nums text-muted-foreground shrink-0">
-                          {a.quantity} × {Number(a.unitPrice || 0).toLocaleString()} ={' '}
-                          {(Number(a.quantity || 0) * Number(a.unitPrice || 0)).toLocaleString()}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </div>
-            </div>
-          )}
+
+                  {clientLabel && (
+                    <DetailSection icon={Building2} title="Invoice client">
+                      <DetailRow icon={Receipt} label="Linked client" mutedValue>
+                        {clientLabel}
+                      </DetailRow>
+                    </DetailSection>
+                  )}
+
+                  <DetailSection icon={Banknote} title="Amounts (LKR)">
+                    <DetailRow icon={Banknote} label="Booking price">
+                      {fmtN(priceLkr)}
+                    </DetailRow>
+                    <DetailRow icon={Percent} label="Booking.com commission">
+                      {fmtN(bcLkr)}
+                    </DetailRow>
+                    <DetailRow icon={Calculator} label="Sub total">
+                      {fmtN(subLkr)}
+                    </DetailRow>
+                    <DetailRow icon={Wallet} label="Staff commission">
+                      {fmtN(staffLkr)}
+                    </DetailRow>
+                    <DetailRow icon={Receipt} label="Total (net)" emphasize>
+                      {fmtN(totalLkr)}
+                    </DetailRow>
+                  </DetailSection>
+
+                  {showUsdBlock && (
+                    <DetailSection icon={CircleDollarSign} title="Amounts (USD)">
+                      <DetailRow icon={CircleDollarSign} label="Booking price (USD)">
+                        {fmtN(priceUsd)}
+                      </DetailRow>
+                      <DetailRow icon={Percent} label="Booking.com (USD)">
+                        {fmtN(bcUsd)}
+                      </DetailRow>
+                      <DetailRow icon={Calculator} label="Sub total (USD)">
+                        {fmtN(subUsd)}
+                      </DetailRow>
+                      <p className="px-3 py-2 text-[11px] leading-relaxed text-muted-foreground border-t border-secondary/80">
+                        Staff commission is recorded in LKR. Use the LKR total above for net after staff.
+                      </p>
+                    </DetailSection>
+                  )}
+
+                  <DetailSection icon={Package} title="Add-ons">
+                    {(d.addons || []).length === 0 ? (
+                      <p className="px-3 py-3 text-sm text-muted-foreground leading-relaxed">
+                        No add-ons yet. Use the <PlusCircle className="inline h-3.5 w-3.5 align-text-bottom text-primary" aria-hidden /> button on the booking row to add packages from Pricing.
+                      </p>
+                    ) : (
+                      <ul className="py-1">
+                        {d.addons.map((a) => (
+                          <li
+                            key={a.id || `${a.pricingId}-${a.name}`}
+                            className="mx-2 mb-2 flex items-center justify-between gap-2 rounded-lg border border-secondary/80 bg-secondary/20 px-3 py-2 last:mb-0"
+                          >
+                            <span className="flex items-center gap-2 min-w-0 font-medium">
+                              <Package className="h-3.5 w-3.5 shrink-0 text-primary opacity-80" aria-hidden />
+                              <span className="truncate">{a.name}</span>
+                            </span>
+                            <span className="tabular-nums text-xs text-muted-foreground shrink-0">
+                              {a.quantity} × {fmtN(a.unitPrice || 0)} = {fmtN(Number(a.quantity || 0) * Number(a.unitPrice || 0))}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </DetailSection>
+
+                  <DetailSection icon={Hash} title="Reference">
+                    <DetailRow icon={Hash} label="Booking ID">
+                      <span className="font-mono text-[11px] break-all text-foreground">{d.id}</span>
+                    </DetailRow>
+                    {d.createdAt && (
+                      <DetailRow icon={Clock} label="Created" mutedValue>
+                        {typeof d.createdAt === 'string'
+                          ? d.createdAt.replace('T', ' ').slice(0, 19)
+                          : String(d.createdAt)}
+                      </DetailRow>
+                    )}
+                  </DetailSection>
+                </div>
+              );
+            })()}
         </DialogContent>
       </Dialog>
 
