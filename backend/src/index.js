@@ -130,6 +130,14 @@ async function initDb() {
     console.warn('Commission/salary migration:', e.message);
   }
   try {
+    const recalcPath = path.join(__dirname, '..', 'scripts', 'recalc-booking-staff-commission-subtotal.sql');
+    const recalcSql = fs.readFileSync(recalcPath, 'utf8');
+    await pool.query(recalcSql);
+    console.log('Booking staff commissions recalculated from subtotal.');
+  } catch (e) {
+    console.warn('Booking commission subtotal recalculation:', e.message);
+  }
+  try {
     const addonsPath = path.join(__dirname, '..', 'scripts', 'add-booking-addons-client.sql');
     const addonsSql = fs.readFileSync(addonsPath, 'utf8');
     await pool.query(addonsSql);

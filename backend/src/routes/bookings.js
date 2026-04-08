@@ -56,26 +56,15 @@ function computeStaffCommission(role, ratePct, commissionBaseLkr) {
   if (!STAFF_ROLES.includes((role || '').toLowerCase())) return 0;
   const rate = parseFloat(ratePct);
   if (!Number.isFinite(rate) || rate <= 0) return 0;
-  const base = Number(commissionBaseLkr) || 0;
+  const base = Math.max(0, Number(commissionBaseLkr) || 0);
   return Math.round((base * rate) / 100 * 100) / 100;
 }
 
-/** LKR total from add-on lines (guest extras); used with room price for staff commission. */
-function sumAddonsFromPayload(addons) {
-  if (!Array.isArray(addons)) return 0;
-  return addons.reduce((sum, a) => {
-    const unit = Number(a.unitPrice) || Number(a.price) || 0;
-    const qty = Math.max(1, parseInt(a.quantity, 10) || 1);
-    return sum + unit * qty;
-  }, 0);
-}
-
-async function sumAddonsInDb(pool, bookingId) {
-  const { rows } = await pool.query(
-    'SELECT COALESCE(SUM(unit_price * quantity), 0)::numeric AS s FROM booking_addons WHERE booking_id = $1',
-    [bookingId]
-  );
-  return parseFloat(rows[0]?.s) || 0;
+/** Commission base follows requested logic: subtotal = booking price - Booking.com price. */
+function computeCommissionBaseFromSubtotal(priceLkr, bookingComLkr) {
+  const price = Number(priceLkr) || 0;
+  const bookingCom = Number(bookingComLkr) || 0;
+  return Math.max(0, price - bookingCom);
 }
 
 /** Manager/receptionist id for commission; rejects admin and invalid ids. */
@@ -196,8 +185,8 @@ router.post('/', async (req, res) => {
   try {
     const d = req.body;
     const price = d.price != null ? Number(d.price) : 0;
-    const addonsTotalLkr = sumAddonsFromPayload(d.addons);
-    const everyBookingTotalLkr = price + addonsTotalLkr;
+    const bookingComCommission = d.bookingComCommission != null ? Number(d.bookingComCommission) : 0;
+    const commissionBaseSubtotal = computeCommissionBaseFromSubtotal(price, bookingComCommission);
 
     let bookingUserId = req.user.id;
     let role = (req.user.role || '').toLowerCase();
@@ -208,7 +197,7 @@ router.post('/', async (req, res) => {
       if (raw == null || String(raw).trim() === '') {
         return res.status(400).json({
           error:
-            'Select which staff member this booking is for. Their commission rate (e.g. 10%) applies to room + add-ons. Admins do not earn booking commission.',
+            'Select which staff member this booking is for. Their commission rate (e.g. 10%) applies to subtotal (booking price - Booking.com). Admins do not earn booking commission.',
         });
       }
       bookingUserId = await assertValidCommissionStaffId(pool, raw);
@@ -217,7 +206,7 @@ router.post('/', async (req, res) => {
       ratePct = u.ratePct;
     }
 
-    const staffCommissionAmount = computeStaffCommission(role, ratePct, everyBookingTotalLkr);
+    const staffCommissionAmount = computeStaffCommission(role, ratePct, commissionBaseSubtotal);
     const id = `BKG-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
     const clientId = d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null;
     await pool.query(
@@ -237,7 +226,7 @@ router.post('/', async (req, res) => {
         d.checkIn || null,
         d.checkOut || null,
         price,
-        d.bookingComCommission != null ? Number(d.bookingComCommission) : 0,
+        bookingComCommission,
         d.priceUsd != null ? Number(d.priceUsd) : 0,
         d.bookingComCommissionUsd != null ? Number(d.bookingComCommissionUsd) : 0,
         staffCommissionAmount,
@@ -274,11 +263,17 @@ router.put('/:id', async (req, res) => {
     const d = req.body;
     const priceParam = d.price != null ? Number(d.price) : null;
     const { rows: existing } = await pool.query(
-      adm ? 'SELECT price, user_id FROM bookings WHERE id = $1' : 'SELECT price, user_id FROM bookings WHERE id = $1 AND user_id = $2',
+      adm
+        ? 'SELECT price, booking_com_commission, user_id FROM bookings WHERE id = $1'
+        : 'SELECT price, booking_com_commission, user_id FROM bookings WHERE id = $1 AND user_id = $2',
       adm ? [id] : [id, uid]
     );
     if (!existing[0]) return res.status(404).json({ error: 'Not found' });
     const price = priceParam != null ? priceParam : parseFloat(existing[0].price) || 0;
+    const bookingComCommission =
+      d.bookingComCommission != null
+        ? Number(d.bookingComCommission)
+        : parseFloat(existing[0].booking_com_commission) || 0;
 
     let ownerId = existing[0].user_id;
     if (adm && d.assignedStaffUserId !== undefined && d.assignedStaffUserId !== null && String(d.assignedStaffUserId).trim() !== '') {
@@ -290,11 +285,8 @@ router.put('/:id', async (req, res) => {
 
     const { role: ownerRoleRaw, ratePct: ownerRate } = await loadUserCommissionFields(pool, ownerId);
     const ownerRole = (ownerRoleRaw || '').toLowerCase();
-    const addonsTotalLkr = Array.isArray(d.addons)
-      ? sumAddonsFromPayload(d.addons)
-      : await sumAddonsInDb(pool, id);
-    const everyBookingTotalLkr = price + addonsTotalLkr;
-    const staffCommissionAmount = computeStaffCommission(ownerRole, ownerRate, everyBookingTotalLkr);
+    const commissionBaseSubtotal = computeCommissionBaseFromSubtotal(price, bookingComCommission);
+    const staffCommissionAmount = computeStaffCommission(ownerRole, ownerRate, commissionBaseSubtotal);
     const clientId = d.clientId !== undefined ? (d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null) : undefined;
     const rowFields = [
       d.customerName != null ? String(d.customerName).trim() : null,
