@@ -46,7 +46,6 @@ const SalaryManagement = () => {
     notes: '',
     commissionRatePct: '',
   });
-  const [editingStaffUser, setEditingStaffUser] = useState(null);
   const [usersList, setUsersList] = useState([]);
 
   const loadStaffCommission = async () => {
@@ -122,10 +121,8 @@ const SalaryManagement = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    const isSalaryMode = editingItem || !editingStaffUser;
-    const isLegacySalary =
-      isSalaryMode && editingItem && !editingItem.linkedUserId;
-    if (isSalaryMode && !editingStaffUser && !form.linkedUserId && !isLegacySalary) {
+    const isLegacySalary = Boolean(editingItem && !editingItem.linkedUserId);
+    if (!editingItem && !form.linkedUserId && !isLegacySalary) {
       toast({
         title: 'Select an employee',
         description: 'Choose a staff member (admin accounts cannot be selected).',
@@ -134,7 +131,6 @@ const SalaryManagement = () => {
       return;
     }
     if (
-      isSalaryMode &&
       form.period !== 'always' &&
       (!form.amount || String(form.amount).trim() === '')
     ) {
@@ -153,7 +149,12 @@ const SalaryManagement = () => {
       });
       return;
     }
-    if (editingStaffUser && (form.commissionRatePct === '' || parseFloat(form.commissionRatePct) < 0)) {
+    if (
+      !isLegacySalary &&
+      (form.commissionRatePct === '' ||
+        form.commissionRatePct == null ||
+        parseFloat(form.commissionRatePct) < 0)
+    ) {
       toast({
         title: 'Invalid commission rate',
         description: 'Please enter a valid commission rate (0–100).',
@@ -164,54 +165,38 @@ const SalaryManagement = () => {
 
     setSaving(true);
     try {
-      if (editingItem || isSalaryMode) {
-        const basePayload = {
-          amount: Number(form.amount) || 0,
-          period: form.period || 'monthly',
-          notes: (form.notes || '').trim(),
+      const basePayload = {
+        amount: Number(form.amount) || 0,
+        period: form.period || 'monthly',
+        notes: (form.notes || '').trim(),
+      };
+      const rate =
+        form.commissionRatePct !== '' && form.commissionRatePct != null
+          ? Math.min(100, Math.max(0, parseFloat(form.commissionRatePct)))
+          : undefined;
+      let payload;
+      if (isLegacySalary) {
+        payload = {
+          ...basePayload,
+          employeeName: form.employeeName.trim(),
+          position: (form.position || '').trim(),
         };
-        const rate =
-          form.commissionRatePct !== '' && form.commissionRatePct != null
-            ? Math.min(100, Math.max(0, parseFloat(form.commissionRatePct)))
-            : undefined;
-        let payload;
-        if (isLegacySalary) {
-          payload = {
-            ...basePayload,
-            employeeName: form.employeeName.trim(),
-            position: (form.position || '').trim(),
-          };
-        } else {
-          payload = {
-            ...basePayload,
-            linkedUserId: form.linkedUserId ? Number(form.linkedUserId) : undefined,
-            commissionRatePct: rate,
-          };
-        }
-        if (editingItem) {
-          await api.salary.update(editingItem.id, payload);
-          toast({ title: 'Salary updated', description: 'Salary record has been updated.' });
-        } else {
-          await api.salary.create(payload);
-          toast({ title: 'Salary added', description: 'New salary record has been saved.' });
-        }
+      } else {
+        payload = {
+          ...basePayload,
+          linkedUserId: form.linkedUserId ? Number(form.linkedUserId) : undefined,
+          commissionRatePct: rate,
+        };
       }
-      if (editingStaffUser && form.commissionRatePct !== '' && !editingItem) {
-        const rate = Math.min(100, Math.max(0, parseFloat(form.commissionRatePct) || 0));
-        const userRow = usersList.find((u) => u.id === editingStaffUser.userId);
-        if (userRow) {
-          await api.users.update(editingStaffUser.userId, {
-            name: userRow.name,
-            email: userRow.email,
-            role: userRow.role,
-            commission_rate_pct: rate,
-          });
-          toast({ title: 'Commission rate updated', description: `Rate set to ${rate}%.` });
-        }
+      if (editingItem) {
+        await api.salary.update(editingItem.id, payload);
+        toast({ title: 'Salary updated', description: 'Salary record has been updated.' });
+      } else {
+        await api.salary.create(payload);
+        toast({ title: 'Salary added', description: 'New salary record has been saved.' });
       }
       setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
       setEditingItem(null);
-      setEditingStaffUser(null);
       setIsDialogOpen(false);
       loadItems();
       if (isAdmin) loadStaffCommission();
@@ -224,15 +209,11 @@ const SalaryManagement = () => {
 
   const openEdit = (row) => {
     const salaryRecord = row.salaryRecord || null;
-    const staffUser = row.staffUser || null;
     setEditingItem(salaryRecord);
-    setEditingStaffUser(staffUser);
     let crPct = '';
     if (salaryRecord?.linkedUserId) {
       const u = usersList.find((x) => x.id === salaryRecord.linkedUserId);
       crPct = u ? String(u.commission_rate_pct ?? 10) : '10';
-    } else if (staffUser) {
-      crPct = String(staffUser.commissionRatePct ?? 10);
     }
     setForm({
       linkedUserId: salaryRecord?.linkedUserId ? String(salaryRecord.linkedUserId) : '',
@@ -247,43 +228,22 @@ const SalaryManagement = () => {
   };
 
   const handleDeleteSalary = async (item) => {
-    if (!window.confirm(`Delete salary record for "${item.employeeName}"?`)) return;
+    if (
+      !window.confirm(
+        `Remove "${item.employeeName}" from this list? The user account is not deleted—only this salary/commission record.`
+      )
+    ) {
+      return;
+    }
     try {
       await api.salary.delete(item.id);
-      toast({ title: 'Salary deleted', description: `Record for "${item.employeeName}" has been removed.` });
+      toast({ title: 'Record removed', description: `"${item.employeeName}" removed from the list. User login is unchanged.` });
       loadItems();
       if (isAdmin) loadStaffCommission();
     } catch (err) {
       toast({ title: 'Delete failed', description: err.message || 'Could not delete', variant: 'destructive' });
     }
   };
-
-  const handleDeleteStaffUser = async (row) => {
-    const su = row.staffUser;
-    if (!isAdmin || !su?.userId) return;
-    if (user?.id != null && Number(su.userId) === Number(user.id)) {
-      toast({ title: 'Cannot delete own account', description: 'Remove another user from User management or ask another admin.', variant: 'destructive' });
-      return;
-    }
-    if (
-      !window.confirm(
-        `Permanently delete user "${su.name}" (${su.email})? Their login and related data for this account will be removed. This cannot be undone.`
-      )
-    ) {
-      return;
-    }
-    try {
-      await api.users.delete(su.userId);
-      toast({ title: 'User removed', description: `${su.name} has been deleted.` });
-      loadItems();
-      loadStaffCommission();
-      api.users.list().then((list) => setUsersList(Array.isArray(list) ? list : [])).catch(() => setUsersList([]));
-    } catch (err) {
-      toast({ title: 'Delete failed', description: err.message || 'Could not delete user', variant: 'destructive' });
-    }
-  };
-
-  const normalizeName = (s) => (s || '').trim().toLowerCase();
 
   const combinedRows = React.useMemo(() => {
     if (!isAdmin) {
@@ -295,32 +255,32 @@ const SalaryManagement = () => {
         commissionRatePct: null,
         totalCommission: null,
         salaryRecord: item,
-        staffUser: null,
       }));
     }
-    const rows = [];
-    const salaryUsed = new Set();
-    staffCommissionList.forEach((s) => {
-      const match = items.find(
-        (item) =>
-          (item.linkedUserId && item.linkedUserId === s.userId) ||
-          normalizeName(item.employeeName) === normalizeName(s.name)
-      );
-      if (match) salaryUsed.add(match.id);
-      rows.push({
-        type: 'staff',
-        name: s.name,
-        email: s.email,
-        roleOrPosition: s.role,
-        commissionRatePct: s.commissionRatePct,
-        totalCommission: s.totalCommission,
-        salaryRecord: match || null,
-        staffUser: s,
-      });
-    });
-    items.forEach((item) => {
-      if (salaryUsed.has(item.id)) return;
-      rows.push({
+    const totalsByUserId = new Map(staffCommissionList.map((s) => [s.userId, s]));
+    return items.map((item) => {
+      if (item.linkedUserId) {
+        const stats = totalsByUserId.get(item.linkedUserId);
+        const u = usersList.find((x) => x.id === item.linkedUserId);
+        const rateFromUser =
+          u != null && u.commission_rate_pct != null ? parseFloat(u.commission_rate_pct) : null;
+        const rate =
+          rateFromUser != null && Number.isFinite(rateFromUser)
+            ? rateFromUser
+            : stats != null
+              ? stats.commissionRatePct
+              : null;
+        return {
+          type: 'linked_salary',
+          name: item.employeeName || u?.name || '—',
+          email: u?.email || '—',
+          roleOrPosition: item.position || u?.role || '',
+          commissionRatePct: rate,
+          totalCommission: stats != null ? stats.totalCommission : null,
+          salaryRecord: item,
+        };
+      }
+      return {
         type: 'salary_only',
         name: item.employeeName,
         email: '',
@@ -328,11 +288,9 @@ const SalaryManagement = () => {
         commissionRatePct: null,
         totalCommission: null,
         salaryRecord: item,
-        staffUser: null,
-      });
+      };
     });
-    return rows;
-  }, [isAdmin, staffCommissionList, items]);
+  }, [isAdmin, staffCommissionList, items, usersList]);
 
   const filteredItems = combinedRows.filter((row) => {
     if (!search) return true;
@@ -368,7 +326,6 @@ const SalaryManagement = () => {
             <Button
               onClick={() => {
                 setEditingItem(null);
-                setEditingStaffUser(null);
                 setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
                 setIsDialogOpen(true);
               }}
@@ -435,12 +392,15 @@ const SalaryManagement = () => {
                   <tr>
                     <td colSpan={isAdmin ? 9 : 6} className="p-0 align-top">
                       <EmptyState
-                        title={isAdmin ? 'No staff or salary records yet' : 'No salary records yet'}
-                        description={isAdmin ? 'Add users (Manager/Receptionist) and salary records to get started.' : 'Add your first salary record to get started.'}
+                        title={isAdmin ? 'No salary or commission records yet' : 'No salary records yet'}
+                        description={
+                          isAdmin
+                            ? 'Staff members appear here only after you add them with Add Salary. Deleting a row removes this list entry only—not the user account.'
+                            : 'Add your first salary record to get started.'
+                        }
                         actionLabel="Add Salary"
                         onAction={() => {
                           setEditingItem(null);
-                          setEditingStaffUser(null);
                           setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
                           setIsDialogOpen(true);
                         }}
@@ -450,7 +410,7 @@ const SalaryManagement = () => {
                 ) : (
                   filteredItems.map((row, index) => (
                     <motion.tr
-                      key={row.staffUser ? `staff-${row.staffUser.userId}` : `salary-${row.salaryRecord?.id}`}
+                      key={row.salaryRecord?.id || `row-${index}`}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
                       transition={{ delay: index * 0.02 }}
@@ -482,7 +442,7 @@ const SalaryManagement = () => {
                       <td className="px-4 py-3 text-sm text-muted-foreground !text-left align-top">{row.salaryRecord?.notes || '—'}</td>
                       <td className="px-4 py-3 !text-center align-top whitespace-nowrap">
                         <div className="inline-flex flex-wrap items-center justify-center gap-2">
-                          {(row.staffUser || row.salaryRecord) && (
+                          {row.salaryRecord && (
                             <button
                               type="button"
                               onClick={() => openEdit(row)}
@@ -499,23 +459,11 @@ const SalaryManagement = () => {
                               type="button"
                               onClick={() => handleDeleteSalary(row.salaryRecord)}
                               className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-red-500 hover:text-red-400 text-sm"
-                              title="Delete salary record only"
-                              aria-label="Delete salary record"
+                              title="Remove this row from the list (does not delete the user account)"
+                              aria-label="Remove salary record from list"
                             >
                               <Trash2 className="w-4 h-4" />
-                              <span>{isAdmin && row.staffUser ? 'Delete salary' : 'Delete'}</span>
-                            </button>
-                          )}
-                          {isAdmin && row.staffUser && (user?.id == null || Number(row.staffUser.userId) !== Number(user.id)) && (
-                            <button
-                              type="button"
-                              onClick={() => handleDeleteStaffUser(row)}
-                              className="inline-flex items-center gap-1.5 p-1.5 min-h-[44px] sm:min-h-0 hover:bg-secondary rounded-md text-red-500 hover:text-red-400 text-sm"
-                              title="Delete user account (login removed)"
-                              aria-label="Delete user account"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                              <span>{row.salaryRecord ? 'Delete user' : 'Delete'}</span>
+                              <span>Delete</span>
                             </button>
                           )}
                         </div>
@@ -535,37 +483,16 @@ const SalaryManagement = () => {
           setIsDialogOpen(open);
           if (!open) {
             setEditingItem(null);
-            setEditingStaffUser(null);
             setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
           }
         }}
       >
         <DialogContent className="max-w-md">
           <DialogHeader>
-            <DialogTitle>
-              {editingStaffUser && !editingItem ? 'Edit commission' : editingItem ? 'Edit salary & commission' : 'Add Salary'}
-            </DialogTitle>
+            <DialogTitle>{editingItem ? 'Edit salary & commission' : 'Add Salary'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {editingStaffUser && !editingItem ? (
-              <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">
-                  {editingStaffUser.name} — {editingStaffUser.role}
-                </p>
-                <Label>Commission rate (%)</Label>
-                <Input
-                  type="number"
-                  min="0"
-                  max="100"
-                  step="0.5"
-                  value={form.commissionRatePct}
-                  onChange={(e) => handleChange('commissionRatePct', e.target.value)}
-                  placeholder="10"
-                />
-                <p className="text-xs text-muted-foreground">Percentage of booking price earned as commission.</p>
-              </div>
-            ) : (
-              <>
+            <>
                 {editingItem && !editingItem.linkedUserId ? (
                   <>
                     <div className="space-y-2">
@@ -627,8 +554,7 @@ const SalaryManagement = () => {
                     </div>
                   </>
                 )}
-                {(!editingStaffUser || editingItem) && (
-                  <>
+                <>
                     <div className="space-y-2">
                       <Label>Amount{form.period === 'always' ? ' (optional if commission only)' : ''}</Label>
                       <Input
@@ -667,16 +593,14 @@ const SalaryManagement = () => {
                         placeholder="Additional notes"
                       />
                     </div>
-                  </>
-                )}
-              </>
-            )}
+                </>
+            </>
             <div className="flex justify-end gap-2 pt-2">
               <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
                 Cancel
               </Button>
               <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : editingStaffUser && !editingItem ? 'Update commission' : editingItem ? 'Update' : 'Save Salary'}
+                {saving ? 'Saving...' : editingItem ? 'Update' : 'Save Salary'}
               </Button>
             </div>
           </form>
