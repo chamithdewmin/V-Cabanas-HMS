@@ -837,7 +837,7 @@ const CashFlow = () => {
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Source / Recipient</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Category</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Amount</th>
-                  <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Status</th>
+                  <th className="px-4 py-3 text-center text-sm font-semibold whitespace-nowrap">Status</th>
                   <th className="px-4 py-3 text-right text-sm font-semibold whitespace-nowrap">Balance</th>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Notes</th>
                   <th className="px-4 py-3 text-center text-sm font-semibold uppercase whitespace-nowrap">Actions</th>
@@ -880,7 +880,7 @@ const CashFlow = () => {
                         {settings.currency} {tx.amount.toLocaleString()}
                       </span>
                     </td>
-                    <td className="px-4 py-3 align-middle">
+                    <td className="px-4 py-3 align-middle text-center">
                       <span
                         className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                           tx.status === 'received' || tx.status === 'paid'
@@ -905,7 +905,7 @@ const CashFlow = () => {
                       {tx.notes || '—'}
                       </span>
                     </td>
-                    <td className="px-4 py-3 align-middle">
+                    <td className="px-4 py-3 align-middle text-center">
                       <div className="flex items-center justify-center gap-1">
                         {tx.isProjected ? (
                           <span className="text-xs text-muted-foreground">Projected</span>
