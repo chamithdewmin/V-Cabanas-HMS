@@ -256,15 +256,26 @@ const Booking = () => {
     setAddonRows((rows) => [...rows, { pricingId: '', name: '', unitPrice: '', quantity: 1 }]);
   };
 
+  const findPricingById = (pricingId) => {
+    const id = String(pricingId ?? '');
+    if (!id) return null;
+    return pricingList.find((x) => String(x.id) === id) || null;
+  };
+
   const updateAddonRowPopup = (index, field, value) => {
     setAddonRows((prev) => {
       const next = [...prev];
       if (!next[index]) return prev;
       next[index] = { ...next[index], [field]: value };
       if (field === 'pricingId') {
-        const p = pricingList.find((x) => x.id === value);
+        const p = findPricingById(value);
         if (p) {
-          next[index] = { ...next[index], name: p.name || '', unitPrice: p.price ?? '' };
+          next[index] = {
+            ...next[index],
+            pricingId: String(p.id),
+            name: p.name || '',
+            unitPrice: p.price ?? '',
+          };
         }
       }
       return next;
@@ -870,7 +881,9 @@ const Booking = () => {
           </DialogHeader>
           <div className="space-y-4">
             <div>
-              <p className="text-xs text-muted-foreground">Add breakfast, lunch, tours from Pricing.</p>
+              <p className="text-xs text-muted-foreground">
+                Select a package from Pricing, then set quantity. Unit price auto-fills from the selected package.
+              </p>
             </div>
             <div className="flex justify-end">
               <Button type="button" variant="outline" size="sm" onClick={addAddonRowPopup} className="gap-1">
@@ -885,8 +898,8 @@ const Booking = () => {
                     <tr>
                       <th className="px-3 py-2 text-left font-medium">Package</th>
                       <th className="px-3 py-2 text-right font-medium w-24">Qty</th>
-                      <th className="px-3 py-2 text-right font-medium w-28">Unit price</th>
-                      <th className="px-3 py-2 text-right font-medium w-28">Amount</th>
+                      <th className="px-3 py-2 text-right font-medium w-32">Unit price (LKR)</th>
+                      <th className="px-3 py-2 text-right font-medium w-32">Amount (LKR)</th>
                       <th className="w-10" />
                     </tr>
                   </thead>
@@ -895,21 +908,27 @@ const Booking = () => {
                       const qty = Number(a.quantity) || 0;
                       const unit = Number(a.unitPrice) || 0;
                       const amount = qty * unit;
+                      const selectedPricing = findPricingById(a.pricingId);
                       return (
                         <tr key={idx} className="border-t border-secondary">
                           <td className="px-3 py-2">
                             <select
-                              value={a.pricingId}
+                              value={String(a.pricingId || '')}
                               onChange={(e) => updateAddonRowPopup(idx, 'pricingId', e.target.value)}
                               className="w-full px-2 py-1.5 bg-secondary border border-secondary rounded text-sm"
                             >
-                              <option value="">Select...</option>
+                              <option value="">Select package...</option>
                               {pricingList.map((p) => (
-                                <option key={p.id} value={p.id}>
+                                <option key={p.id} value={String(p.id)}>
                                   {p.name} – {Number(p.price).toLocaleString()}
                                 </option>
                               ))}
                             </select>
+                            <p className="mt-1 text-[11px] text-muted-foreground leading-tight">
+                              {selectedPricing
+                                ? `${selectedPricing.name} selected`
+                                : 'Choose a package to auto-fill name and price'}
+                            </p>
                           </td>
                           <td className="px-3 py-2 text-right">
                             <Input
