@@ -820,7 +820,17 @@ const CashFlow = () => {
         {/* Table */}
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[1100px] table-auto border-collapse [&_th]:align-middle [&_td]:align-middle">
+            <table className="w-full min-w-[1100px] table-fixed border-collapse [&_th]:align-middle [&_td]:align-middle">
+              <colgroup>
+                <col className="w-[10%]" />
+                <col className="w-[18%]" />
+                <col className="w-[12%]" />
+                <col className="w-[14%]" />
+                <col className="w-[12%]" />
+                <col className="w-[14%]" />
+                <col className="w-[12%]" />
+                <col className="w-[8%]" />
+              </colgroup>
               <thead className="bg-secondary">
                 <tr>
                   <th className="px-4 py-3 text-left text-sm font-semibold whitespace-nowrap">Date</th>
@@ -869,7 +879,7 @@ const CashFlow = () => {
                     </td>
                     <td className="px-4 py-3 align-middle text-center">
                       <span
-                        className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                        className={`inline-flex min-w-[78px] justify-center items-center px-2 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                           tx.status === 'received' || tx.status === 'paid'
                             ? 'bg-green-500/20 text-green-500'
                             : tx.status === 'overdue'
