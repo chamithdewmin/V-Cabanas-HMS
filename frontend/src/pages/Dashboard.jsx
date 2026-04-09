@@ -32,9 +32,37 @@ const CHART_RED = 'hsl(0 72% 51%)';
 const CHART_GRID = 'hsl(215 16% 47% / 0.22)';
 
 function formatAxisMoney(v) {
-  if (v >= 1_000_000) return `${(v / 1_000_000).toFixed(1)}M`;
-  if (v >= 1000) return `${(v / 1000).toFixed(0)}K`;
-  return String(Math.round(v));
+  const n = Number(v) || 0;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1000) {
+    const k = n / 1000;
+    // Avoid duplicate ticks (e.g. 1500 and 2000 both rounding to "2K")
+    const decimals = Number.isInteger(k) ? 0 : 1;
+    return `${k.toFixed(decimals)}K`;
+  }
+  return String(Math.round(n));
+}
+
+/** Total LKR for a booking: room price + add-on lines (matches booking detail totals). */
+function bookingTotalRevenue(b) {
+  const room = Number(b?.price) || 0;
+  const addons = Array.isArray(b?.addons)
+    ? b.addons.reduce((s, a) => s + (Number(a.unitPrice) || 0) * (Number(a.quantity) || 1), 0)
+    : 0;
+  return room + addons;
+}
+
+function sumBookingRevenueForCalendarMonth(bookings, year, monthIndex) {
+  let s = 0;
+  bookings.forEach((b) => {
+    const ymd = bookingCheckInYmd(b.checkIn);
+    if (!ymd) return;
+    const parts = ymd.split('-').map(Number);
+    const yy = parts[0];
+    const mm = parts[1];
+    if (yy === year && mm - 1 === monthIndex) s += bookingTotalRevenue(b);
+  });
+  return s;
 }
 
 function localYmd(d) {
@@ -69,6 +97,14 @@ function buildMonthlySeries(monthsBack, bookings, incomes, expenses) {
     });
 
     let revenue = 0;
+    bookings.forEach((b) => {
+      const ymd = bookingCheckInYmd(b.checkIn);
+      if (!ymd) return;
+      const parts = ymd.split('-').map(Number);
+      const yy = parts[0];
+      const mm = parts[1];
+      if (yy === y && mm - 1 === m) revenue += bookingTotalRevenue(b);
+    });
     incomes.forEach((inc) => {
       if (!inc?.date) return;
       const d = new Date(inc.date);
@@ -202,7 +238,9 @@ export default function FinanceDashboard() {
     const yesterdayBookings = bookings.filter((b) => bookingCheckInYmd(b.checkIn) === yesterdayStr).length;
     const bookingsTrend = pctChange(todayBookings, yesterdayBookings);
 
-    const totalRevenue = incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
+    const totalRevenue =
+      bookings.reduce((s, b) => s + bookingTotalRevenue(b), 0) +
+      incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
     const totalExpenses = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
     const now = new Date();
@@ -215,8 +253,15 @@ export default function FinanceDashboard() {
     const sumExpenseIn = (start, end) =>
       expenses.filter((e) => e.date && isInRange(e.date, start, end)).reduce((s, e) => s + (Number(e.amount) || 0), 0);
 
-    const revThis = sumIncomeIn(thisM.start, thisM.end);
-    const revPrev = sumIncomeIn(prevM.start, prevM.end);
+    const revThis =
+      sumBookingRevenueForCalendarMonth(bookings, now.getFullYear(), now.getMonth()) +
+      sumIncomeIn(thisM.start, thisM.end);
+    const revPrev =
+      sumBookingRevenueForCalendarMonth(
+        bookings,
+        lastMonthDate.getFullYear(),
+        lastMonthDate.getMonth()
+      ) + sumIncomeIn(prevM.start, prevM.end);
     const revenueTrend = pctChange(revThis, revPrev);
 
     const expThis = sumExpenseIn(thisM.start, thisM.end);
@@ -359,7 +404,9 @@ export default function FinanceDashboard() {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-foreground">Revenue &amp; Expenses</h2>
-                <p className="text-sm text-muted-foreground">Monthly income vs spending</p>
+                <p className="text-sm text-muted-foreground">
+                  Booking totals by check-in month, plus income entries
+                </p>
               </div>
               <label className="sr-only" htmlFor="dash-chart-period-rev">
                 Chart period
