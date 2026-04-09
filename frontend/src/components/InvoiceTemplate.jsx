@@ -572,15 +572,6 @@ export default function InvoiceTemplate({
                       {fmt(inv.subtotal, cc)}
                     </td>
                   </tr>
-                  {inv.tax > 0 ? (
-                    <tr>
-                      <td style={{ padding: '6px 14px', background: WHITE }} />
-                      <td style={{ padding: '6px 14px', color: TEXT, background: WHITE }}>Tax</td>
-                      <td style={{ padding: '6px 14px', textAlign: 'right', color: TEXT, background: WHITE }}>
-                        {fmt(inv.tax, cc)}
-                      </td>
-                    </tr>
-                  ) : null}
                   <tr style={{ borderTop: `2px solid ${TEXT}` }}>
                     <td style={{ padding: '6px 14px', background: WHITE }} />
                     <td
