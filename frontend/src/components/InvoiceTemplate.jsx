@@ -237,8 +237,8 @@ const styles = {
   },
   title: {
     fontSize: 28,
-    fontWeight: 500,
-    color: TEXT,
+    fontWeight: 600,
+    color: HEADER_NAVY,
     margin: 0,
     fontFamily: "Georgia, 'Times New Roman', serif",
   },
@@ -260,7 +260,7 @@ const styles = {
   },
   dividerBold: {
     border: 'none',
-    borderTop: `2px solid ${TEXT}`,
+    borderTop: `2px solid ${HEADER_NAVY}`,
     margin: '1.5rem 0',
   },
   dividerLight: {
@@ -292,10 +292,10 @@ const styles = {
   },
   receiptLabel: {
     fontSize: 22,
-    fontWeight: 500,
+    fontWeight: 600,
     letterSpacing: '0.08em',
     margin: 0,
-    color: TEXT,
+    color: HEADER_NAVY,
     fontFamily: "Georgia, 'Times New Roman', serif",
   },
   sectionTitle: {
