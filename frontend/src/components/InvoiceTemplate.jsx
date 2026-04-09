@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useFinance } from '@/contexts/FinanceContext';
+import { countNightsBetween } from '@/lib/invoiceNights';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
@@ -95,6 +96,42 @@ function formatInvoiceQty(qty) {
   return Number.isInteger(trimmed) ? String(Math.round(trimmed)) : String(trimmed);
 }
 
+/** Legacy line text: "Room 1, 2026-04-09 to 2026-04-10" */
+function parseDateRangeFromDescription(desc) {
+  const m = String(desc).match(/(\d{4}-\d{2}-\d{2})\s*to\s*(\d{4}-\d{2}-\d{2})/);
+  if (!m) return null;
+  return { checkIn: m[1], checkOut: m[2] };
+}
+
+function extractRoomLabelFromDescription(desc) {
+  const s = String(desc).trim();
+  const m = s.match(/^Room\s+([^,·]+)/i);
+  if (m) return `Room ${m[1].trim()}`;
+  if (/^Room\b/i.test(s)) return 'Room';
+  return 'Room';
+}
+
+/** First line = room stay: show "Room X · N nights" from invoice dates or legacy date range in text. */
+function roomLineDescriptionForDisplay(rawTitle, checkIn, checkOut) {
+  let d1 = checkIn ? String(checkIn).slice(0, 10) : null;
+  let d2 = checkOut ? String(checkOut).slice(0, 10) : null;
+  if (!d1 || !d2) {
+    const parsed = parseDateRangeFromDescription(rawTitle);
+    if (parsed) {
+      d1 = d1 || parsed.checkIn;
+      d2 = d2 || parsed.checkOut;
+    }
+  }
+  const looksLikeRoom =
+    /^Room\s/i.test(rawTitle) || (d1 && d2 && /\d{4}-\d{2}-\d{2}\s*to\s*\d{4}-\d{2}-\d{2}/.test(rawTitle));
+  if (!looksLikeRoom || !d1 || !d2) return rawTitle;
+
+  const nights = countNightsBetween(d1, d2);
+  const roomLabel = extractRoomLabelFromDescription(rawTitle);
+  if (nights > 0) return `${roomLabel} · ${nights} night${nights !== 1 ? 's' : ''}`;
+  return `${roomLabel} · Stay`;
+}
+
 function normalise(raw = {}, currency = 'LKR', settings = {}) {
   const items = Array.isArray(raw.items) ? raw.items : [];
   const subtotal =
@@ -144,7 +181,10 @@ function normalise(raw = {}, currency = 'LKR', settings = {}) {
       const qty = parseFloat(it.quantity ?? it.qty ?? 1);
       const price = parseFloat(it.price || 0);
       const lineTotal = it.total ?? price * qty;
-      const title = it.name || it.description || 'Item';
+      let title = it.name || it.description || 'Item';
+      if (i === 0) {
+        title = roomLineDescriptionForDisplay(title, checkIn, checkOut);
+      }
       const detail = (it.description || it.name || '').trim();
       return {
         id: i + 1,
