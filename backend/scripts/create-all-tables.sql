@@ -84,6 +84,10 @@ CREATE TABLE IF NOT EXISTS invoices (
   bank_details JSONB,
   bank_details_encrypted TEXT,
   show_signature_area BOOLEAN DEFAULT false,
+  booking_check_in DATE,
+  booking_check_out DATE,
+  booking_adults INT,
+  booking_children INT,
   created_at TIMESTAMPTZ DEFAULT NOW()
 );
 

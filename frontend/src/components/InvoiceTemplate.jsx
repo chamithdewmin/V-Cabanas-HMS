@@ -528,7 +528,7 @@ export default function InvoiceTemplate({
 
               {inv.showBooking ? (
                 <>
-                  <p style={styles.sectionTitle}>Booking Details</p>
+                  <p style={{ ...styles.sectionTitle, color: HEADER_NAVY }}>Booking Details</p>
                   <div style={styles.bookingGrid}>
                     <span style={styles.bookingLabel}>Check-in</span>
                     <span>{inv.bookingCheckInLong || '—'}</span>

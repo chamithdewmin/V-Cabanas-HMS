@@ -77,6 +77,10 @@ const toInvoice = (row) => {
     bankDetails,
     showSignatureArea: Boolean(row.show_signature_area),
     createdAt: row.created_at,
+    checkIn: row.booking_check_in || null,
+    checkOut: row.booking_check_out || null,
+    adults: row.booking_adults != null ? parseInt(row.booking_adults, 10) : null,
+    children: row.booking_children != null ? parseInt(row.booking_children, 10) : null,
   };
 };
 
@@ -150,9 +154,17 @@ router.post('/', async (req, res) => {
       : null;
     const bankDetailsEncrypted = bankObj ? encrypt(JSON.stringify(bankObj)) : null;
     const showSignatureArea = Boolean(d.showSignatureArea);
+    const bookingCheckIn = d.checkIn ? String(d.checkIn).slice(0, 10) : null;
+    const bookingCheckOut = d.checkOut ? String(d.checkOut).slice(0, 10) : null;
+    const bookingAdults =
+      d.adults != null && d.adults !== '' && Number.isFinite(Number(d.adults)) ? parseInt(d.adults, 10) : null;
+    const bookingChildren =
+      d.children != null && d.children !== '' && Number.isFinite(Number(d.children))
+        ? parseInt(d.children, 10)
+        : null;
     await pool.query(
-      `INSERT INTO invoices (id, user_id, invoice_number, client_id, client_name, client_email, client_phone, items, subtotal, tax_rate, tax_amount, total, payment_method, status, due_date, notes, bank_details_encrypted, show_signature_area)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18)`,
+      `INSERT INTO invoices (id, user_id, invoice_number, client_id, client_name, client_email, client_phone, items, subtotal, tax_rate, tax_amount, total, payment_method, status, due_date, notes, bank_details_encrypted, show_signature_area, booking_check_in, booking_check_out, booking_adults, booking_children)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22)`,
       [
         id,
         uid,
@@ -172,6 +184,10 @@ router.post('/', async (req, res) => {
         d.notes || '',
         bankDetailsEncrypted,
         showSignatureArea,
+        bookingCheckIn,
+        bookingCheckOut,
+        bookingAdults,
+        bookingChildren,
       ]
     );
     const { rows } = await pool.query('SELECT * FROM invoices WHERE id = $1', [id]);

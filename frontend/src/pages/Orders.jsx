@@ -11,6 +11,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
+import { countNightsBetween } from '@/lib/invoiceNights';
 import { FileText } from 'lucide-react';
 
 const Orders = () => {
@@ -37,6 +38,10 @@ const Orders = () => {
     notes: '',
     bankDetails: null,
     showSignatureArea: false,
+    bookingCheckIn: '',
+    bookingCheckOut: '',
+    bookingAdults: '',
+    bookingChildren: '',
     items: [
       { description: '', price: '', quantity: 1 },
     ],
@@ -71,7 +76,11 @@ const Orders = () => {
         const b = data.booking;
         const checkIn = b.checkIn ? (typeof b.checkIn === 'string' && b.checkIn.includes('T') ? b.checkIn.slice(0, 10) : b.checkIn) : '';
         const checkOut = b.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '';
-        const desc = `Room ${b.roomNumber || ''}${checkIn || checkOut ? `, ${checkIn || '—'} to ${checkOut || '—'}` : ''}`.trim() || 'Booking';
+        const nights = countNightsBetween(checkIn, checkOut);
+        const roomLabel = b.roomNumber != null && String(b.roomNumber).trim() !== '' ? `Room ${b.roomNumber}` : 'Room';
+        let desc = roomLabel;
+        if (nights > 0) desc = `${roomLabel} · ${nights} night${nights !== 1 ? 's' : ''}`;
+        else if (checkIn || checkOut) desc = `${roomLabel} · Stay`;
         items.push({ description: desc, price: String(b.price ?? 0), quantity: 1 });
       }
       (data.addons || []).forEach((a) => {
@@ -85,12 +94,19 @@ const Orders = () => {
         toast({ title: 'No booking found', description: 'This client has no booking. Add a booking and link the client first.', variant: 'destructive' });
         return;
       }
+      const b = data.booking;
+      const checkIn = b?.checkIn ? (typeof b.checkIn === 'string' && b.checkIn.includes('T') ? b.checkIn.slice(0, 10) : b.checkIn) : '';
+      const checkOut = b?.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '';
       setForm((prev) => ({
         ...prev,
         clientName: data.client?.name ?? prev.clientName,
         clientEmail: data.client?.email ?? prev.clientEmail,
         clientPhone: data.client?.phone ?? prev.clientPhone,
         items: items.length ? items : prev.items,
+        bookingCheckIn: checkIn,
+        bookingCheckOut: checkOut,
+        bookingAdults: b?.adults != null ? String(b.adults) : '',
+        bookingChildren: b?.children != null ? String(b.children) : '',
       }));
       setLastLoadedFromBookingCount(items.length);
       toast({ title: 'Loaded from booking', description: `${items.length} item(s) added from this client's booking.` });
@@ -179,6 +195,10 @@ const Orders = () => {
         notes: form.notes,
         bankDetails: form.bankDetails,
         showSignatureArea: form.showSignatureArea,
+        checkIn: form.bookingCheckIn || undefined,
+        checkOut: form.bookingCheckOut || undefined,
+        adults: form.bookingAdults !== '' && form.bookingAdults != null ? Number(form.bookingAdults) : undefined,
+        children: form.bookingChildren !== '' && form.bookingChildren != null ? Number(form.bookingChildren) : undefined,
       });
 
       toast({
@@ -196,6 +216,10 @@ const Orders = () => {
         notes: '',
         bankDetails: null,
         showSignatureArea: false,
+        bookingCheckIn: '',
+        bookingCheckOut: '',
+        bookingAdults: '',
+        bookingChildren: '',
         items: [
           { description: '', price: '', quantity: 1 },
         ],
