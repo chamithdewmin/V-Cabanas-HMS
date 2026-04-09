@@ -3,8 +3,10 @@ import { useFinance } from '@/contexts/FinanceContext';
 import html2canvas from 'html2canvas';
 import { jsPDF } from 'jspdf';
 
-const NAVY = '#1a2e5a';
-const MUTED = '#888';
+/** Receipt is always light: white paper, black ink (survives app dark mode). */
+const TEXT = '#111111';
+const WHITE = '#ffffff';
+const LINE = '#e5e5e5';
 
 const LocationIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -174,16 +176,16 @@ const styles = {
     fontFamily: 'system-ui, -apple-system, Segoe UI, sans-serif',
   },
   card: {
-    background: '#fff',
-    border: '0.5px solid #e0e0e0',
+    background: WHITE,
+    border: `0.5px solid ${LINE}`,
     borderRadius: 12,
     padding: '2.5rem 2.5rem 2rem',
-    color: '#111',
+    color: TEXT,
   },
   title: {
     fontSize: 28,
     fontWeight: 500,
-    color: NAVY,
+    color: TEXT,
     margin: 0,
     fontFamily: "Georgia, 'Times New Roman', serif",
   },
@@ -193,7 +195,7 @@ const styles = {
     gap: 24,
     justifyContent: 'center',
     fontSize: 13,
-    color: MUTED,
+    color: TEXT,
     marginTop: 8,
     flexWrap: 'wrap',
   },
@@ -201,16 +203,16 @@ const styles = {
     display: 'flex',
     alignItems: 'center',
     gap: 5,
-    color: MUTED,
+    color: TEXT,
   },
   dividerBold: {
     border: 'none',
-    borderTop: `2px solid ${NAVY}`,
+    borderTop: `2px solid ${TEXT}`,
     margin: '1.5rem 0',
   },
   dividerLight: {
     border: 'none',
-    borderTop: '0.5px solid #e0e0e0',
+    borderTop: `0.5px solid ${LINE}`,
     margin: '1.25rem 0',
   },
   topSection: {
@@ -221,17 +223,18 @@ const styles = {
   sectionLabel: {
     fontSize: 13,
     fontWeight: 500,
-    color: MUTED,
+    color: TEXT,
     margin: '0 0 6px 0',
   },
   clientName: {
     fontWeight: 500,
     fontSize: 15,
     margin: '0 0 2px 0',
+    color: TEXT,
   },
   clientEmail: {
     fontSize: 13,
-    color: MUTED,
+    color: TEXT,
     margin: 0,
   },
   receiptLabel: {
@@ -239,11 +242,11 @@ const styles = {
     fontWeight: 500,
     letterSpacing: '0.08em',
     margin: 0,
-    color: NAVY,
+    color: TEXT,
     fontFamily: "Georgia, 'Times New Roman', serif",
   },
   metaKey: {
-    color: MUTED,
+    color: TEXT,
     fontWeight: 500,
     paddingRight: 12,
     textAlign: 'right',
@@ -254,7 +257,7 @@ const styles = {
     fontWeight: 600,
     fontSize: 14,
     margin: '0 0 8px 0',
-    color: NAVY,
+    color: TEXT,
   },
   bookingGrid: {
     display: 'grid',
@@ -263,25 +266,32 @@ const styles = {
     fontSize: 14,
   },
   bookingLabel: {
-    color: MUTED,
+    color: TEXT,
   },
   table: {
     width: '100%',
     borderCollapse: 'collapse',
     fontSize: 14,
     marginTop: 16,
+    background: WHITE,
+    color: TEXT,
   },
   thead: {
-    background: NAVY,
-    color: '#fff',
+    background: WHITE,
+    color: TEXT,
   },
   th: {
     padding: '10px 14px',
-    fontWeight: 500,
+    fontWeight: 600,
     fontSize: 13,
+    background: WHITE,
+    color: TEXT,
+    borderBottom: `2px solid ${TEXT}`,
   },
   td: {
     padding: '10px 14px',
+    background: WHITE,
+    color: TEXT,
   },
 };
 
@@ -364,6 +374,9 @@ export default function InvoiceTemplate({
     <>
       <style>{`
         .inv-root * { box-sizing: border-box; }
+        .invoice-receipt-print { color-scheme: only light; }
+        .invoice-receipt-print, .invoice-receipt-print.inv-print-area { background: #ffffff !important; color: #111111 !important; }
+        .invoice-receipt-print th, .invoice-receipt-print td { background-color: #ffffff !important; color: #111111 !important; }
         @keyframes invoiceSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media print {
           body * { visibility: hidden !important; }
@@ -383,7 +396,7 @@ export default function InvoiceTemplate({
             style={{
               fontWeight: 600,
               fontSize: 14,
-              background: dlStatus === 'loading' ? '#7f1d1d' : dlStatus === 'done' ? '#166534' : NAVY,
+              background: dlStatus === 'loading' ? '#7f1d1d' : dlStatus === 'done' ? '#166534' : '#1a2e5a',
               color: '#fff',
               border: 'none',
               borderRadius: 8,
@@ -405,7 +418,7 @@ export default function InvoiceTemplate({
             style={{
               fontWeight: 600,
               fontSize: 14,
-              background: NAVY,
+              background: '#1a2e5a',
               color: '#fff',
               border: 'none',
               borderRadius: 8,
@@ -424,13 +437,14 @@ export default function InvoiceTemplate({
 
         <div
           ref={printAreaRef}
-          className="inv-print-area"
+          className="inv-print-area invoice-receipt-print"
           style={{
             width: 680,
             maxWidth: 680,
             minWidth: 280,
             margin: '0 auto',
-            background: '#fff',
+            background: WHITE,
+            color: TEXT,
             boxShadow: '0 4px 40px rgba(0,0,0,0.18)',
             boxSizing: 'border-box',
           }}
@@ -466,15 +480,23 @@ export default function InvoiceTemplate({
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={styles.receiptLabel}>RECEIPT</p>
-                  <table style={{ marginTop: 10, fontSize: 13, marginLeft: 'auto' }}>
+                  <table
+                    style={{
+                      marginTop: 10,
+                      fontSize: 13,
+                      marginLeft: 'auto',
+                      background: WHITE,
+                      color: TEXT,
+                    }}
+                  >
                     <tbody>
                       <tr>
                         <td style={styles.metaKey}>Receipt #:</td>
-                        <td style={{ textAlign: 'left' }}>{inv.invoiceNumber}</td>
+                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE }}>{inv.invoiceNumber}</td>
                       </tr>
                       <tr>
                         <td style={styles.metaKey}>Receipt Date:</td>
-                        <td style={{ textAlign: 'left' }}>{inv.receiptDateFormatted}</td>
+                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE }}>{inv.receiptDateFormatted}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -519,42 +541,55 @@ export default function InvoiceTemplate({
                     <tr
                       key={row.id}
                       style={{
-                        borderBottom: '0.5px solid #e0e0e0',
-                        background: i % 2 === 0 ? '#fafafa' : '#fff',
+                        borderBottom: `0.5px solid ${LINE}`,
+                        background: WHITE,
                       }}
                     >
-                      <td style={{ ...styles.td, textAlign: 'center', color: MUTED }}>{row.qtyStr}</td>
-                      <td style={styles.td}>{row.description}</td>
-                      <td style={{ ...styles.td, textAlign: 'right', color: MUTED }}>{fmt(row.price, cc)}</td>
-                      <td style={{ ...styles.td, textAlign: 'right' }}>{`${fmt(row.total, cc)}*`}</td>
+                      <td style={{ ...styles.td, textAlign: 'center', color: TEXT }}>{row.qtyStr}</td>
+                      <td style={{ ...styles.td, color: TEXT }}>{row.description}</td>
+                      <td style={{ ...styles.td, textAlign: 'right', color: TEXT }}>{fmt(row.price, cc)}</td>
+                      <td style={{ ...styles.td, textAlign: 'right', color: TEXT }}>{`${fmt(row.total, cc)}*`}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
 
-              <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 14, marginTop: 4 }}>
+              <table
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: 14,
+                  marginTop: 4,
+                  background: WHITE,
+                  color: TEXT,
+                }}
+              >
                 <tbody>
                   <tr>
-                    <td style={{ padding: '6px 14px', width: '50%' }} />
-                    <td style={{ padding: '6px 14px', color: MUTED }}>Subtotal</td>
-                    <td style={{ padding: '6px 14px', textAlign: 'right' }}>{fmt(inv.subtotal, cc)}</td>
+                    <td style={{ padding: '6px 14px', width: '50%', background: WHITE }} />
+                    <td style={{ padding: '6px 14px', color: TEXT, background: WHITE }}>Subtotal</td>
+                    <td style={{ padding: '6px 14px', textAlign: 'right', color: TEXT, background: WHITE }}>
+                      {fmt(inv.subtotal, cc)}
+                    </td>
                   </tr>
                   {inv.tax > 0 ? (
                     <tr>
-                      <td style={{ padding: '6px 14px' }} />
-                      <td style={{ padding: '6px 14px', color: MUTED }}>Tax</td>
-                      <td style={{ padding: '6px 14px', textAlign: 'right' }}>{fmt(inv.tax, cc)}</td>
+                      <td style={{ padding: '6px 14px', background: WHITE }} />
+                      <td style={{ padding: '6px 14px', color: TEXT, background: WHITE }}>Tax</td>
+                      <td style={{ padding: '6px 14px', textAlign: 'right', color: TEXT, background: WHITE }}>
+                        {fmt(inv.tax, cc)}
+                      </td>
                     </tr>
                   ) : null}
-                  <tr style={{ borderTop: '0.5px solid #e0e0e0' }}>
-                    <td style={{ padding: '6px 14px' }} />
+                  <tr style={{ borderTop: `2px solid ${TEXT}` }}>
+                    <td style={{ padding: '6px 14px', background: WHITE }} />
                     <td
                       style={{
                         padding: '6px 14px',
-                        color: '#111',
-                        fontWeight: 600,
+                        color: TEXT,
+                        fontWeight: 700,
                         fontSize: 15,
-                        background: '#e8eef5',
+                        background: WHITE,
                       }}
                     >
                       Total
@@ -563,9 +598,10 @@ export default function InvoiceTemplate({
                       style={{
                         padding: '6px 14px',
                         textAlign: 'right',
-                        fontWeight: 600,
+                        fontWeight: 700,
                         fontSize: 15,
-                        background: '#e8eef5',
+                        color: TEXT,
+                        background: WHITE,
                       }}
                     >
                       {fmt(inv.total, cc)}
@@ -578,7 +614,7 @@ export default function InvoiceTemplate({
 
               <div>
                 <p style={styles.sectionTitle}>Notes</p>
-                <p style={{ fontSize: 13, color: MUTED, margin: 0 }}>{inv.notes}</p>
+                <p style={{ fontSize: 13, color: TEXT, margin: 0 }}>{inv.notes}</p>
               </div>
             </div>
           </div>
