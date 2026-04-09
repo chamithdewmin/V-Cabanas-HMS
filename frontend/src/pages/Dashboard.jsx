@@ -14,6 +14,7 @@ import {
 } from 'recharts';
 import {
   CalendarCheck,
+  ChevronDown,
   DollarSign,
   Receipt,
   Users,
@@ -30,6 +31,16 @@ const CHART_BLUE = 'hsl(221 100% 53%)';
 const CHART_RED = 'hsl(0 72% 51%)';
 /** Subtle grid in SVG (theme-independent; reads well on light & dark cards) */
 const CHART_GRID = 'hsl(215 16% 47% / 0.22)';
+
+const CHART_RANGE_OPTIONS = [
+  { id: '12w', label: 'Last 12 weeks' },
+  { id: '6m', label: 'Last 6 months' },
+  { id: '12m', label: 'Last 12 months' },
+];
+
+function atMidnight(d) {
+  return new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
 
 function formatAxisMoney(v) {
   const n = Number(v) || 0;
@@ -84,7 +95,7 @@ function buildMonthlySeries(monthsBack, bookings, incomes, expenses) {
     const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
     const y = date.getFullYear();
     const m = date.getMonth();
-    const monthLabel = date.toLocaleDateString('en-US', { month: 'short' });
+    const period = date.toLocaleDateString('en-US', { month: 'short' });
 
     let bookingCount = 0;
     bookings.forEach((b) => {
@@ -118,9 +129,74 @@ function buildMonthlySeries(monthsBack, bookings, incomes, expenses) {
       if (d.getFullYear() === y && d.getMonth() === m) expense += Number(ex.amount) || 0;
     });
 
-    rows.push({ month: monthLabel, bookings: bookingCount, revenue, expense });
+    rows.push({ period, bookings: bookingCount, revenue, expense });
   }
   return rows;
+}
+
+function buildWeeklySeries(weeksBack, bookings, incomes, expenses) {
+  const rows = [];
+  const now = new Date();
+  const startOfToday = atMidnight(now);
+
+  for (let i = 0; i < weeksBack; i += 1) {
+    const weekEndDay = new Date(startOfToday);
+    weekEndDay.setDate(weekEndDay.getDate() - (weeksBack - 1 - i) * 7);
+    const weekStartDay = new Date(weekEndDay);
+    weekStartDay.setDate(weekStartDay.getDate() - 6);
+    const ws = atMidnight(weekStartDay);
+    const we = atMidnight(weekEndDay);
+
+    const fmt = (d) =>
+      `${d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+    const period =
+      ws.getFullYear() === we.getFullYear() && ws.getMonth() === we.getMonth()
+        ? `${fmt(ws)}–${we.getDate()}`
+        : `${fmt(ws)}–${fmt(we)}`;
+
+    const inWeek = (d) => {
+      const t = atMidnight(d).getTime();
+      return t >= ws.getTime() && t <= we.getTime();
+    };
+
+    let bookingCount = 0;
+    let revenue = 0;
+    bookings.forEach((b) => {
+      const ymd = bookingCheckInYmd(b.checkIn);
+      if (!ymd) return;
+      const parts = ymd.split('-').map(Number);
+      const cd = new Date(parts[0], parts[1] - 1, parts[2]);
+      if (!inWeek(cd)) return;
+      bookingCount += 1;
+      revenue += bookingTotalRevenue(b);
+    });
+
+    incomes.forEach((inc) => {
+      if (!inc?.date) return;
+      const d = new Date(inc.date);
+      const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      if (!inWeek(day)) return;
+      revenue += Number(inc.amount) || 0;
+    });
+
+    let expense = 0;
+    expenses.forEach((ex) => {
+      if (!ex?.date) return;
+      const d = new Date(ex.date);
+      const day = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+      if (!inWeek(day)) return;
+      expense += Number(ex.amount) || 0;
+    });
+
+    rows.push({ period, bookings: bookingCount, revenue, expense });
+  }
+  return rows;
+}
+
+function buildChartSeries(range, bookings, incomes, expenses) {
+  if (range === '12w') return buildWeeklySeries(12, bookings, incomes, expenses);
+  if (range === '6m') return buildMonthlySeries(6, bookings, incomes, expenses);
+  return buildMonthlySeries(12, bookings, incomes, expenses);
 }
 
 function DashboardTooltip({ active, payload, label, valuePrefix = '' }) {
@@ -165,6 +241,33 @@ function isInRange(isoStr, start, end) {
   return d >= start && d <= end;
 }
 
+function ChartRangeSelect({ id, value, onChange }) {
+  return (
+    <div className="relative w-full sm:w-auto sm:min-w-[11rem]">
+      <select
+        id={id}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className={cn(
+          'w-full cursor-pointer appearance-none rounded-full border border-border bg-secondary/90 py-2.5 pl-4 pr-10',
+          'text-sm font-medium text-foreground shadow-sm outline-none transition-colors',
+          'hover:bg-secondary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background'
+        )}
+      >
+        {CHART_RANGE_OPTIONS.map((o) => (
+          <option key={o.id} value={o.id}>
+            {o.label}
+          </option>
+        ))}
+      </select>
+      <ChevronDown
+        className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-foreground/80"
+        aria-hidden
+      />
+    </div>
+  );
+}
+
 function MetricCard({ icon: Icon, label, value, trendPct }) {
   const positive = trendPct >= 0;
   const showTrend = Number.isFinite(trendPct);
@@ -200,7 +303,7 @@ export default function FinanceDashboard() {
   const { user } = useAuth();
   const { incomes, expenses, clients, settings } = useFinance();
   const [bookings, setBookings] = useState([]);
-  const [chartMonths, setChartMonths] = useState(12);
+  const [chartRange, setChartRange] = useState('12m');
 
   useEffect(() => {
     api.bookings
@@ -222,10 +325,12 @@ export default function FinanceDashboard() {
 
   const currency = settings?.currency || 'LKR';
 
-  const monthlyChartData = useMemo(
-    () => buildMonthlySeries(chartMonths, bookings, incomes, expenses),
-    [chartMonths, bookings, incomes, expenses]
+  const chartData = useMemo(
+    () => buildChartSeries(chartRange, bookings, incomes, expenses),
+    [chartRange, bookings, incomes, expenses]
   );
+
+  const isWeeklyChart = chartRange === '12w';
 
   const metrics = useMemo(() => {
     const today = new Date();
@@ -343,24 +448,19 @@ export default function FinanceDashboard() {
             <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <h2 className="text-base font-semibold text-foreground">Bookings</h2>
-                <p className="text-sm text-muted-foreground">Check-ins by month</p>
+                <p className="text-sm text-muted-foreground">
+                  {isWeeklyChart ? 'Check-ins by week' : 'Check-ins by month'}
+                </p>
               </div>
-              <label className="sr-only" htmlFor="dash-chart-period-bookings">
-                Chart period
-              </label>
-              <select
+              <ChartRangeSelect
                 id="dash-chart-period-bookings"
-                value={chartMonths}
-                onChange={(e) => setChartMonths(Number(e.target.value))}
-                className="w-full shrink-0 rounded-lg border border-border bg-secondary/80 px-3 py-2 text-xs font-medium text-foreground shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring sm:w-auto"
-              >
-                <option value={6}>Last 6 months</option>
-                <option value={12}>Last 12 months</option>
-              </select>
+                value={chartRange}
+                onChange={(v) => setChartRange(v)}
+              />
             </div>
             <div className="h-[280px] w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={monthlyChartData} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <AreaChart data={chartData} margin={{ top: 8, right: 8, left: 0, bottom: isWeeklyChart ? 8 : 0 }}>
                   <defs>
                     <linearGradient id="dashBookingsFill" x1="0" y1="0" x2="0" y2="1">
                       <stop offset="5%" stopColor={CHART_BLUE} stopOpacity={0.35} />
@@ -369,10 +469,14 @@ export default function FinanceDashboard() {
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
                   <XAxis
-                    dataKey="month"
+                    dataKey="period"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: 'hsl(215 15% 45%)', fontSize: 12 }}
+                    tick={{ fill: 'hsl(215 15% 45%)', fontSize: isWeeklyChart ? 10 : 12 }}
+                    angle={isWeeklyChart ? -38 : 0}
+                    textAnchor={isWeeklyChart ? 'end' : 'middle'}
+                    height={isWeeklyChart ? 68 : 28}
+                    interval={isWeeklyChart ? 0 : 'preserveStartEnd'}
                   />
                   <YAxis
                     axisLine={false}
@@ -405,31 +509,30 @@ export default function FinanceDashboard() {
               <div>
                 <h2 className="text-base font-semibold text-foreground">Revenue &amp; Expenses</h2>
                 <p className="text-sm text-muted-foreground">
-                  Booking totals by check-in month, plus income entries
+                  {isWeeklyChart
+                    ? 'Booking totals by check-in week, plus income entries'
+                    : 'Booking totals by check-in month, plus income entries'}
                 </p>
               </div>
-              <label className="sr-only" htmlFor="dash-chart-period-rev">
-                Chart period
-              </label>
-              <select
+              <ChartRangeSelect
                 id="dash-chart-period-rev"
-                value={chartMonths}
-                onChange={(e) => setChartMonths(Number(e.target.value))}
-                className="w-full shrink-0 rounded-lg border border-border bg-secondary/80 px-3 py-2 text-xs font-medium text-foreground shadow-sm outline-none ring-offset-background focus-visible:ring-2 focus-visible:ring-ring sm:w-auto"
-              >
-                <option value={6}>Last 6 months</option>
-                <option value={12}>Last 12 months</option>
-              </select>
+                value={chartRange}
+                onChange={(v) => setChartRange(v)}
+              />
             </div>
             <div className="h-[280px] w-full min-w-0">
               <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={monthlyChartData} barCategoryGap="18%" barGap={4} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+                <BarChart data={chartData} barCategoryGap="18%" barGap={4} margin={{ top: 8, right: 8, left: 0, bottom: isWeeklyChart ? 8 : 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke={CHART_GRID} vertical={false} />
                   <XAxis
-                    dataKey="month"
+                    dataKey="period"
                     axisLine={false}
                     tickLine={false}
-                    tick={{ fill: 'hsl(215 15% 45%)', fontSize: 12 }}
+                    tick={{ fill: 'hsl(215 15% 45%)', fontSize: isWeeklyChart ? 10 : 12 }}
+                    angle={isWeeklyChart ? -38 : 0}
+                    textAnchor={isWeeklyChart ? 'end' : 'middle'}
+                    height={isWeeklyChart ? 68 : 28}
+                    interval={isWeeklyChart ? 0 : 'preserveStartEnd'}
                   />
                   <YAxis
                     axisLine={false}
