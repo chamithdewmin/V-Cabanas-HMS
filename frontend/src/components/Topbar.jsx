@@ -55,7 +55,7 @@ const Topbar = () => {
     a.getDate() === b.getDate();
 
   return (
-    <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 pt-[env(safe-area-inset-top)]">
+    <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/85 pt-[calc(env(safe-area-inset-top)+0.5rem)] sm:pt-[calc(env(safe-area-inset-top)+0.75rem)]">
       <div className="flex items-center justify-between gap-3 px-3 py-2 sm:px-4 sm:py-3 lg:px-6 min-w-0">
         <div className="flex items-center gap-2 min-w-0 flex-1">
           <SidebarTrigger className="shrink-0 lg:hidden" />

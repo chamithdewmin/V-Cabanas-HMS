@@ -61,12 +61,7 @@ function MetricCard({ icon: Icon, label, value, trendPct }) {
       )}
     >
       <div className="mb-3 flex items-start justify-between gap-2">
-        <div
-          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15 text-primary"
-          aria-hidden
-        >
-          <Icon className="h-5 w-5" strokeWidth={2} />
-        </div>
+        <Icon className="h-5 w-5 shrink-0 text-primary" strokeWidth={2} aria-hidden />
         {showTrend && (
           <div
             className={cn(
