@@ -7,6 +7,10 @@ import { jsPDF } from 'jspdf';
 const TEXT = '#111111';
 const WHITE = '#ffffff';
 const LINE = '#e5e5e5';
+const CELL_BORDER = '#e0e0e0';
+const HEADER_NAVY = '#1a2e5a';
+const ZEBRA_GREY = '#f5f5f5';
+const TOTAL_ROW_BG = '#e8eef5';
 
 const LocationIcon = () => (
   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -252,6 +256,8 @@ const styles = {
     textAlign: 'right',
     paddingTop: 3,
     paddingBottom: 3,
+    border: 'none',
+    borderBottom: 'none',
   },
   sectionTitle: {
     fontWeight: 600,
@@ -266,31 +272,6 @@ const styles = {
     fontSize: 14,
   },
   bookingLabel: {
-    color: TEXT,
-  },
-  table: {
-    width: '100%',
-    borderCollapse: 'collapse',
-    fontSize: 14,
-    marginTop: 16,
-    background: WHITE,
-    color: TEXT,
-  },
-  thead: {
-    background: WHITE,
-    color: TEXT,
-  },
-  th: {
-    padding: '10px 14px',
-    fontWeight: 600,
-    fontSize: 13,
-    background: WHITE,
-    color: TEXT,
-    borderBottom: `2px solid ${TEXT}`,
-  },
-  td: {
-    padding: '10px 14px',
-    background: WHITE,
     color: TEXT,
   },
 };
@@ -376,7 +357,38 @@ export default function InvoiceTemplate({
         .inv-root * { box-sizing: border-box; }
         .invoice-receipt-print { color-scheme: only light; }
         .invoice-receipt-print, .invoice-receipt-print.inv-print-area { background: #ffffff !important; color: #111111 !important; }
-        .invoice-receipt-print th, .invoice-receipt-print td { background-color: #ffffff !important; color: #111111 !important; }
+        .invoice-receipt-print table.inv-line-items { border: 1px solid ${CELL_BORDER} !important; }
+        .invoice-receipt-print table.inv-line-items thead th {
+          background-color: ${HEADER_NAVY} !important;
+          color: #ffffff !important;
+          border: 1px solid ${HEADER_NAVY} !important;
+        }
+        .invoice-receipt-print table.inv-line-items tbody td,
+        .invoice-receipt-print table.inv-line-items tfoot td {
+          border: 1px solid ${CELL_BORDER} !important;
+        }
+        .invoice-receipt-print table.inv-line-items tbody tr {
+          border-bottom: 1px solid ${CELL_BORDER} !important;
+          background: transparent !important;
+        }
+        .invoice-receipt-print table.inv-line-items tfoot tr {
+          background: transparent !important;
+        }
+        .invoice-receipt-print table.inv-line-items tfoot tr:first-child td {
+          background-color: #ffffff !important;
+          color: #111111 !important;
+        }
+        .invoice-receipt-print table.inv-line-items tfoot tr:last-child td {
+          background-color: ${TOTAL_ROW_BG} !important;
+          color: ${HEADER_NAVY} !important;
+        }
+        .invoice-receipt-print table.inv-receipt-meta tbody tr {
+          border-bottom: none !important;
+          border: none !important;
+        }
+        .invoice-receipt-print table.inv-receipt-meta td {
+          border: none !important;
+        }
         @keyframes invoiceSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media print {
           body * { visibility: hidden !important; }
@@ -481,22 +493,25 @@ export default function InvoiceTemplate({
                 <div style={{ textAlign: 'right' }}>
                   <p style={styles.receiptLabel}>RECEIPT</p>
                   <table
+                    className="inv-receipt-meta"
                     style={{
                       marginTop: 10,
                       fontSize: 13,
                       marginLeft: 'auto',
                       background: WHITE,
                       color: TEXT,
+                      borderCollapse: 'collapse',
+                      width: 'auto',
                     }}
                   >
                     <tbody>
-                      <tr>
+                      <tr style={{ border: 'none', borderBottom: 'none' }}>
                         <td style={styles.metaKey}>Receipt #:</td>
-                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE }}>{inv.invoiceNumber}</td>
+                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE, border: 'none' }}>{inv.invoiceNumber}</td>
                       </tr>
-                      <tr>
+                      <tr style={{ border: 'none', borderBottom: 'none' }}>
                         <td style={styles.metaKey}>Receipt Date:</td>
-                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE }}>{inv.receiptDateFormatted}</td>
+                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE, border: 'none' }}>{inv.receiptDateFormatted}</td>
                       </tr>
                     </tbody>
                   </table>
@@ -520,85 +535,167 @@ export default function InvoiceTemplate({
                 </>
               ) : null}
 
-              <table style={styles.table}>
+              <table
+                className="inv-line-items"
+                style={{
+                  width: '100%',
+                  borderCollapse: 'collapse',
+                  fontSize: 14,
+                  marginTop: 16,
+                  tableLayout: 'fixed',
+                  color: TEXT,
+                }}
+              >
+                <colgroup>
+                  <col style={{ width: '12%' }} />
+                  <col style={{ width: '40%' }} />
+                  <col style={{ width: '22%' }} />
+                  <col style={{ width: '26%' }} />
+                </colgroup>
                 <thead>
-                  <tr style={styles.thead}>
-                    {['Quantity', 'Description', 'Unit Price', 'Amount'].map((h) => (
+                  <tr>
+                    {[
+                      { key: 'Quantity', align: 'left' },
+                      { key: 'Description', align: 'left' },
+                      { key: 'Unit Price', align: 'right' },
+                      { key: 'Amount', align: 'right' },
+                    ].map(({ key, align }) => (
                       <th
-                        key={h}
+                        key={key}
                         style={{
-                          ...styles.th,
-                          textAlign: h === 'Quantity' ? 'center' : h === 'Description' ? 'left' : 'right',
+                          padding: '10px 14px',
+                          fontWeight: 600,
+                          fontSize: 13,
+                          textAlign: align,
+                          verticalAlign: 'middle',
                         }}
                       >
-                        {h}
+                        {key}
                       </th>
                     ))}
                   </tr>
                 </thead>
                 <tbody>
                   {inv.items.map((row, i) => (
-                    <tr
-                      key={row.id}
-                      style={{
-                        borderBottom: `0.5px solid ${LINE}`,
-                        background: WHITE,
-                      }}
-                    >
-                      <td style={{ ...styles.td, textAlign: 'center', color: TEXT }}>{row.qtyStr}</td>
-                      <td style={{ ...styles.td, color: TEXT }}>{row.description}</td>
-                      <td style={{ ...styles.td, textAlign: 'right', color: TEXT }}>{fmt(row.price, cc)}</td>
-                      <td style={{ ...styles.td, textAlign: 'right', color: TEXT }}>{`${fmt(row.total, cc)}*`}</td>
+                    <tr key={row.id}>
+                      <td
+                        style={{
+                          padding: '10px 14px',
+                          textAlign: 'right',
+                          color: '#333333',
+                          background: i % 2 === 1 ? ZEBRA_GREY : WHITE,
+                          verticalAlign: 'top',
+                        }}
+                      >
+                        {row.qtyStr}
+                      </td>
+                      <td
+                        style={{
+                          padding: '10px 14px',
+                          color: '#333333',
+                          background: i % 2 === 1 ? ZEBRA_GREY : WHITE,
+                          verticalAlign: 'top',
+                        }}
+                      >
+                        {row.description}
+                      </td>
+                      <td
+                        style={{
+                          padding: '10px 14px',
+                          textAlign: 'right',
+                          color: '#333333',
+                          background: i % 2 === 1 ? ZEBRA_GREY : WHITE,
+                          verticalAlign: 'top',
+                        }}
+                      >
+                        {fmt(row.price, cc)}
+                      </td>
+                      <td
+                        style={{
+                          padding: '10px 14px',
+                          textAlign: 'right',
+                          color: '#333333',
+                          background: i % 2 === 1 ? ZEBRA_GREY : WHITE,
+                          verticalAlign: 'top',
+                        }}
+                      >
+                        {`${fmt(row.total, cc)}*`}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
-              </table>
-
-              <table
-                style={{
-                  width: '100%',
-                  borderCollapse: 'collapse',
-                  fontSize: 14,
-                  marginTop: 4,
-                  background: WHITE,
-                  color: TEXT,
-                }}
-              >
-                <tbody>
+                <tfoot>
                   <tr>
-                    <td style={{ padding: '6px 14px', width: '50%', background: WHITE }} />
-                    <td style={{ padding: '6px 14px', color: TEXT, background: WHITE }}>Subtotal</td>
-                    <td style={{ padding: '6px 14px', textAlign: 'right', color: TEXT, background: WHITE }}>
+                    <td
+                      colSpan={2}
+                      style={{
+                        padding: '10px 14px',
+                        background: WHITE,
+                        border: `1px solid ${CELL_BORDER}`,
+                      }}
+                    />
+                    <td
+                      style={{
+                        padding: '10px 14px',
+                        textAlign: 'right',
+                        fontWeight: 600,
+                        background: WHITE,
+                        color: '#333333',
+                        border: `1px solid ${CELL_BORDER}`,
+                      }}
+                    >
+                      Subtotal
+                    </td>
+                    <td
+                      style={{
+                        padding: '10px 14px',
+                        textAlign: 'right',
+                        fontWeight: 600,
+                        background: WHITE,
+                        color: '#333333',
+                        border: `1px solid ${CELL_BORDER}`,
+                      }}
+                    >
                       {fmt(inv.subtotal, cc)}
                     </td>
                   </tr>
-                  <tr style={{ borderTop: `2px solid ${TEXT}` }}>
-                    <td style={{ padding: '6px 14px', background: WHITE }} />
+                  <tr>
+                    <td
+                      colSpan={2}
+                      style={{
+                        padding: '10px 14px',
+                        background: TOTAL_ROW_BG,
+                        border: `1px solid ${CELL_BORDER}`,
+                      }}
+                    />
                     <td
                       style={{
-                        padding: '6px 14px',
-                        color: TEXT,
+                        padding: '10px 14px',
+                        textAlign: 'right',
                         fontWeight: 700,
                         fontSize: 15,
-                        background: WHITE,
+                        background: TOTAL_ROW_BG,
+                        color: HEADER_NAVY,
+                        border: `1px solid ${CELL_BORDER}`,
                       }}
                     >
                       Total
                     </td>
                     <td
                       style={{
-                        padding: '6px 14px',
+                        padding: '10px 14px',
                         textAlign: 'right',
                         fontWeight: 700,
                         fontSize: 15,
-                        color: TEXT,
-                        background: WHITE,
+                        background: TOTAL_ROW_BG,
+                        color: HEADER_NAVY,
+                        border: `1px solid ${CELL_BORDER}`,
                       }}
                     >
                       {fmt(inv.total, cc)}
                     </td>
                   </tr>
-                </tbody>
+                </tfoot>
               </table>
 
               <hr style={styles.dividerLight} />
