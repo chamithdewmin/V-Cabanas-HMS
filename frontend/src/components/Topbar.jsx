@@ -92,7 +92,7 @@ const Topbar = () => {
               className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-secondary bg-secondary/30 text-muted-foreground hover:text-foreground hover:bg-secondary/60"
               aria-label="Calendar"
             >
-              <CalendarDays className="w-4 h-4" />
+              <CalendarDays className="h-5 w-5" />
             </button>
             {isCalendarOpen && (
               <div className="absolute right-0 mt-2 w-[280px] rounded-2xl border border-secondary bg-card p-3 shadow-2xl">
@@ -163,7 +163,7 @@ const Topbar = () => {
             className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-secondary bg-secondary/30 text-muted-foreground hover:text-foreground hover:bg-secondary/60"
             aria-label="Notifications"
           >
-            <Bell className="w-4 h-4" />
+            <Bell className="h-5 w-5" />
           </button>
         </div>
       </div>
