@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
@@ -25,6 +26,7 @@ const Orders = () => {
   const [lastLoadedFromBookingCount, setLastLoadedFromBookingCount] = useState(0);
   const [refreshLoading, setRefreshLoading] = useState(false);
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const { invoices, clients, settings, updateInvoiceStatus, addInvoice, deleteInvoice, loadData } = useFinance();
 
@@ -494,12 +496,16 @@ const Orders = () => {
                           </button>
                           <button
                             type="button"
-                            onClick={() => {
-                              if (window.confirm(`Delete invoice ${order.invoiceNumber}?`)) {
-                                deleteInvoice(order.id);
-                                setSelectedOrder(null);
-                                toast({ title: 'Invoice deleted', description: 'Invoice has been removed.' });
-                              }
+                            onClick={async () => {
+                              const ok = await confirm(`Delete invoice ${order.invoiceNumber}?`, {
+                                title: 'Delete invoice',
+                                confirmLabel: 'Delete',
+                                variant: 'destructive',
+                              });
+                              if (!ok) return;
+                              deleteInvoice(order.id);
+                              setSelectedOrder(null);
+                              toast({ title: 'Invoice deleted', description: 'Invoice has been removed.' });
                             }}
                             className="p-1.5 hover:bg-secondary rounded-md text-red-500 hover:text-red-400"
                             title="Delete"

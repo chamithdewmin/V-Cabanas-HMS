@@ -5,11 +5,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/lib/api';
 
 const DailyNotes = () => {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [notes, setNotes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -85,7 +87,12 @@ const DailyNotes = () => {
   };
 
   const handleDelete = async (n) => {
-    if (!window.confirm('Delete this daily note?')) return;
+    const ok = await confirm('Delete this daily note?', {
+      title: 'Delete daily note',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       await api.dailyNotes.delete(n.id);
       toast({ title: 'Note deleted', description: 'Daily note has been removed.' });

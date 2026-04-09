@@ -6,6 +6,7 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { Users } from 'lucide-react';
@@ -18,6 +19,7 @@ const Customers = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const { toast } = useToast();
+  const confirm = useConfirm();
   const { clients, addClient, updateClient, deleteClient, loadData } = useFinance();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
@@ -112,11 +114,15 @@ const Customers = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteClient = (customer) => {
-    if (window.confirm(`Delete client "${customer.name}"?`)) {
-      deleteClient(customer.id);
-      toast({ title: 'Client deleted', description: 'Client has been removed.' });
-    }
+  const handleDeleteClient = async (customer) => {
+    const ok = await confirm(`Delete client "${customer.name}"?`, {
+      title: 'Delete client',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
+    deleteClient(customer.id);
+    toast({ title: 'Client deleted', description: 'Client has been removed.' });
   };
 
   const totalPages = Math.max(1, Math.ceil(filteredCustomers.length / PER_PAGE));

@@ -5,6 +5,7 @@ import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
@@ -39,6 +40,7 @@ function formatSalaryPeriod(p) {
 
 const SalaryManagement = () => {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const { user } = useAuth();
   const userRole = (user?.role || '').toLowerCase();
   const isAdmin = userRole === 'admin';
@@ -253,13 +255,15 @@ const SalaryManagement = () => {
   };
 
   const handleDeleteSalary = async (item) => {
-    if (
-      !window.confirm(
-        `Remove "${item.employeeName}" from this list? The user account is not deleted—only this salary/commission record.`
-      )
-    ) {
-      return;
-    }
+    const ok = await confirm(
+      `Remove "${item.employeeName}" from this list? The user account is not deleted—only this salary/commission record.`,
+      {
+        title: 'Remove salary record',
+        confirmLabel: 'Remove',
+        variant: 'destructive',
+      },
+    );
+    if (!ok) return;
     try {
       await api.salary.delete(item.id);
       toast({ title: 'Record removed', description: `"${item.employeeName}" removed from the list. User login is unchanged.` });

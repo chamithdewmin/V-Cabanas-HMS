@@ -5,6 +5,7 @@ import { Plus, RefreshCw, Pencil, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ import { api } from '@/lib/api';
 
 const Pricing = () => {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -88,7 +90,12 @@ const Pricing = () => {
   };
 
   const handleDelete = async (item) => {
-    if (!window.confirm(`Delete pricing item "${item.name}"?`)) return;
+    const ok = await confirm(`Delete pricing item "${item.name}"?`, {
+      title: 'Delete pricing',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       await api.pricing.delete(item.id);
       toast({ title: 'Pricing deleted', description: `"${item.name}" has been removed.` });

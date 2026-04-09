@@ -4,6 +4,7 @@ import { BrowserRouter } from "react-router-dom";
 import App from "./App";
 import { AuthProvider } from "./contexts/AuthContext";
 import { FinanceProvider } from "./contexts/FinanceContext";
+import { ConfirmDialogProvider } from "./contexts/ConfirmDialogContext";
 import { Toaster } from "./components/ui/toaster";
 import "./index.css";
 
@@ -12,8 +13,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>
       <AuthProvider>
         <FinanceProvider>
-          <App />
-          <Toaster />
+          <ConfirmDialogProvider>
+            <App />
+            <Toaster />
+          </ConfirmDialogProvider>
         </FinanceProvider>
       </AuthProvider>
     </BrowserRouter>

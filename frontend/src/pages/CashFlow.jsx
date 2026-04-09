@@ -17,6 +17,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -56,6 +57,7 @@ const CashFlow = () => {
     loadData,
   } = useFinance();
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const [filters, setFilters] = useState({
     type: 'all', // all | inflow | outflow | upcoming
@@ -564,9 +566,14 @@ const CashFlow = () => {
     setEditingTx(null);
   };
 
-  const handleDelete = (tx) => {
+  const handleDelete = async (tx) => {
     if (tx.sourceType === 'invoice') {
-      if (window.confirm('Mark this invoice as paid instead of deleting?')) {
+      const markPaid = await confirm('Mark this invoice as paid instead of deleting?', {
+        title: 'Invoice transaction',
+        confirmLabel: 'Mark paid',
+        cancelLabel: 'Cancel',
+      });
+      if (markPaid) {
         updateInvoiceStatus(tx.id, 'paid');
         toast({ title: 'Invoice marked paid', description: 'Payment recorded.' });
       }
@@ -576,7 +583,12 @@ const CashFlow = () => {
       tx.sourceType === 'income'
         ? `Delete income of ${settings.currency} ${tx.amount.toLocaleString()}?`
         : `Delete expense of ${settings.currency} ${tx.amount.toLocaleString()}?`;
-    if (window.confirm(msg)) {
+    const ok = await confirm(msg, {
+      title: 'Delete transaction',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (ok) {
       if (tx.sourceType === 'income') deleteIncome(tx.id);
       else deleteExpense(tx.id);
       toast({ title: 'Deleted', description: 'Transaction has been removed.' });

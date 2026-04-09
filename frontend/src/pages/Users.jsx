@@ -6,6 +6,7 @@ import { Search, UserPlus, Pencil, Trash2, MoreHorizontal, ChevronLeft, ChevronR
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -17,6 +18,7 @@ const ROLE_RECEPTIONIST = 'receptionist';
 const PER_PAGE = 10;
 
 const Users = () => {
+  const confirm = useConfirm();
   const { user } = useAuth();
   const [users, setUsers] = useState([]);
   const [filteredUsers, setFilteredUsers] = useState([]);
@@ -153,7 +155,12 @@ const Users = () => {
       });
       return;
     }
-    if (!window.confirm(`Delete user "${user.name}"?`)) return;
+    const ok = await confirm(`Delete user "${user.name}"?`, {
+      title: 'Delete user',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       await api.users.delete(user.id);
       toast({ title: 'User deleted', description: `${user.name} has been removed.` });

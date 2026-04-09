@@ -5,6 +5,7 @@ import { Download, Upload, RefreshCw, Plus, DollarSign, Repeat, PieChart, Pencil
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
@@ -12,6 +13,7 @@ import { Label } from '@/components/ui/label';
 const Inventory = () => {
   const { expenses, settings, addExpense, updateExpense, deleteExpense, loadData } = useFinance();
   const { toast } = useToast();
+  const confirm = useConfirm();
 
   const [form, setForm] = useState({
     category: 'Hosting',
@@ -147,11 +149,18 @@ const Inventory = () => {
     setIsDialogOpen(true);
   };
 
-  const handleDeleteExpense = (exp) => {
-    if (window.confirm(`Delete expense of ${settings.currency} ${exp.amount.toLocaleString()} (${exp.category})?`)) {
-      deleteExpense(exp.id);
-      toast({ title: 'Expense deleted', description: 'Expense record has been removed.' });
-    }
+  const handleDeleteExpense = async (exp) => {
+    const ok = await confirm(
+      `Delete expense of ${settings.currency} ${exp.amount.toLocaleString()} (${exp.category})?`,
+      {
+        title: 'Delete expense',
+        confirmLabel: 'Delete',
+        variant: 'destructive',
+      },
+    );
+    if (!ok) return;
+    deleteExpense(exp.id);
+    toast({ title: 'Expense deleted', description: 'Expense record has been removed.' });
   };
 
   const filteredExpenses = useMemo(() => {

@@ -24,6 +24,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
@@ -93,6 +94,7 @@ const emptyForm = () => ({
 
 const Booking = () => {
   const { toast } = useToast();
+  const confirm = useConfirm();
   const { user } = useAuth();
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
   const tableColSpan = 11;
@@ -319,7 +321,12 @@ const Booking = () => {
   };
 
   const handleDelete = async (b) => {
-    if (!window.confirm(`Delete booking for ${b.customerName}?`)) return;
+    const ok = await confirm(`Delete booking for ${b.customerName}?`, {
+      title: 'Delete booking',
+      confirmLabel: 'Delete',
+      variant: 'destructive',
+    });
+    if (!ok) return;
     try {
       await api.bookings.delete(b.id);
       toast({ title: 'Booking deleted', description: 'Booking has been removed.' });
