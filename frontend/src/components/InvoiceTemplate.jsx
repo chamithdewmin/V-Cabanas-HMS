@@ -86,6 +86,15 @@ function formatPhoneDisplay(phone) {
   return String(phone).trim();
 }
 
+/** Whole numbers as 1, 2, 3; fractional quantities keep minimal decimals (e.g. 1.5). */
+function formatInvoiceQty(qty) {
+  const n = parseFloat(qty);
+  if (!Number.isFinite(n)) return '0';
+  if (Math.abs(n - Math.round(n)) < 1e-9) return String(Math.round(n));
+  const trimmed = parseFloat(n.toFixed(6));
+  return Number.isInteger(trimmed) ? String(Math.round(trimmed)) : String(trimmed);
+}
+
 function normalise(raw = {}, currency = 'LKR', settings = {}) {
   const items = Array.isArray(raw.items) ? raw.items : [];
   const subtotal =
@@ -145,7 +154,7 @@ function normalise(raw = {}, currency = 'LKR', settings = {}) {
         price,
         quantity: qty,
         total: lineTotal,
-        qtyStr: qty.toFixed(2),
+        qtyStr: formatInvoiceQty(qty),
       };
     }),
 
@@ -248,16 +257,6 @@ const styles = {
     margin: 0,
     color: TEXT,
     fontFamily: "Georgia, 'Times New Roman', serif",
-  },
-  metaKey: {
-    color: TEXT,
-    fontWeight: 500,
-    paddingRight: 12,
-    textAlign: 'right',
-    paddingTop: 3,
-    paddingBottom: 3,
-    border: 'none',
-    borderBottom: 'none',
   },
   sectionTitle: {
     fontWeight: 600,
@@ -382,13 +381,6 @@ export default function InvoiceTemplate({
           background-color: ${TOTAL_ROW_BG} !important;
           color: ${HEADER_NAVY} !important;
         }
-        .invoice-receipt-print table.inv-receipt-meta tbody tr {
-          border-bottom: none !important;
-          border: none !important;
-        }
-        .invoice-receipt-print table.inv-receipt-meta td {
-          border: none !important;
-        }
         @keyframes invoiceSpin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
         @media print {
           body * { visibility: hidden !important; }
@@ -492,29 +484,43 @@ export default function InvoiceTemplate({
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={styles.receiptLabel}>RECEIPT</p>
-                  <table
-                    className="inv-receipt-meta"
+                  <div
                     style={{
                       marginTop: 10,
-                      fontSize: 13,
                       marginLeft: 'auto',
-                      background: WHITE,
+                      width: 'fit-content',
+                      maxWidth: '100%',
+                      fontSize: 13,
                       color: TEXT,
-                      borderCollapse: 'collapse',
-                      width: 'auto',
+                      background: WHITE,
                     }}
                   >
-                    <tbody>
-                      <tr style={{ border: 'none', borderBottom: 'none' }}>
-                        <td style={styles.metaKey}>Receipt #:</td>
-                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE, border: 'none' }}>{inv.invoiceNumber}</td>
-                      </tr>
-                      <tr style={{ border: 'none', borderBottom: 'none' }}>
-                        <td style={styles.metaKey}>Receipt Date:</td>
-                        <td style={{ textAlign: 'left', color: TEXT, background: WHITE, border: 'none' }}>{inv.receiptDateFormatted}</td>
-                      </tr>
-                    </tbody>
-                  </table>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'flex-end',
+                        alignItems: 'baseline',
+                        gap: '6px 14px',
+                        marginBottom: 6,
+                      }}
+                    >
+                      <span style={{ color: TEXT, fontWeight: 600 }}>Receipt #:</span>
+                      <span style={{ color: TEXT, fontWeight: 400 }}>{inv.invoiceNumber}</span>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        justifyContent: 'flex-end',
+                        alignItems: 'baseline',
+                        gap: '6px 14px',
+                      }}
+                    >
+                      <span style={{ color: TEXT, fontWeight: 600 }}>Receipt Date:</span>
+                      <span style={{ color: TEXT, fontWeight: 400 }}>{inv.receiptDateFormatted}</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
