@@ -51,6 +51,16 @@ function formatCheckInDisplay(checkIn) {
   return d.toLocaleDateString();
 }
 
+/** Sum add-on line amounts (LKR) for a booking. */
+function sumAddonsLkr(booking) {
+  const addons = Array.isArray(booking?.addons) ? booking.addons : [];
+  return addons.reduce((sum, a) => {
+    const u = Number(a.unitPrice) || 0;
+    const q = Number(a.quantity) || 1;
+    return sum + u * q;
+  }, 0);
+}
+
 export default function ReportMonthly() {
   const { toast } = useToast();
   const { settings } = useFinance();
@@ -98,6 +108,8 @@ export default function ReportMonthly() {
     return filtered.reduce(
       (acc, b) => {
         const mgr = Number(b.staffCommissionAmount) || 0;
+        const addonsLkr = sumAddonsLkr(b);
+        acc.addons += addonsLkr;
         acc.manager += mgr;
         if (showUsd) {
           const price = Number(b.priceUsd) || 0;
@@ -106,7 +118,7 @@ export default function ReportMonthly() {
           acc.bookingPrice += price;
           acc.bookingCom += bc;
           acc.subtotal += sub;
-          /* USD view: manager is stored in LKR; TOTAL stays USD gross-after-Booking.com (same as subtotal). */
+          /* USD view: manager & add-ons stay LKR; TOTAL column stays USD subtotal (after Booking.com only). */
           acc.total += sub;
         } else {
           const price = Number(b.price) || 0;
@@ -115,11 +127,11 @@ export default function ReportMonthly() {
           acc.bookingPrice += price;
           acc.bookingCom += bc;
           acc.subtotal += sub;
-          acc.total += sub - mgr;
+          acc.total += sub - mgr + addonsLkr;
         }
         return acc;
       },
-      { bookingPrice: 0, bookingCom: 0, subtotal: 0, manager: 0, total: 0 }
+      { bookingPrice: 0, bookingCom: 0, subtotal: 0, manager: 0, addons: 0, total: 0 }
     );
   }, [filtered, showUsd]);
 
@@ -219,6 +231,7 @@ export default function ReportMonthly() {
                     Sub total{showUsd ? ' (USD)' : ''}
                   </th>
                   <th className="px-4 py-3 text-sm font-semibold !text-right">Manager commission</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-right">Add on&apos;s</th>
                   <th className="px-4 py-3 text-sm font-semibold !text-right">
                     TOTAL{showUsd ? ' (USD)' : ''}
                   </th>
@@ -227,13 +240,13 @@ export default function ReportMonthly() {
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={8} className="px-4 py-8 text-center text-sm text-muted-foreground">
+                    <td colSpan={9} className="px-4 py-8 text-center text-sm text-muted-foreground">
                       Loading…
                     </td>
                   </tr>
                 ) : filtered.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="p-0 align-top">
+                    <td colSpan={9} className="p-0 align-top">
                       <EmptyState
                         title="No bookings this month"
                         description="No check-ins fall in the selected month. Try another year or month."
@@ -243,6 +256,7 @@ export default function ReportMonthly() {
                 ) : (
                   filtered.map((b, idx) => {
                     const mgr = Number(b.staffCommissionAmount) || 0;
+                    const addonsLkr = sumAddonsLkr(b);
                     let price;
                     let bc;
                     let subtotal;
@@ -256,7 +270,7 @@ export default function ReportMonthly() {
                       price = Number(b.price) || 0;
                       bc = Number(b.bookingComCommission) || 0;
                       subtotal = price - bc;
-                      total = subtotal - mgr;
+                      total = subtotal - mgr + addonsLkr;
                     }
                     return (
                       <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
@@ -267,6 +281,7 @@ export default function ReportMonthly() {
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(bc)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(subtotal)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmt(mgr)}</td>
+                        <td className="px-4 py-3 text-right text-sm tabular-nums">{fmt(addonsLkr)}</td>
                         <td className="px-4 py-3 text-right text-sm font-medium tabular-nums">{fmtCell(total)}</td>
                       </tr>
                     );
@@ -283,6 +298,7 @@ export default function ReportMonthly() {
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.bookingCom)}</td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.subtotal)}</td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmt(totals.manager)}</td>
+                    <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmt(totals.addons)}</td>
                     <td className="px-4 py-3 text-right text-sm font-semibold tabular-nums">{fmtCell(totals.total)}</td>
                   </tr>
                 </tfoot>
@@ -295,11 +311,11 @@ export default function ReportMonthly() {
           {showUsd ? (
             <>
               USD view uses saved booking USD amounts. Sub total (USD) is booking price minus Booking.com (both USD).
-              Manager commission stays in {settings.currency} (not converted). TOTAL (USD) matches Sub total (manager is not applied in USD figures).
+              Manager commission and Add-ons stay in {settings.currency} (not converted). TOTAL (USD) is Sub total only; add-ons are shown in {settings.currency} for reference.
             </>
           ) : (
             <>
-              Sub total is booking price minus Booking.com price. TOTAL is Sub total minus manager commission (same as “Net after staff” on the Booking page).
+              Sub total is booking price minus Booking.com price. Add-ons is the sum of add-on line items (LKR). TOTAL is Sub total minus manager commission plus add-ons.
             </>
           )}
         </p>
