@@ -194,18 +194,16 @@ router.post('/', async (req, res) => {
 
     if (isAdmin(req)) {
       const raw = d.assignedStaffUserId;
-      if (raw != null && String(raw).trim() !== '') {
-        bookingUserId = await assertValidCommissionStaffId(pool, raw);
-        const u = await loadUserCommissionFields(pool, bookingUserId);
-        role = (u.role || '').toLowerCase();
-        ratePct = u.ratePct;
-      } else {
-        // No staff assigned (e.g. nobody in Salary is set to "Every booking") — attribute booking to admin; staff commission is 0 for admin role.
-        bookingUserId = req.user.id;
-        const u = await loadUserCommissionFields(pool, bookingUserId);
-        role = (u.role || '').toLowerCase();
-        ratePct = u.ratePct;
+      if (raw == null || String(raw).trim() === '') {
+        return res.status(400).json({
+          error:
+            'Select which staff member this booking is for. Their commission rate (e.g. 10%) applies to subtotal (booking price - Booking.com). Admins do not earn booking commission.',
+        });
       }
+      bookingUserId = await assertValidCommissionStaffId(pool, raw);
+      const u = await loadUserCommissionFields(pool, bookingUserId);
+      role = (u.role || '').toLowerCase();
+      ratePct = u.ratePct;
     }
 
     const staffCommissionAmount = computeStaffCommission(role, ratePct, commissionBaseSubtotal);
