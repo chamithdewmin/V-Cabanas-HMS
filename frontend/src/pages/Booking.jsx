@@ -515,188 +515,196 @@ const Booking = () => {
           else closeBookingDialog();
         }}
       >
-        <DialogContent hideCloseButton className="max-w-xl">
+        <DialogContent hideCloseButton className="max-w-2xl">
           <DialogHeader>
             <DialogTitle>{editingBooking ? 'Edit Booking' : 'New Booking'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {isAdmin && (
-                <div className="space-y-1.5 md:col-span-2">
-                  <Label htmlFor="assignedStaffUserId">Staff (commission / booking for)</Label>
+            {isAdmin && (
+              <div className="space-y-1.5">
+                <Label htmlFor="assignedStaffUserId">Staff (commission / booking for)</Label>
+                <select
+                  id="assignedStaffUserId"
+                  value={form.assignedStaffUserId}
+                  onChange={(e) => handleChange('assignedStaffUserId', e.target.value)}
+                  required={isAdmin}
+                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                >
+                  <option value="">Select manager or receptionist</option>
+                  {commissionStaffOptions.map((u) => (
+                    <option key={u.id} value={String(u.id)}>
+                      {u.name || u.email || `User ${u.id}`}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-xs text-muted-foreground">
+                  Commission is calculated from this staff member&apos;s rate on room price plus add-ons (LKR).
+                </p>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+              {/* Left column */}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="customerName">Customer name</Label>
+                  <Input
+                    id="customerName"
+                    value={form.customerName}
+                    onChange={(e) => handleChange('customerName', e.target.value)}
+                    placeholder="Guest full name"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="roomNumber">Room no</Label>
+                  <Input
+                    id="roomNumber"
+                    value={form.roomNumber}
+                    onChange={(e) => handleChange('roomNumber', e.target.value)}
+                    placeholder="E.g. 101"
+                    required
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="roomFeature">Room Feature</Label>
                   <select
-                    id="assignedStaffUserId"
-                    value={form.assignedStaffUserId}
-                    onChange={(e) => handleChange('assignedStaffUserId', e.target.value)}
-                    required={isAdmin}
+                    id="roomFeature"
+                    value={form.roomFeature}
+                    onChange={(e) => handleChange('roomFeature', e.target.value)}
                     className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
-                    <option value="">Select manager or receptionist</option>
-                    {commissionStaffOptions.map((u) => (
-                      <option key={u.id} value={String(u.id)}>
-                        {u.name || u.email || `User ${u.id}`}
-                      </option>
-                    ))}
+                    <option value="ac">AC</option>
+                    <option value="non_ac">Non AC</option>
                   </select>
-                  <p className="text-xs text-muted-foreground">
-                    Commission is calculated from this staff member&apos;s rate on room price plus add-ons (LKR).
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label>Guest count</Label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="adults" className="text-xs text-muted-foreground">
+                        Adults
+                      </Label>
+                      <Input
+                        id="adults"
+                        type="number"
+                        min="0"
+                        value={form.adults}
+                        onChange={(e) => handleChange('adults', e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="children" className="text-xs text-muted-foreground">
+                        Children
+                      </Label>
+                      <Input
+                        id="children"
+                        type="number"
+                        min="0"
+                        value={form.children}
+                        onChange={(e) => handleChange('children', e.target.value)}
+                        placeholder="0"
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right column */}
+              <div className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label htmlFor="checkIn">Check-in date</Label>
+                  <Input
+                    id="checkIn"
+                    type="date"
+                    value={form.checkIn}
+                    onChange={(e) => handleChange('checkIn', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-1.5">
+                  <Label htmlFor="checkOut">Check-out date</Label>
+                  <Input
+                    id="checkOut"
+                    type="date"
+                    value={form.checkOut}
+                    onChange={(e) => handleChange('checkOut', e.target.value)}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium leading-none">Total price (LKR) / Total price (USD)</p>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="price" className="text-xs text-muted-foreground">
+                        LKR
+                      </Label>
+                      <Input
+                        id="price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.price}
+                        onChange={(e) => handleChange('price', e.target.value)}
+                        placeholder="LKR"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="priceUsd" className="text-xs text-muted-foreground">
+                        USD
+                      </Label>
+                      <Input
+                        id="priceUsd"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.priceUsd}
+                        onChange={(e) => handleChange('priceUsd', e.target.value)}
+                        placeholder="USD"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <p className="text-sm font-medium leading-none">
+                    Booking.com commission (LKR, if any) / Booking.com commission (USD, if any)
                   </p>
-                </div>
-              )}
-              <div className="space-y-1.5">
-                <Label htmlFor="customerName">Customer name</Label>
-                <Input
-                  id="customerName"
-                  value={form.customerName}
-                  onChange={(e) => handleChange('customerName', e.target.value)}
-                  placeholder="Guest full name"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="roomNumber">Room no</Label>
-                <Input
-                  id="roomNumber"
-                  value={form.roomNumber}
-                  onChange={(e) => handleChange('roomNumber', e.target.value)}
-                  placeholder="E.g. 101"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label>Guest count</Label>
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="space-y-1.5">
-                    <Label htmlFor="adults" className="text-xs text-muted-foreground">
-                      Adults
-                    </Label>
-                    <Input
-                      id="adults"
-                      type="number"
-                      min="0"
-                      value={form.adults}
-                      onChange={(e) => handleChange('adults', e.target.value)}
-                      placeholder="0"
-                    />
-                  </div>
-                  <div className="space-y-1.5">
-                    <Label htmlFor="children" className="text-xs text-muted-foreground">
-                      Children
-                    </Label>
-                    <Input
-                      id="children"
-                      type="number"
-                      min="0"
-                      value={form.children}
-                      onChange={(e) => handleChange('children', e.target.value)}
-                      placeholder="0"
-                    />
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bookingComCommission" className="text-xs text-muted-foreground">
+                        LKR
+                      </Label>
+                      <Input
+                        id="bookingComCommission"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.bookingComCommission}
+                        onChange={(e) => handleChange('bookingComCommission', e.target.value)}
+                        placeholder="LKR"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <Label htmlFor="bookingComCommissionUsd" className="text-xs text-muted-foreground">
+                        USD
+                      </Label>
+                      <Input
+                        id="bookingComCommissionUsd"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={form.bookingComCommissionUsd}
+                        onChange={(e) => handleChange('bookingComCommissionUsd', e.target.value)}
+                        placeholder="USD"
+                      />
+                    </div>
                   </div>
                 </div>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="roomFeature">Room Feature</Label>
-                <select
-                  id="roomFeature"
-                  value={form.roomFeature}
-                  onChange={(e) => handleChange('roomFeature', e.target.value)}
-                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  <option value="ac">AC</option>
-                  <option value="non_ac">Non AC</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="roomType">Room Type</Label>
-                <select
-                  id="roomType"
-                  value={form.roomType}
-                  onChange={(e) => handleChange('roomType', e.target.value)}
-                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  <option value="double">Double</option>
-                  <option value="triple">Triple</option>
-                </select>
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="checkIn">Check-in date</Label>
-                <Input
-                  id="checkIn"
-                  type="date"
-                  value={form.checkIn}
-                  onChange={(e) => handleChange('checkIn', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="checkOut">Check-out date</Label>
-                <Input
-                  id="checkOut"
-                  type="date"
-                  value={form.checkOut}
-                  onChange={(e) => handleChange('checkOut', e.target.value)}
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="price">Total price (LKR)</Label>
-                <Input
-                  id="price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.price}
-                  onChange={(e) => handleChange('price', e.target.value)}
-                  placeholder="Total price in LKR"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="bookingComCommission">
-                  Booking.com commission (LKR, if any)
-                </Label>
-                <Input
-                  id="bookingComCommission"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.bookingComCommission}
-                  onChange={(e) => handleChange('bookingComCommission', e.target.value)}
-                  placeholder="Commission in LKR"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="priceUsd">Total price (USD)</Label>
-                <Input
-                  id="priceUsd"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.priceUsd}
-                  onChange={(e) => handleChange('priceUsd', e.target.value)}
-                  placeholder="Total price in USD"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="bookingComCommissionUsd">
-                  Booking.com commission (USD, if any)
-                </Label>
-                <Input
-                  id="bookingComCommissionUsd"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  value={form.bookingComCommissionUsd}
-                  onChange={(e) => handleChange('bookingComCommissionUsd', e.target.value)}
-                  placeholder="Commission in USD"
-                />
               </div>
             </div>
 
