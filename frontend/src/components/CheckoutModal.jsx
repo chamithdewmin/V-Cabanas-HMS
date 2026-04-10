@@ -1,6 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { useCart } from '@/contexts/CartContext';
 import { useToast } from '@/components/ui/use-toast';
@@ -79,31 +86,39 @@ const CheckoutModal = ({ isOpen, onClose }) => {
     window.print();
   };
 
+  const handleCloseCheckout = () => {
+    setSelectedCustomer('');
+    setPaymentMethod('card');
+    setShowInvoice(false);
+    setCurrentInvoice(null);
+    onClose();
+  };
+
   if (showInvoice && currentInvoice) {
     return (
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+      <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseCheckout(); }}>
+        <DialogContent hideCloseButton className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Invoice</DialogTitle>
           </DialogHeader>
           <InvoiceTemplate order={currentInvoice} />
-          <div className="flex gap-3 mt-4">
-            <Button onClick={handlePrint} className="flex-1">
+          <DialogPillActions className="mt-4">
+            <DialogPillPrimaryButton type="button" onClick={handlePrint}>
               <Printer className="w-4 h-4 mr-2" />
               Print Invoice
-            </Button>
-            <Button onClick={() => { setShowInvoice(false); onClose(); }} variant="outline" className="flex-1">
+            </DialogPillPrimaryButton>
+            <DialogPillSecondaryButton type="button" onClick={handleCloseCheckout}>
               Close
-            </Button>
-          </div>
+            </DialogPillSecondaryButton>
+          </DialogPillActions>
         </DialogContent>
       </Dialog>
     );
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-md">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleCloseCheckout(); }}>
+      <DialogContent hideCloseButton className="max-w-md">
         <DialogHeader>
           <DialogTitle>Checkout</DialogTitle>
         </DialogHeader>
@@ -182,9 +197,14 @@ const CheckoutModal = ({ isOpen, onClose }) => {
             </div>
           </div>
 
-          <Button onClick={handleCheckout} className="w-full" disabled={loading}>
-            {loading ? 'Saving...' : 'Complete Sale'}
-          </Button>
+          <DialogPillActions className="pt-2">
+            <DialogPillPrimaryButton type="button" onClick={handleCheckout} disabled={loading}>
+              {loading ? 'Saving...' : 'Complete Sale'}
+            </DialogPillPrimaryButton>
+            <DialogPillSecondaryButton type="button" onClick={handleCloseCheckout}>
+              Close
+            </DialogPillSecondaryButton>
+          </DialogPillActions>
         </div>
       </DialogContent>
     </Dialog>

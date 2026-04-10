@@ -7,7 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -28,13 +36,21 @@ const Users = () => {
   const [editingUser, setEditingUser] = useState(null);
   const [saving, setSaving] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [form, setForm] = useState({
+  const userFormInitial = () => ({
     name: '',
     email: '',
     password: '',
     role: ROLE_RECEPTIONIST,
     commission_rate_pct: 10,
   });
+
+  const [form, setForm] = useState(userFormInitial);
+
+  const closeUserDialog = () => {
+    setForm(userFormInitial());
+    setEditingUser(null);
+    setIsDialogOpen(false);
+  };
   const { toast } = useToast();
 
   const loadUsers = async () => {
@@ -118,7 +134,7 @@ const Users = () => {
         });
         toast({ title: 'User added', description: `${form.name} can now log in.` });
       }
-      setForm({ name: '', email: '', password: '', role: ROLE_RECEPTIONIST, commission_rate_pct: 10 });
+      setForm(userFormInitial());
       setEditingUser(null);
       setIsDialogOpen(false);
       loadUsers();
@@ -396,11 +412,11 @@ const Users = () => {
         <Dialog
           open={isDialogOpen}
           onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) setEditingUser(null);
+            if (open) setIsDialogOpen(true);
+            else closeUserDialog();
           }}
         >
-          <DialogContent>
+          <DialogContent hideCloseButton>
             <DialogHeader>
               <DialogTitle>{editingUser ? 'Edit User' : 'Add New User'}</DialogTitle>
             </DialogHeader>
@@ -463,18 +479,14 @@ const Users = () => {
                   </p>
                 </div>
               )}
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving}>
+              <DialogPillActions>
+                <DialogPillPrimaryButton type="submit" disabled={saving}>
                   {saving ? 'Saving...' : editingUser ? 'Update User' : 'Add User'}
-                </Button>
-              </div>
+                </DialogPillPrimaryButton>
+                <DialogPillSecondaryButton type="button" onClick={closeUserDialog}>
+                  Close
+                </DialogPillSecondaryButton>
+              </DialogPillActions>
             </form>
           </DialogContent>
         </Dialog>

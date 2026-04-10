@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Calendar } from 'lucide-react';
@@ -61,7 +68,7 @@ const ExportReportDialog = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md">
+      <DialogContent hideCloseButton className="max-w-md">
         <DialogHeader>
           <DialogTitle>Export {reportTitle}</DialogTitle>
         </DialogHeader>
@@ -131,14 +138,24 @@ const ExportReportDialog = ({
             </div>
           )}
 
-          <div className="flex gap-2 pt-2">
-            <Button variant="outline" onClick={handleExportCSV} className="flex-1">
+          <p className="text-sm text-muted-foreground pt-1">
+            <button
+              type="button"
+              className="text-primary underline-offset-2 hover:underline font-medium"
+              onClick={handleExportCSV}
+            >
               Export CSV
-            </Button>
-            <Button onClick={handleDownloadPDF} className="flex-1">
+            </button>
+            <span className="text-muted-foreground"> · spreadsheet download</span>
+          </p>
+          <DialogPillActions>
+            <DialogPillPrimaryButton type="button" onClick={handleDownloadPDF}>
               Download PDF
-            </Button>
-          </div>
+            </DialogPillPrimaryButton>
+            <DialogPillSecondaryButton type="button" onClick={() => onOpenChange(false)}>
+              Close
+            </DialogPillSecondaryButton>
+          </DialogPillActions>
         </div>
       </DialogContent>
     </Dialog>

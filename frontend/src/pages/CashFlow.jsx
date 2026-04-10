@@ -20,7 +20,15 @@ import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import {
   BarChart,
@@ -73,7 +81,7 @@ const CashFlow = () => {
   const [editingTx, setEditingTx] = useState(null);
   const [refreshLoading, setRefreshLoading] = useState(false);
   const [bookings, setBookings] = useState([]);
-  const [form, setForm] = useState({
+  const getEmptyTxForm = () => ({
     source: '',
     category: '',
     customCategory: '',
@@ -82,13 +90,21 @@ const CashFlow = () => {
     notes: '',
     isRecurring: false,
     clientId: '',
-    // Recurring (inflow)
     isRecurringInflow: false,
     recurringFrequency: 'monthly',
     recurringEndDate: '',
     continueIndefinitely: true,
     recurringNotes: '',
+    paymentMethod: 'cash',
   });
+
+  const [form, setForm] = useState(getEmptyTxForm);
+
+  const closeAddDialog = () => {
+    setForm(getEmptyTxForm());
+    setEditingTx(null);
+    setIsAddOpen(false);
+  };
 
   // Build unified transaction list from incomes, expenses, unpaid invoices
   const allTransactions = useMemo(() => {
@@ -562,6 +578,7 @@ const CashFlow = () => {
         toast({ title: 'Expense added', description: 'Money out has been recorded.' });
       }
     }
+    setForm(getEmptyTxForm());
     setIsAddOpen(false);
     setEditingTx(null);
   };
@@ -999,11 +1016,11 @@ const CashFlow = () => {
       <Dialog
         open={isAddOpen}
         onOpenChange={(open) => {
-          setIsAddOpen(open);
-          if (!open) setEditingTx(null);
+          if (open) setIsAddOpen(true);
+          else closeAddDialog();
         }}
       >
-        <DialogContent className="max-w-lg">
+        <DialogContent hideCloseButton className="max-w-lg">
           <DialogHeader>
             <DialogTitle>
               {editingTx ? 'Edit Transaction' : addType === 'inflow' ? 'Add Money In' : 'Add Money Out'}
@@ -1263,14 +1280,14 @@ const CashFlow = () => {
                 onChange={(e) => setForm((p) => ({ ...p, notes: e.target.value }))}
               />
             </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsAddOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
+            <DialogPillActions>
+              <DialogPillPrimaryButton type="submit">
                 {editingTx ? 'Update' : 'Add Transaction'}
-              </Button>
-            </div>
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={closeAddDialog}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </form>
         </DialogContent>
       </Dialog>

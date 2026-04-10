@@ -25,7 +25,15 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
@@ -111,6 +119,17 @@ const Booking = () => {
   const [addonDialogBooking, setAddonDialogBooking] = useState(null);
   const [addonRows, setAddonRows] = useState([]);
   const [addonSaving, setAddonSaving] = useState(false);
+
+  const closeBookingDialog = () => {
+    setForm(emptyForm());
+    setEditingBooking(null);
+    setIsDialogOpen(false);
+  };
+
+  const closeAddonDialog = () => {
+    setAddonDialogBooking(null);
+    setAddonRows([]);
+  };
 
   const loadBookings = async () => {
     setLoading(true);
@@ -489,14 +508,11 @@ const Booking = () => {
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingBooking(null);
-            setForm(emptyForm());
-          }
+          if (open) setIsDialogOpen(true);
+          else closeBookingDialog();
         }}
       >
-        <DialogContent className="max-w-xl">
+        <DialogContent hideCloseButton className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{editingBooking ? 'Edit Booking' : 'New Booking'}</DialogTitle>
           </DialogHeader>
@@ -700,19 +716,26 @@ const Booking = () => {
               </div>
             </div>
 
-            <div className="flex justify-end gap-3 pt-4">
-              <Button type="button" variant="outline" onClick={() => setForm(emptyForm())}>
-                Clear
-              </Button>
-              <Button type="submit" disabled={saving}>{saving ? 'Saving...' : (editingBooking ? 'Update booking' : 'Save booking')}</Button>
-            </div>
+            <DialogPillActions className="pt-4">
+              <DialogPillPrimaryButton type="submit" disabled={saving}>
+                {saving ? 'Saving...' : editingBooking ? 'Update booking' : 'Save booking'}
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={closeBookingDialog}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </form>
         </DialogContent>
       </Dialog>
 
       {/* View booking details */}
-      <Dialog open={!!detailBooking} onOpenChange={(open) => !open && setDetailBooking(null)}>
-        <DialogContent className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">
+      <Dialog
+        open={!!detailBooking}
+        onOpenChange={(open) => {
+          if (!open) setDetailBooking(null);
+        }}
+      >
+        <DialogContent hideCloseButton className="max-h-[90vh] max-w-lg overflow-y-auto sm:max-w-xl">
           <DialogHeader className="space-y-1">
             <DialogTitle className="flex items-center gap-2 text-xl">
               <Eye className="h-5 w-5 text-primary shrink-0" aria-hidden />
@@ -864,6 +887,11 @@ const Booking = () => {
                 </div>
               );
             })()}
+          <DialogPillActions className="pt-4">
+            <DialogPillPrimaryButton type="button" onClick={() => setDetailBooking(null)}>
+              Close
+            </DialogPillPrimaryButton>
+          </DialogPillActions>
         </DialogContent>
       </Dialog>
 
@@ -871,13 +899,11 @@ const Booking = () => {
       <Dialog
         open={!!addonDialogBooking}
         onOpenChange={(open) => {
-          if (!open) {
-            setAddonDialogBooking(null);
-            setAddonRows([]);
-          }
+          if (open) return;
+          closeAddonDialog();
         }}
       >
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogContent hideCloseButton className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Add-ons</DialogTitle>
             {addonDialogBooking && (
@@ -976,14 +1002,14 @@ const Booking = () => {
                 </table>
               </div>
             )}
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => { setAddonDialogBooking(null); setAddonRows([]); }}>
-                Cancel
-              </Button>
-              <Button type="button" onClick={saveAddonDialog} disabled={addonSaving}>
+            <DialogPillActions className="pt-2">
+              <DialogPillPrimaryButton type="button" onClick={saveAddonDialog} disabled={addonSaving}>
                 {addonSaving ? 'Saving...' : 'Save add-ons'}
-              </Button>
-            </div>
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={closeAddonDialog}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </div>
         </DialogContent>
       </Dialog>

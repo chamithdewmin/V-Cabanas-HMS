@@ -1,6 +1,13 @@
 import React, { useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { ChevronLeft, ChevronRight, ShoppingCart } from 'lucide-react';
 import { useCart } from '@/contexts/CartContext';
 
@@ -14,6 +21,13 @@ const ProductModal = ({ car, isOpen, onClose }) => {
 
   const handleAddToCart = () => {
     addToCart(car, quantity, selectedColor || car.colors[0]);
+    handleClose();
+  };
+
+  const handleClose = () => {
+    setCurrentImageIndex(0);
+    setSelectedColor(null);
+    setQuantity(1);
     onClose();
   };
 
@@ -26,8 +40,8 @@ const ProductModal = ({ car, isOpen, onClose }) => {
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) handleClose(); }}>
+      <DialogContent hideCloseButton className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{car.make} {car.model} ({car.year})</DialogTitle>
         </DialogHeader>
@@ -144,10 +158,15 @@ const ProductModal = ({ car, isOpen, onClose }) => {
               </div>
             </div>
 
-            <Button onClick={handleAddToCart} className="w-full" disabled={car.stock === 0}>
-              <ShoppingCart className="w-4 h-4 mr-2" />
-              Add to Cart
-            </Button>
+            <DialogPillActions>
+              <DialogPillPrimaryButton type="button" onClick={handleAddToCart} disabled={car.stock === 0}>
+                <ShoppingCart className="w-4 h-4 mr-2" />
+                Add to Cart
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={handleClose}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </div>
         </div>
       </DialogContent>

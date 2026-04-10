@@ -7,7 +7,15 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useFinance } from '@/contexts/FinanceContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 
 const Inventory = () => {
@@ -15,7 +23,7 @@ const Inventory = () => {
   const { toast } = useToast();
   const confirm = useConfirm();
 
-  const [form, setForm] = useState({
+  const expenseFormInitial = () => ({
     category: 'Hosting',
     customCategory: '',
     amount: '',
@@ -25,6 +33,14 @@ const Inventory = () => {
     notes: '',
     receipt: null,
   });
+
+  const [form, setForm] = useState(expenseFormInitial);
+
+  const closeExpenseDialog = () => {
+    setForm(expenseFormInitial());
+    setEditingExpense(null);
+    setIsDialogOpen(false);
+  };
 
   const [filters, setFilters] = useState({
     period: 'month',
@@ -120,16 +136,7 @@ const Inventory = () => {
       toast({ title: 'Expense added', description: 'New expense record has been saved.' });
     }
 
-    setForm({
-      category: 'Hosting',
-      customCategory: '',
-      amount: '',
-      date: '',
-      paymentMethod: 'cash',
-      isRecurring: false,
-      notes: '',
-      receipt: null,
-    });
+    setForm(expenseFormInitial());
     setIsDialogOpen(false);
   };
 
@@ -497,11 +504,11 @@ const Inventory = () => {
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) setEditingExpense(null);
+          if (open) setIsDialogOpen(true);
+          else closeExpenseDialog();
         }}
       >
-        <DialogContent className="max-w-xl">
+        <DialogContent hideCloseButton className="max-w-xl">
           <DialogHeader>
             <DialogTitle>{editingExpense ? 'Edit Expense' : 'Add Expense'}</DialogTitle>
           </DialogHeader>
@@ -605,14 +612,14 @@ const Inventory = () => {
                 />
               </div>
             </div>
-            <div className="flex justify-end gap-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit">
+            <DialogPillActions>
+              <DialogPillPrimaryButton type="submit">
                 {editingExpense ? 'Update Expense' : 'Save Expense'}
-              </Button>
-            </div>
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={closeExpenseDialog}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </form>
         </DialogContent>
       </Dialog>

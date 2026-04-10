@@ -8,7 +8,16 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
 
 const DEBOUNCE_MS = 600;
@@ -536,16 +545,16 @@ const Settings = () => {
 
       {/* Reset confirmation dialog */}
       <Dialog open={resetConfirmOpen} onOpenChange={setResetConfirmOpen}>
-        <DialogContent className="max-w-md">
+        <DialogContent hideCloseButton className="max-w-md">
           <DialogHeader>
             <DialogTitle>Reset All Data?</DialogTitle>
             <DialogDescription>
               This will delete all data from our database. Are you sure you want to reset? An OTP will be sent to your registered phone number to confirm.
             </DialogDescription>
           </DialogHeader>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setResetConfirmOpen(false)}>Cancel</Button>
-            <Button
+          <DialogPillActions>
+            <DialogPillPrimaryButton
+              type="button"
               variant="destructive"
               disabled={resetLoading}
               onClick={async () => {
@@ -565,14 +574,26 @@ const Settings = () => {
               }}
             >
               {resetLoading ? 'Sending...' : 'Yes, Reset Data'}
-            </Button>
-          </DialogFooter>
+            </DialogPillPrimaryButton>
+            <DialogPillSecondaryButton type="button" onClick={() => setResetConfirmOpen(false)}>
+              Close
+            </DialogPillSecondaryButton>
+          </DialogPillActions>
         </DialogContent>
       </Dialog>
 
       {/* OTP verification dialog */}
-      <Dialog open={resetOtpOpen} onOpenChange={(open) => { setResetOtpOpen(open); if (!open) setResetOtp(''); setDevOtp(''); }}>
-        <DialogContent className="max-w-md">
+      <Dialog
+        open={resetOtpOpen}
+        onOpenChange={(open) => {
+          setResetOtpOpen(open);
+          if (!open) {
+            setResetOtp('');
+            setDevOtp('');
+          }
+        }}
+      >
+        <DialogContent hideCloseButton className="max-w-md">
           <DialogHeader>
             <DialogTitle>Enter OTP</DialogTitle>
             <DialogDescription>
@@ -595,9 +616,9 @@ const Settings = () => {
               <p className="text-xs text-muted-foreground">Dev OTP: {devOtp}</p>
             )}
           </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => { setResetOtpOpen(false); setResetOtp(''); setDevOtp(''); }}>Cancel</Button>
-            <Button
+          <DialogPillActions>
+            <DialogPillPrimaryButton
+              type="button"
               variant="destructive"
               disabled={resetLoading || resetOtp.length < 4}
               onClick={async () => {
@@ -617,8 +638,18 @@ const Settings = () => {
               }}
             >
               {resetLoading ? 'Verifying...' : 'Verify & Reset'}
-            </Button>
-          </DialogFooter>
+            </DialogPillPrimaryButton>
+            <DialogPillSecondaryButton
+              type="button"
+              onClick={() => {
+                setResetOtpOpen(false);
+                setResetOtp('');
+                setDevOtp('');
+              }}
+            >
+              Close
+            </DialogPillSecondaryButton>
+          </DialogPillActions>
         </DialogContent>
       </Dialog>
     </>

@@ -1,5 +1,12 @@
 import React, { useRef, useState } from 'react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+} from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Download, Printer } from 'lucide-react';
 import { downloadReportPdf, downloadReportPdfFile } from '@/utils/pdfPrint';
@@ -48,11 +55,9 @@ const ReportPreviewModal = ({ open, onOpenChange, html, filename, reportTitle = 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
+        hideCloseButton
         className="max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto w-[95vw]"
         aria-describedby={undefined}
-        onInteractOutside={(e) => {
-          if (loading) e.preventDefault();
-        }}
       >
         <DialogHeader>
           <DialogTitle>{reportTitle}</DialogTitle>
@@ -87,6 +92,11 @@ const ReportPreviewModal = ({ open, onOpenChange, html, filename, reportTitle = 
             style={{ fontFamily: 'sans-serif', fontSize: '14px' }}
             dangerouslySetInnerHTML={{ __html: html || '<p class="text-gray-500">No content to display.</p>' }}
           />
+          <DialogPillActions>
+            <DialogPillPrimaryButton type="button" onClick={() => onOpenChange(false)} disabled={loading}>
+              Close
+            </DialogPillPrimaryButton>
+          </DialogPillActions>
         </div>
       </DialogContent>
     </Dialog>

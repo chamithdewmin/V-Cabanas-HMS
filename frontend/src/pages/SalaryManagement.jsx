@@ -6,7 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
@@ -55,7 +63,7 @@ const SalaryManagement = () => {
   const [selectedMonth, setSelectedMonth] = useState(() => new Date().getMonth() + 1);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [form, setForm] = useState({
+  const salaryFormInitial = () => ({
     linkedUserId: '',
     employeeName: '',
     position: '',
@@ -64,6 +72,14 @@ const SalaryManagement = () => {
     notes: '',
     commissionRatePct: '',
   });
+
+  const [form, setForm] = useState(salaryFormInitial);
+
+  const closeSalaryDialog = () => {
+    setForm(salaryFormInitial());
+    setEditingItem(null);
+    setIsDialogOpen(false);
+  };
   const [usersList, setUsersList] = useState([]);
   const yearOptions = React.useMemo(() => {
     const y = new Date().getFullYear();
@@ -222,7 +238,7 @@ const SalaryManagement = () => {
         await api.salary.create(payload);
         toast({ title: 'Salary added', description: 'New salary record has been saved.' });
       }
-      setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+      setForm(salaryFormInitial());
       setEditingItem(null);
       setIsDialogOpen(false);
       loadItems();
@@ -355,7 +371,7 @@ const SalaryManagement = () => {
             <Button
               onClick={() => {
                 setEditingItem(null);
-                setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+                setForm(salaryFormInitial());
                 setIsDialogOpen(true);
               }}
             >
@@ -466,7 +482,7 @@ const SalaryManagement = () => {
                         actionLabel="Add Salary"
                         onAction={() => {
                           setEditingItem(null);
-                          setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
+                          setForm(salaryFormInitial());
                           setIsDialogOpen(true);
                         }}
                       />
@@ -543,14 +559,11 @@ const SalaryManagement = () => {
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingItem(null);
-            setForm({ linkedUserId: '', employeeName: '', position: '', amount: '', period: 'monthly', notes: '', commissionRatePct: '' });
-          }
+          if (open) setIsDialogOpen(true);
+          else closeSalaryDialog();
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent hideCloseButton className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Edit salary & commission' : 'Add Salary'}</DialogTitle>
           </DialogHeader>
@@ -659,14 +672,14 @@ const SalaryManagement = () => {
                     </div>
                 </>
             </>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button type="button" variant="outline" onClick={() => setIsDialogOpen(false)}>
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
+            <DialogPillActions>
+              <DialogPillPrimaryButton type="submit" disabled={saving}>
                 {saving ? 'Saving...' : editingItem ? 'Update' : 'Save Salary'}
-              </Button>
-            </div>
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={closeSalaryDialog}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </form>
         </DialogContent>
       </Dialog>

@@ -6,7 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import { api } from '@/lib/api';
 
 const DailyNotes = () => {
@@ -17,11 +25,19 @@ const DailyNotes = () => {
   const [saving, setSaving] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingNote, setEditingNote] = useState(null);
-  const [form, setForm] = useState({
+  const noteFormInitial = () => ({
     noteDate: '',
     amount: '',
     note: '',
   });
+
+  const [form, setForm] = useState(noteFormInitial);
+
+  const closeNoteDialog = () => {
+    setForm(noteFormInitial());
+    setEditingNote(null);
+    setIsDialogOpen(false);
+  };
 
   const loadNotes = async () => {
     setLoading(true);
@@ -65,7 +81,7 @@ const DailyNotes = () => {
         await api.dailyNotes.create(payload);
         toast({ title: 'Note saved', description: 'Daily note has been saved.' });
       }
-      setForm({ noteDate: '', amount: '', note: '' });
+      setForm(noteFormInitial());
       setEditingNote(null);
       setIsDialogOpen(false);
       loadNotes();
@@ -205,14 +221,11 @@ const DailyNotes = () => {
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingNote(null);
-            setForm({ noteDate: '', amount: '', note: '' });
-          }
+          if (open) setIsDialogOpen(true);
+          else closeNoteDialog();
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent hideCloseButton className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingNote ? 'Edit Daily Note' : 'New Daily Note'}</DialogTitle>
           </DialogHeader>
@@ -250,14 +263,14 @@ const DailyNotes = () => {
                 className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 resize-y min-h-[80px]"
               />
             </div>
-            <div className="flex justify-end gap-3 pt-2">
-              <Button type="button" variant="outline" onClick={() => setForm({ noteDate: form.noteDate, amount: '', note: '' })}>
-                Clear fields
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : (editingNote ? 'Update' : 'Save')}
-              </Button>
-            </div>
+            <DialogPillActions>
+              <DialogPillPrimaryButton type="submit" disabled={saving}>
+                {saving ? 'Saving...' : editingNote ? 'Update' : 'Save'}
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={closeNoteDialog}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </form>
         </DialogContent>
       </Dialog>

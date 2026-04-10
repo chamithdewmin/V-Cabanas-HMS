@@ -6,7 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
@@ -20,11 +28,19 @@ const Pricing = () => {
   const [search, setSearch] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingItem, setEditingItem] = useState(null);
-  const [form, setForm] = useState({
+  const pricingFormInitial = () => ({
     name: '',
     price: '',
     notes: '',
   });
+
+  const [form, setForm] = useState(pricingFormInitial);
+
+  const closePricingDialog = () => {
+    setForm(pricingFormInitial());
+    setEditingItem(null);
+    setIsDialogOpen(false);
+  };
 
   const loadItems = async () => {
     setLoading(true);
@@ -68,7 +84,7 @@ const Pricing = () => {
         await api.pricing.create(payload);
         toast({ title: 'Pricing added', description: 'New pricing item has been saved.' });
       }
-      setForm({ name: '', price: '', notes: '' });
+      setForm(pricingFormInitial());
       setEditingItem(null);
       setIsDialogOpen(false);
       loadItems();
@@ -244,14 +260,11 @@ const Pricing = () => {
       <Dialog
         open={isDialogOpen}
         onOpenChange={(open) => {
-          setIsDialogOpen(open);
-          if (!open) {
-            setEditingItem(null);
-            setForm({ name: '', price: '', notes: '' });
-          }
+          if (open) setIsDialogOpen(true);
+          else closePricingDialog();
         }}
       >
-        <DialogContent className="max-w-md">
+        <DialogContent hideCloseButton className="max-w-md">
           <DialogHeader>
             <DialogTitle>{editingItem ? 'Edit Pricing' : 'Add Pricing'}</DialogTitle>
           </DialogHeader>
@@ -286,18 +299,14 @@ const Pricing = () => {
                 placeholder="Any additional info about this price"
               />
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => setIsDialogOpen(false)}
-              >
-                Cancel
-              </Button>
-              <Button type="submit" disabled={saving}>
-                {saving ? 'Saving...' : (editingItem ? 'Update Pricing' : 'Save Pricing')}
-              </Button>
-            </div>
+            <DialogPillActions>
+              <DialogPillPrimaryButton type="submit" disabled={saving}>
+                {saving ? 'Saving...' : editingItem ? 'Update Pricing' : 'Save Pricing'}
+              </DialogPillPrimaryButton>
+              <DialogPillSecondaryButton type="button" onClick={closePricingDialog}>
+                Close
+              </DialogPillSecondaryButton>
+            </DialogPillActions>
           </form>
         </DialogContent>
       </Dialog>

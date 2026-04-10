@@ -3,11 +3,12 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
 } from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
 
 const ConfirmDialogContext = createContext(null);
 
@@ -82,18 +83,18 @@ export function ConfirmDialogProvider({ children }) {
                   {dialog.message}
                 </DialogDescription>
               </DialogHeader>
-              <DialogFooter className="gap-2 sm:gap-2">
-                <Button type="button" variant="outline" onClick={() => finish(false)}>
-                  {dialog.cancelLabel}
-                </Button>
-                <Button
+              <DialogPillActions>
+                <DialogPillPrimaryButton
                   type="button"
                   variant={dialog.variant === 'destructive' ? 'destructive' : 'default'}
                   onClick={() => finish(true)}
                 >
                   {dialog.confirmLabel}
-                </Button>
-              </DialogFooter>
+                </DialogPillPrimaryButton>
+                <DialogPillSecondaryButton type="button" onClick={() => finish(false)}>
+                  {dialog.cancelLabel}
+                </DialogPillSecondaryButton>
+              </DialogPillActions>
             </>
           )}
         </DialogContent>

@@ -7,7 +7,15 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { Users } from 'lucide-react';
 
@@ -26,12 +34,21 @@ const Customers = () => {
   const [refreshLoading, setRefreshLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [nameError, setNameError] = useState('');
-  const [form, setForm] = useState({
+  const clientFormInitial = () => ({
     name: '',
     email: '',
     phone: '',
     address: '',
   });
+
+  const [form, setForm] = useState(clientFormInitial);
+
+  const closeClientDialog = () => {
+    setForm(clientFormInitial());
+    setEditingClient(null);
+    setNameError('');
+    setIsDialogOpen(false);
+  };
 
   useEffect(() => {
     setCustomers(clients);
@@ -90,7 +107,7 @@ const Customers = () => {
         });
         toast({ title: 'Client added', description: `${form.name} has been added to your clients list.` });
       }
-      setForm({ name: '', email: '', phone: '', address: '' });
+      setForm(clientFormInitial());
       setIsDialogOpen(false);
     } catch (err) {
       toast({
@@ -361,11 +378,11 @@ const Customers = () => {
         <Dialog
           open={isDialogOpen}
           onOpenChange={(open) => {
-            setIsDialogOpen(open);
-            if (!open) setEditingClient(null);
+            if (open) setIsDialogOpen(true);
+            else closeClientDialog();
           }}
         >
-          <DialogContent>
+          <DialogContent hideCloseButton>
             <DialogHeader>
               <DialogTitle>{editingClient ? 'Edit Client' : 'Add New Client'}</DialogTitle>
             </DialogHeader>
@@ -415,19 +432,15 @@ const Customers = () => {
                   placeholder="Address (optional)"
                 />
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" disabled={saving} className={saving ? 'gap-2' : ''}>
+              <DialogPillActions>
+                <DialogPillPrimaryButton type="submit" disabled={saving} className={saving ? 'gap-2' : ''}>
                   {saving && <Loader2 className="h-4 w-4 animate-spin" />}
                   {saving ? 'Saving...' : editingClient ? 'Update Client' : 'Save Client'}
-                </Button>
-              </div>
+                </DialogPillPrimaryButton>
+                <DialogPillSecondaryButton type="button" onClick={closeClientDialog}>
+                  Close
+                </DialogPillSecondaryButton>
+              </DialogPillActions>
             </form>
           </DialogContent>
         </Dialog>

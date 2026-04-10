@@ -9,7 +9,15 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogPillActions,
+  DialogPillPrimaryButton,
+  DialogPillSecondaryButton,
+} from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
 import { countNightsBetween } from '@/lib/invoiceNights';
@@ -30,7 +38,7 @@ const Orders = () => {
 
   const { invoices, clients, settings, updateInvoiceStatus, addInvoice, deleteInvoice, loadData } = useFinance();
 
-  const [form, setForm] = useState({
+  const createInvoiceFormInitial = () => ({
     clientId: '',
     clientName: '',
     clientEmail: '',
@@ -44,10 +52,16 @@ const Orders = () => {
     bookingCheckOut: '',
     bookingAdults: '',
     bookingChildren: '',
-    items: [
-      { description: '', price: '', quantity: 1 },
-    ],
+    items: [{ description: '', price: '', quantity: 1 }],
   });
+
+  const [form, setForm] = useState(createInvoiceFormInitial);
+
+  const closeCreateInvoiceDialog = () => {
+    setForm(createInvoiceFormInitial());
+    setLastLoadedFromBookingCount(0);
+    setIsCreateOpen(false);
+  };
   const handleChange = (field, value) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
@@ -208,24 +222,8 @@ const Orders = () => {
         description: `Invoice ${invoice.invoiceNumber || invoice.id} has been created.`,
       });
 
-      setForm({
-        clientId: '',
-        clientName: '',
-        clientEmail: '',
-        clientPhone: '',
-        paymentMethod: 'bank',
-        dueDate: '',
-        notes: '',
-        bankDetails: null,
-        showSignatureArea: false,
-        bookingCheckIn: '',
-        bookingCheckOut: '',
-        bookingAdults: '',
-        bookingChildren: '',
-        items: [
-          { description: '', price: '', quantity: 1 },
-        ],
-      });
+      setForm(createInvoiceFormInitial());
+      setLastLoadedFromBookingCount(0);
       setIsCreateOpen(false);
     } catch (err) {
       toast({
@@ -552,7 +550,11 @@ const Orders = () => {
           }
         }}
       >
-        <DialogContent className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto" aria-describedby={undefined}>
+        <DialogContent
+          hideCloseButton
+          className="w-[95vw] max-w-4xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle>Invoice Details</DialogTitle>
           </DialogHeader>
@@ -564,12 +566,33 @@ const Orders = () => {
               onAutoActionDone={() => setInvoiceAction(null)}
             />
           )}
+          <DialogPillActions className="pt-4">
+            <DialogPillPrimaryButton
+              type="button"
+              onClick={() => {
+                setSelectedOrder(null);
+                setInvoiceAction(null);
+              }}
+            >
+              Close
+            </DialogPillPrimaryButton>
+          </DialogPillActions>
         </DialogContent>
       </Dialog>
 
       {/* Create invoice */}
-      <Dialog open={isCreateOpen} onOpenChange={setIsCreateOpen}>
-        <DialogContent className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto" aria-describedby={undefined}>
+      <Dialog
+        open={isCreateOpen}
+        onOpenChange={(open) => {
+          if (open) setIsCreateOpen(true);
+          else closeCreateInvoiceDialog();
+        }}
+      >
+        <DialogContent
+          hideCloseButton
+          className="w-[95vw] max-w-2xl max-h-[90vh] overflow-y-auto mx-2 sm:mx-auto"
+          aria-describedby={undefined}
+        >
           <DialogHeader>
             <DialogTitle>Create Invoice</DialogTitle>
           </DialogHeader>
@@ -681,25 +704,19 @@ const Orders = () => {
               />
             </div>
 
-            <div className="flex items-center justify-between pt-2">
+            <div className="flex flex-col gap-4 pt-2 sm:flex-row sm:items-center sm:justify-between">
               <div className="text-sm text-muted-foreground">
                 Subtotal:{' '}
                 <span className="font-semibold text-primary">
                   {settings.currency} {subtotal.toLocaleString()}
                 </span>
               </div>
-              <div className="flex gap-2">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setIsCreateOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button type="submit">
-                  Save Invoice
-                </Button>
-              </div>
+              <DialogPillActions className="w-full pt-0 sm:max-w-md sm:ml-auto">
+                <DialogPillPrimaryButton type="submit">Save Invoice</DialogPillPrimaryButton>
+                <DialogPillSecondaryButton type="button" onClick={closeCreateInvoiceDialog}>
+                  Close
+                </DialogPillSecondaryButton>
+              </DialogPillActions>
             </div>
           </form>
         </DialogContent>
