@@ -48,6 +48,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AvatarLabelGroup, AvatarWithStatus, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { isStaffRestrictedRole } from '@/lib/navAccess';
 
 const reportSubItems = [
   { to: '/reports/overview', label: 'Overview Reports' },
@@ -187,7 +188,19 @@ export default function Sidebar() {
 
   const userRole = (user?.role || '').toLowerCase();
   const canManageUsers = userRole === 'admin';
-  const navEntries = NAV_ITEMS_WITH_DIVIDERS;
+
+  const staffAllowedHrefs = new Set([
+    '/invoices',
+    '/clients',
+    '/booking',
+    '/calendar',
+    '/daily-notes',
+    '/settings',
+  ]);
+
+  const navEntries = isStaffRestrictedRole(userRole)
+    ? NAV_ITEMS_WITH_DIVIDERS.filter((e) => !e.divider && e.href && staffAllowedHrefs.has(e.href))
+    : NAV_ITEMS_WITH_DIVIDERS;
 
   const handleLogout = async () => {
     await logout();

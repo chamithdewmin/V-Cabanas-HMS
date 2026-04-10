@@ -26,9 +26,23 @@ import Pricing from './pages/Pricing';
 import SalaryManagement from './pages/SalaryManagement';
 import DailyNotes from './pages/DailyNotes';
 import Layout from './components/Layout';
+import { staffHomePath } from './lib/navAccess';
 
-function DefaultRedirect() {
-  return <Navigate to="/dashboard" replace />;
+function AppHomeRedirect() {
+  const { user } = useAuth();
+  return <Navigate to={staffHomePath(user?.role)} replace />;
+}
+
+function LoginRoute() {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <Login />;
+  return <Navigate to={staffHomePath(user?.role)} replace />;
+}
+
+function ForgotPasswordRoute() {
+  const { isAuthenticated, user } = useAuth();
+  if (!isAuthenticated) return <ForgotPassword />;
+  return <Navigate to={staffHomePath(user?.role)} replace />;
 }
 
 function App() {
@@ -69,14 +83,12 @@ function App() {
     );
   }
 
-  const loginRedirectTo = '/dashboard';
-
   return (
     <Routes>
-      <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to={loginRedirectTo} />} />
-      <Route path="/forgot-password" element={!isAuthenticated ? <ForgotPassword /> : <Navigate to={loginRedirectTo} />} />
+      <Route path="/login" element={<LoginRoute />} />
+      <Route path="/forgot-password" element={<ForgotPasswordRoute />} />
       <Route path="/" element={isAuthenticated ? <Layout /> : <Navigate to="/login" replace />}>
-        <Route index element={<DefaultRedirect />} />
+        <Route index element={<AppHomeRedirect />} />
         <Route path="dashboard" element={<Dashboard />} />
         <Route path="expenses" element={<Inventory />} />
         <Route path="invoices" element={<Orders />} />
