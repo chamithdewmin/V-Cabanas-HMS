@@ -315,7 +315,7 @@ export default function ReportMonthly() {
             </>
           ) : (
             <>
-              Sub total is booking price minus Booking.com price. Add-ons is the sum of add-on line items (LKR). TOTAL is Sub total minus manager commission plus add-ons.
+              Sub total is booking price minus Booking.com price. Add-ons is the sum of add-on line items (LKR). TOTAL is Sub total minus manager commission plus add-ons — same amount as each booking inflow on Cash Flow.
             </>
           )}
         </p>

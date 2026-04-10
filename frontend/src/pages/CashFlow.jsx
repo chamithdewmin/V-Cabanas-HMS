@@ -41,6 +41,16 @@ import {
   Legend,
 } from 'recharts';
 
+/** LKR add-on lines total — matches Monthly Report TOTAL and booking table “Add on's”. */
+function sumAddonsLkr(booking) {
+  const addons = Array.isArray(booking?.addons) ? booking.addons : [];
+  return addons.reduce((sum, a) => {
+    const u = Number(a.unitPrice) || 0;
+    const q = Number(a.quantity) || 1;
+    return sum + u * q;
+  }, 0);
+}
+
 const SORT_OPTIONS = [
   { value: 'date-asc', label: 'Date (oldest first)' },
   { value: 'date-desc', label: 'Date (newest first)' },
@@ -169,7 +179,9 @@ const CashFlow = () => {
       const bookingCom = Number(b.bookingComCommission) || 0;
       const staffCommission = Number(b.staffCommissionAmount) || 0;
       const subtotal = bookingPrice - bookingCom;
-      const bookingTotal = subtotal - staffCommission;
+      const addonsLkr = sumAddonsLkr(b);
+      /* Same net as Monthly Report LKR TOTAL: subtotal − staff commission + add-ons */
+      const bookingTotal = subtotal - staffCommission + addonsLkr;
       txList.push({
         id: b.id,
         type: 'inflow',
@@ -178,7 +190,7 @@ const CashFlow = () => {
         category: 'Booking',
         amount: Math.max(0, bookingTotal),
         status: 'received',
-        notes: `Room ${b.roomNumber || '—'} booking total`,
+        notes: `Room ${b.roomNumber || '—'} · net after Booking.com & staff + add-ons`,
         isRecurring: false,
         raw: b,
         sourceType: 'booking',
