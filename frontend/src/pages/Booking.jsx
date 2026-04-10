@@ -590,6 +590,22 @@ const Booking = () => {
                 </div>
 
                 <div className="space-y-1.5">
+                  <Label htmlFor="roomType">Room type</Label>
+                  <select
+                    id="roomType"
+                    value={normalizeRoomTypeForForm(form.roomType)}
+                    onChange={(e) => handleChange('roomType', e.target.value)}
+                    className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
+                  >
+                    {ALLOWED_ROOM_TYPES.map((t) => (
+                      <option key={t} value={t}>
+                        {t === 'double' ? 'Double' : 'Triple'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-1.5">
                   <Label>Guest count</Label>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
