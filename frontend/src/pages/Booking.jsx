@@ -637,7 +637,7 @@ const Booking = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm font-medium leading-none">Total price (LKR) / Total price (USD)</p>
+                  <p className="text-sm font-medium leading-none">Total price</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="price" className="text-xs text-muted-foreground">
@@ -671,9 +671,7 @@ const Booking = () => {
                 </div>
 
                 <div className="space-y-2">
-                  <p className="text-sm font-medium leading-none">
-                    Booking.com commission (LKR, if any) / Booking.com commission (USD, if any)
-                  </p>
+                  <p className="text-sm font-medium leading-none">Booking.com commission</p>
                   <div className="grid grid-cols-2 gap-3">
                     <div className="space-y-1.5">
                       <Label htmlFor="bookingComCommission" className="text-xs text-muted-foreground">
