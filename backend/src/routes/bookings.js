@@ -110,6 +110,23 @@ async function loadUserCommissionFields(pool, userId) {
   };
 }
 
+/** Find client by name (case-insensitive) for this user, or create one — used when saving a booking with a guest name. */
+async function ensureClientByName(pool, userId, nameTrim) {
+  const name = (nameTrim || '').trim();
+  if (!name) return null;
+  const { rows } = await pool.query(
+    `SELECT id FROM clients WHERE user_id = $1 AND LOWER(TRIM(name)) = LOWER($2) LIMIT 1`,
+    [userId, name]
+  );
+  if (rows[0]) return rows[0].id;
+  const id = `CL-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+  await pool.query(
+    `INSERT INTO clients (id, user_id, name, email, phone, address, projects) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
+    [id, userId, name, '', '', '', JSON.stringify([])]
+  );
+  return id;
+}
+
 async function getAddonsForBooking(pool, bookingId) {
   const { rows } = await pool.query(
     'SELECT id, pricing_id, name, unit_price, quantity FROM booking_addons WHERE booking_id = $1 ORDER BY created_at',
@@ -208,7 +225,11 @@ router.post('/', async (req, res) => {
 
     const staffCommissionAmount = computeStaffCommission(role, ratePct, commissionBaseSubtotal);
     const id = `BKG-${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
-    const clientId = d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null;
+    let clientId = d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null;
+    const customerNameTrim = (d.customerName || '').trim();
+    if (!clientId && customerNameTrim) {
+      clientId = await ensureClientByName(pool, bookingUserId, customerNameTrim);
+    }
     await pool.query(
       `INSERT INTO bookings (id, user_id, client_id, customer_name, room_number, adults, children, room_category, room_feature, room_type, check_in, check_out, price, booking_com_commission, price_usd, booking_com_commission_usd, staff_commission_amount)
        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17)`,
@@ -287,7 +308,13 @@ router.put('/:id', async (req, res) => {
     const ownerRole = (ownerRoleRaw || '').toLowerCase();
     const commissionBaseSubtotal = computeCommissionBaseFromSubtotal(price, bookingComCommission);
     const staffCommissionAmount = computeStaffCommission(ownerRole, ownerRate, commissionBaseSubtotal);
-    const clientId = d.clientId !== undefined ? (d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null) : undefined;
+    let clientId = d.clientId !== undefined ? (d.clientId && String(d.clientId).trim() ? String(d.clientId).trim() : null) : undefined;
+    if (clientId !== undefined) {
+      const nameForClient = d.customerName != null ? String(d.customerName).trim() : '';
+      if (clientId === null && nameForClient) {
+        clientId = await ensureClientByName(pool, ownerId, nameForClient);
+      }
+    }
     const rowFields = [
       d.customerName != null ? String(d.customerName).trim() : null,
       d.roomNumber != null ? String(d.roomNumber).trim() : null,

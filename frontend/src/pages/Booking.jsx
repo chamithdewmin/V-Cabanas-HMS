@@ -25,6 +25,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
+import { useFinance } from '@/contexts/FinanceContext';
 import {
   Dialog,
   DialogContent,
@@ -103,6 +104,7 @@ const emptyForm = () => ({
 const Booking = () => {
   const { toast } = useToast();
   const confirm = useConfirm();
+  const { loadData } = useFinance();
   const { user } = useAuth();
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
   const tableColSpan = 11;
@@ -225,6 +227,7 @@ const Booking = () => {
         toast({ title: 'Booking saved', description: 'Booking has been saved.' });
       }
       setForm(emptyForm());
+      loadData();
       setEditingBooking(null);
       setIsDialogOpen(false);
       loadBookings();
