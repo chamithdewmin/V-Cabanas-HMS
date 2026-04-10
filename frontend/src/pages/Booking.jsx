@@ -101,13 +101,22 @@ const emptyForm = () => ({
   assignedStaffUserId: '',
 });
 
+function sumAddonsLkr(booking) {
+  const addons = Array.isArray(booking?.addons) ? booking.addons : [];
+  return addons.reduce((sum, a) => {
+    const u = Number(a.unitPrice) || 0;
+    const q = Number(a.quantity) || 1;
+    return sum + u * q;
+  }, 0);
+}
+
 const Booking = () => {
   const { toast } = useToast();
   const confirm = useConfirm();
   const { loadData } = useFinance();
   const { user } = useAuth();
   const isAdmin = (user?.role || '').toLowerCase() === 'admin';
-  const tableColSpan = 11;
+  const tableColSpan = 12;
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
   const [staffUsers, setStaffUsers] = useState([]);
@@ -386,7 +395,7 @@ const Booking = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[68rem] border-collapse table-auto">
+            <table className="w-full min-w-[74rem] border-collapse table-auto">
               <colgroup>
                 <col className="min-w-[9rem]" />
                 <col className="w-24" />
@@ -397,6 +406,7 @@ const Booking = () => {
                 <col className="min-w-[9.5rem] w-[9.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="w-[7.5rem]" />
+                <col className="w-[8.5rem]" />
                 <col className="w-[8.5rem]" />
                 <col className="w-[10rem]" />
               </colgroup>
@@ -431,6 +441,9 @@ const Booking = () => {
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
                     Staff commission
+                  </th>
+                  <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-right">
+                    Add on&apos;s (LKR)
                   </th>
                   <th scope="col" className="px-4 py-3.5 text-sm font-semibold whitespace-nowrap !text-center">
                     Actions
@@ -481,6 +494,9 @@ const Booking = () => {
                       </td>
                       <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
                         {(b.staffCommissionAmount != null ? Number(b.staffCommissionAmount) : 0).toLocaleString()}
+                      </td>
+                      <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
+                        {sumAddonsLkr(b).toLocaleString()}
                       </td>
                       <td className="px-4 py-3 !text-center align-middle">
                         <div className="inline-flex w-full flex-wrap items-center justify-center gap-0.5">
