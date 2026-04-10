@@ -19,10 +19,14 @@ import {
   DialogPillSecondaryButton,
 } from '@/components/ui/dialog';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { isStaffRestrictedRole } from '@/lib/navAccess';
 
 const DEBOUNCE_MS = 600;
 
 const Settings = () => {
+  const { user } = useAuth();
+  const staffSettingsOnly = isStaffRestrictedRole(user?.role);
   const { settings, updateSettings, loadData } = useFinance();
   const { toast } = useToast();
   const [local, setLocal] = useState(() => ({ ...settings }));
@@ -102,7 +106,9 @@ const Settings = () => {
       <div className="space-y-4 sm:space-y-6 max-w-5xl mx-auto min-w-0 px-0 sm:px-2">
         <div>
           <h1 className="text-2xl sm:text-3xl font-bold">Settings</h1>
-          <p className="text-muted-foreground text-sm sm:text-base">Organize and manage your business settings.</p>
+          <p className="text-muted-foreground text-sm sm:text-base">
+            {staffSettingsOnly ? 'Theme and display preference.' : 'Organize and manage your business settings.'}
+          </p>
         </div>
 
         <motion.div
@@ -141,6 +147,8 @@ const Settings = () => {
             </p>
           </div>
 
+          {!staffSettingsOnly && (
+            <>
           {/* 2. Format Settings */}
           <div className="bg-card rounded-lg p-6 border border-secondary">
             <div className="flex items-center gap-2 mb-4">
@@ -540,6 +548,8 @@ const Settings = () => {
               Reset Data
             </Button>
           </div>
+            </>
+          )}
         </motion.div>
       </div>
 

@@ -10,6 +10,7 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { isStaffRestrictedRole } from '@/lib/navAccess';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const DEBOUNCE_MS = 600;
@@ -25,6 +26,7 @@ function formatPhoneDisplay(phone) {
 const Profile = () => {
   const { settings, updateSettings } = useFinance();
   const { user } = useAuth();
+  const staffHideBusinessProfile = isStaffRestrictedRole(user?.role);
   const { toast } = useToast();
   const [local, setLocal] = useState(() => ({
     firstName: user?.name?.split(' ')[0] || '',
@@ -228,7 +230,9 @@ const Profile = () => {
             Account
           </h1>
           <p className="text-muted-foreground text-sm sm:text-base mt-1">
-            Change the details of your profile here.
+            {staffHideBusinessProfile
+              ? 'Update your personal account details.'
+              : 'Change the details of your profile here.'}
           </p>
         </div>
 
@@ -386,104 +390,108 @@ const Profile = () => {
             </div>
           </div>
 
-          {/* 2. Business Profile */}
-          <div className="bg-card rounded-lg p-4 sm:p-6 border border-border">
-            {/* Business Profile Section */}
-            <div className="mb-6">
-              <div className="flex items-center gap-2 mb-4">
-                <Building2 className="w-5 h-5 text-primary shrink-0" />
-                <h2 className="text-base sm:text-lg font-semibold">Business Profile</h2>
-              </div>
-              <p className="text-sm text-muted-foreground mb-4">Your core business information used across invoices and reports.</p>
-              {/* Invoice From preview - how it appears on invoices */}
-              <div className="mb-6 p-4 rounded-lg border border-border bg-muted/30">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Invoice From (preview)</p>
-                <p className="font-bold text-lg text-foreground mb-2">{s.businessName || 'Company name'}</p>
-                <div className="text-sm text-muted-foreground space-y-1">
-                  {s.phone && <p>Phone — {formatPhoneDisplay(s.phone)}</p>}
-                  {s.companyEmail && <p>Email — {s.companyEmail}</p>}
-                  {s.website && <p>Website — {s.website}</p>}
-                  {s.address && <p>Address — {s.address}</p>}
-                  {!s.phone && !s.companyEmail && !s.website && !s.address && (
-                    <p className="text-muted-foreground/80">Add phone, email, and website below to see them here and on invoices.</p>
-                  )}
+          {!staffHideBusinessProfile && (
+            <>
+              {/* 2. Business Profile */}
+              <div className="bg-card rounded-lg p-4 sm:p-6 border border-border">
+                {/* Business Profile Section */}
+                <div className="mb-6">
+                  <div className="flex items-center gap-2 mb-4">
+                    <Building2 className="w-5 h-5 text-primary shrink-0" />
+                    <h2 className="text-base sm:text-lg font-semibold">Business Profile</h2>
+                  </div>
+                  <p className="text-sm text-muted-foreground mb-4">Your core business information used across invoices and reports.</p>
+                  {/* Invoice From preview - how it appears on invoices */}
+                  <div className="mb-6 p-4 rounded-lg border border-border bg-muted/30">
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2">Invoice From (preview)</p>
+                    <p className="font-bold text-lg text-foreground mb-2">{s.businessName || 'Company name'}</p>
+                    <div className="text-sm text-muted-foreground space-y-1">
+                      {s.phone && <p>Phone — {formatPhoneDisplay(s.phone)}</p>}
+                      {s.companyEmail && <p>Email — {s.companyEmail}</p>}
+                      {s.website && <p>Website — {s.website}</p>}
+                      {s.address && <p>Address — {s.address}</p>}
+                      {!s.phone && !s.companyEmail && !s.website && !s.address && (
+                        <p className="text-muted-foreground/80">Add phone, email, and website below to see them here and on invoices.</p>
+                      )}
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="company-name">Company Name</Label>
+                      <Input
+                        id="company-name"
+                        value={s.businessName}
+                        onChange={(e) => {
+                          setLocal((prev) => ({ ...prev, businessName: e.target.value }));
+                        }}
+                        placeholder="My Business"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone-number">Phone Number</Label>
+                      <Input
+                        id="phone-number"
+                        type="tel"
+                        value={s.phone ?? ''}
+                        onChange={(e) => {
+                          setLocal((prev) => ({ ...prev, phone: e.target.value }));
+                        }}
+                        placeholder="074 1525 537"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="company-email">Company Email</Label>
+                      <Input
+                        id="company-email"
+                        type="email"
+                        value={s.companyEmail ?? ''}
+                        onChange={(e) => {
+                          setLocal((prev) => ({ ...prev, companyEmail: e.target.value }));
+                        }}
+                        placeholder="hello@logozodev.com"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="company-address">Address (optional)</Label>
+                      <Input
+                        id="company-address"
+                        value={s.address ?? ''}
+                        onChange={(e) => {
+                          setLocal((prev) => ({ ...prev, address: e.target.value }));
+                        }}
+                        placeholder="Business address"
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="company-website">Website</Label>
+                      <Input
+                        id="company-website"
+                        value={s.website ?? ''}
+                        onChange={(e) => {
+                          setLocal((prev) => ({ ...prev, website: e.target.value }));
+                        }}
+                        placeholder="www.logozodev.com"
+                      />
+                    </div>
+                  </div>
                 </div>
-              </div>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="company-name">Company Name</Label>
-                  <Input
-                    id="company-name"
-                    value={s.businessName}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, businessName: e.target.value }));
-                    }}
-                    placeholder="My Business"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="phone-number">Phone Number</Label>
-                  <Input
-                    id="phone-number"
-                    type="tel"
-                    value={s.phone ?? ''}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, phone: e.target.value }));
-                    }}
-                    placeholder="074 1525 537"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company-email">Company Email</Label>
-                  <Input
-                    id="company-email"
-                    type="email"
-                    value={s.companyEmail ?? ''}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, companyEmail: e.target.value }));
-                    }}
-                    placeholder="hello@logozodev.com"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company-address">Address (optional)</Label>
-                  <Input
-                    id="company-address"
-                    value={s.address ?? ''}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, address: e.target.value }));
-                    }}
-                    placeholder="Business address"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="company-website">Website</Label>
-                  <Input
-                    id="company-website"
-                    value={s.website ?? ''}
-                    onChange={(e) => {
-                      setLocal((prev) => ({ ...prev, website: e.target.value }));
-                    }}
-                    placeholder="www.logozodev.com"
-                  />
-                </div>
-              </div>
-            </div>
 
-            {/* Single Save Button for All Sections */}
-            <div className="pt-6 border-t border-border">
-              <Button
-                type="button"
-                size="sm"
-                disabled={!hasBusinessChanges || savingBusiness}
-                onClick={handleSaveBusinessAndBank}
-                className="gap-2"
-              >
-                <Save className="h-4 w-4" />
-                {savingBusiness ? 'Saving...' : 'Save Business Details'}
-              </Button>
-            </div>
-          </div>
+                {/* Single Save Button for All Sections */}
+                <div className="pt-6 border-t border-border">
+                  <Button
+                    type="button"
+                    size="sm"
+                    disabled={!hasBusinessChanges || savingBusiness}
+                    onClick={handleSaveBusinessAndBank}
+                    className="gap-2"
+                  >
+                    <Save className="h-4 w-4" />
+                    {savingBusiness ? 'Saving...' : 'Save Business Details'}
+                  </Button>
+                </div>
+              </div>
+            </>
+          )}
 
         </motion.div>
       </div>
