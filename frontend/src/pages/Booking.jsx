@@ -84,7 +84,6 @@ function DetailRow({ icon: Icon, label, children, emphasize, mutedValue }) {
 }
 
 const emptyForm = () => ({
-  clientId: '',
   customerName: '',
   roomNumber: '',
   adults: '',
@@ -227,7 +226,6 @@ const Booking = () => {
     setSaving(true);
     try {
       const payload = {
-        clientId: form.clientId || null,
         customerName: form.customerName.trim(),
         roomNumber: form.roomNumber.trim(),
         adults: form.adults ? Number(form.adults) : 0,
@@ -243,6 +241,9 @@ const Booking = () => {
       };
       if (showStaffCommissionField && form.assignedStaffUserId) {
         payload.assignedStaffUserId = Number(form.assignedStaffUserId);
+      }
+      if (!editingBooking) {
+        payload.clientId = null;
       }
       if (editingBooking) {
         await api.bookings.update(editingBooking.id, payload);
@@ -268,7 +269,6 @@ const Booking = () => {
     const optionsForEdit = buildCommissionStaffOptions(staffUsers, salaryList, b);
     const staffOk = Number.isFinite(sid) && optionsForEdit.some((u) => Number(u.id) === sid);
     setForm({
-      clientId: b.clientId || '',
       customerName: b.customerName || '',
       roomNumber: b.roomNumber || '',
       adults: b.adults ?? '',
@@ -545,25 +545,6 @@ const Booking = () => {
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="clientId">Client (for invoice)</Label>
-                <select
-                  id="clientId"
-                  value={form.clientId}
-                  onChange={(e) => {
-                    const id = e.target.value;
-                    handleChange('clientId', id);
-                    const c = clients.find((x) => x.id === id);
-                    if (c && c.name) handleChange('customerName', c.name);
-                  }}
-                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  <option value="">Select client (optional)</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>{c.name}</option>
-                  ))}
-                </select>
-              </div>
               {showStaffCommissionField && (
                 <div className="space-y-1.5 md:col-span-2">
                   <Label htmlFor="assignedStaffUserId">Staff (commission / booking for)</Label>
