@@ -100,6 +100,29 @@ const emptyForm = () => ({
   assignedStaffUserId: '',
 });
 
+/** Salary period `always` = "Every booking" in Salary Management; include current booking assignee when editing. */
+function buildCommissionStaffOptions(staffUsers, salaryList, bookingForEdit) {
+  const managersAndReceptionists = staffUsers.filter((u) => {
+    const r = (u.role || '').toLowerCase();
+    return r === 'manager' || r === 'receptionist';
+  });
+  const everyBookingUserIds = new Set(
+    salaryList
+      .filter((s) => s.period === 'always' && s.linkedUserId != null && s.linkedUserId !== '')
+      .map((s) => Number(s.linkedUserId)),
+  );
+  const editStaffId =
+    bookingForEdit?.staffUserId != null && !Number.isNaN(Number(bookingForEdit.staffUserId))
+      ? Number(bookingForEdit.staffUserId)
+      : null;
+  return managersAndReceptionists.filter((u) => {
+    const id = Number(u.id);
+    if (everyBookingUserIds.has(id)) return true;
+    if (editStaffId != null && id === editStaffId) return true;
+    return false;
+  });
+}
+
 const Booking = () => {
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -119,6 +142,7 @@ const Booking = () => {
   const [addonDialogBooking, setAddonDialogBooking] = useState(null);
   const [addonRows, setAddonRows] = useState([]);
   const [addonSaving, setAddonSaving] = useState(false);
+  const [salaryList, setSalaryList] = useState([]);
 
   const closeBookingDialog = () => {
     setForm(emptyForm());
@@ -156,22 +180,25 @@ const Booking = () => {
   useEffect(() => {
     if (!isAdmin) {
       setStaffUsers([]);
+      setSalaryList([]);
       return;
     }
     api.users
       .list()
       .then((list) => setStaffUsers(Array.isArray(list) ? list : []))
       .catch(() => setStaffUsers([]));
+    api.salary
+      .list()
+      .then((list) => setSalaryList(Array.isArray(list) ? list : []))
+      .catch(() => setSalaryList([]));
   }, [isAdmin]);
 
   const commissionStaffOptions = useMemo(
-    () =>
-      staffUsers.filter((u) => {
-        const r = (u.role || '').toLowerCase();
-        return r === 'manager' || r === 'receptionist';
-      }),
-    [staffUsers]
+    () => buildCommissionStaffOptions(staffUsers, salaryList, editingBooking),
+    [staffUsers, salaryList, editingBooking],
   );
+
+  const showStaffCommissionField = isAdmin && commissionStaffOptions.length > 0;
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -188,7 +215,7 @@ const Booking = () => {
       });
       return;
     }
-    if (isAdmin && !String(form.assignedStaffUserId || '').trim()) {
+    if (showStaffCommissionField && !String(form.assignedStaffUserId || '').trim()) {
       toast({
         title: 'Select staff',
         description: 'Choose which manager or receptionist earns commission on this booking (room + add-ons).',
@@ -214,7 +241,7 @@ const Booking = () => {
         priceUsd: form.priceUsd ? Number(form.priceUsd) : 0,
         bookingComCommissionUsd: form.bookingComCommissionUsd ? Number(form.bookingComCommissionUsd) : 0,
       };
-      if (isAdmin) {
+      if (showStaffCommissionField && form.assignedStaffUserId) {
         payload.assignedStaffUserId = Number(form.assignedStaffUserId);
       }
       if (editingBooking) {
@@ -238,8 +265,8 @@ const Booking = () => {
   const openEdit = (b) => {
     setEditingBooking(b);
     const sid = b.staffUserId != null ? Number(b.staffUserId) : NaN;
-    const staffOk =
-      Number.isFinite(sid) && commissionStaffOptions.some((u) => Number(u.id) === sid);
+    const optionsForEdit = buildCommissionStaffOptions(staffUsers, salaryList, b);
+    const staffOk = Number.isFinite(sid) && optionsForEdit.some((u) => Number(u.id) === sid);
     setForm({
       clientId: b.clientId || '',
       customerName: b.customerName || '',
@@ -537,14 +564,14 @@ const Booking = () => {
                   ))}
                 </select>
               </div>
-              {isAdmin && (
+              {showStaffCommissionField && (
                 <div className="space-y-1.5 md:col-span-2">
                   <Label htmlFor="assignedStaffUserId">Staff (commission / booking for)</Label>
                   <select
                     id="assignedStaffUserId"
                     value={form.assignedStaffUserId}
                     onChange={(e) => handleChange('assignedStaffUserId', e.target.value)}
-                    required={isAdmin}
+                    required
                     className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
                     <option value="">Select manager or receptionist</option>
@@ -555,7 +582,7 @@ const Booking = () => {
                     ))}
                   </select>
                   <p className="text-xs text-muted-foreground">
-                    Commission is calculated from this staff member&apos;s rate on room price plus add-ons (LKR).
+                    Commission is calculated from this staff member&apos;s rate on room price plus add-ons (LKR). Only staff with Salary &gt; Period &quot;Every booking&quot; appear here.
                   </p>
                 </div>
               )}
