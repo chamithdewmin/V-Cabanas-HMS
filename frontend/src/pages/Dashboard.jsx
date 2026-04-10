@@ -24,6 +24,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
+import { bookingNetRevenueLkr } from '@/lib/bookingNetLkr';
 import { cn } from '@/lib/utils';
 
 /** Matches app theme `--primary` / `--destructive` (see index.css) */
@@ -54,15 +55,6 @@ function formatAxisMoney(v) {
   return String(Math.round(n));
 }
 
-/** Total LKR for a booking: room price + add-on lines (matches booking detail totals). */
-function bookingTotalRevenue(b) {
-  const room = Number(b?.price) || 0;
-  const addons = Array.isArray(b?.addons)
-    ? b.addons.reduce((s, a) => s + (Number(a.unitPrice) || 0) * (Number(a.quantity) || 1), 0)
-    : 0;
-  return room + addons;
-}
-
 function sumBookingRevenueForCalendarMonth(bookings, year, monthIndex) {
   let s = 0;
   bookings.forEach((b) => {
@@ -71,7 +63,7 @@ function sumBookingRevenueForCalendarMonth(bookings, year, monthIndex) {
     const parts = ymd.split('-').map(Number);
     const yy = parts[0];
     const mm = parts[1];
-    if (yy === year && mm - 1 === monthIndex) s += bookingTotalRevenue(b);
+    if (yy === year && mm - 1 === monthIndex) s += bookingNetRevenueLkr(b);
   });
   return s;
 }
@@ -114,7 +106,7 @@ function buildMonthlySeries(monthsBack, bookings, incomes, expenses) {
       const parts = ymd.split('-').map(Number);
       const yy = parts[0];
       const mm = parts[1];
-      if (yy === y && mm - 1 === m) revenue += bookingTotalRevenue(b);
+      if (yy === y && mm - 1 === m) revenue += bookingNetRevenueLkr(b);
     });
     incomes.forEach((inc) => {
       if (!inc?.date) return;
@@ -168,7 +160,7 @@ function buildWeeklySeries(weeksBack, bookings, incomes, expenses) {
       const cd = new Date(parts[0], parts[1] - 1, parts[2]);
       if (!inWeek(cd)) return;
       bookingCount += 1;
-      revenue += bookingTotalRevenue(b);
+      revenue += bookingNetRevenueLkr(b);
     });
 
     incomes.forEach((inc) => {
@@ -344,7 +336,7 @@ export default function FinanceDashboard() {
     const bookingsTrend = pctChange(todayBookings, yesterdayBookings);
 
     const totalRevenue =
-      bookings.reduce((s, b) => s + bookingTotalRevenue(b), 0) +
+      bookings.reduce((s, b) => s + bookingNetRevenueLkr(b), 0) +
       incomes.reduce((s, i) => s + (Number(i.amount) || 0), 0);
     const totalExpenses = expenses.reduce((s, e) => s + (Number(e.amount) || 0), 0);
 

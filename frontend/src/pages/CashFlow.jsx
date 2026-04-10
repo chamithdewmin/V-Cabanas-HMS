@@ -20,6 +20,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
+import { bookingNetRevenueLkr } from '@/lib/bookingNetLkr';
 import {
   Dialog,
   DialogContent,
@@ -40,16 +41,6 @@ import {
   ResponsiveContainer,
   Legend,
 } from 'recharts';
-
-/** LKR add-on lines total — matches Monthly Report TOTAL and booking table “Add on's”. */
-function sumAddonsLkr(booking) {
-  const addons = Array.isArray(booking?.addons) ? booking.addons : [];
-  return addons.reduce((sum, a) => {
-    const u = Number(a.unitPrice) || 0;
-    const q = Number(a.quantity) || 1;
-    return sum + u * q;
-  }, 0);
-}
 
 const SORT_OPTIONS = [
   { value: 'date-asc', label: 'Date (oldest first)' },
@@ -175,20 +166,14 @@ const CashFlow = () => {
       });
 
     bookings.forEach((b) => {
-      const bookingPrice = Number(b.price) || 0;
-      const bookingCom = Number(b.bookingComCommission) || 0;
-      const staffCommission = Number(b.staffCommissionAmount) || 0;
-      const subtotal = bookingPrice - bookingCom;
-      const addonsLkr = sumAddonsLkr(b);
-      /* Same net as Monthly Report LKR TOTAL: subtotal − staff commission + add-ons */
-      const bookingTotal = subtotal - staffCommission + addonsLkr;
+      const bookingTotal = bookingNetRevenueLkr(b);
       txList.push({
         id: b.id,
         type: 'inflow',
         date: b.checkIn || b.createdAt || new Date().toISOString(),
         source: b.customerName || b.clientName || 'Booking',
         category: 'Booking',
-        amount: Math.max(0, bookingTotal),
+        amount: bookingTotal,
         status: 'received',
         notes: `Room ${b.roomNumber || '—'} · net after Booking.com & staff + add-ons`,
         isRecurring: false,

@@ -39,6 +39,7 @@ import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
+import { sumAddonsLkr } from '@/lib/bookingNetLkr';
 
 const ALLOWED_ROOM_TYPES = ['double', 'triple'];
 const normalizeRoomTypeForForm = (v) => {
@@ -100,15 +101,6 @@ const emptyForm = () => ({
   roomType: 'double',
   assignedStaffUserId: '',
 });
-
-function sumAddonsLkr(booking) {
-  const addons = Array.isArray(booking?.addons) ? booking.addons : [];
-  return addons.reduce((sum, a) => {
-    const u = Number(a.unitPrice) || 0;
-    const q = Number(a.quantity) || 1;
-    return sum + u * q;
-  }, 0);
-}
 
 const Booking = () => {
   const { toast } = useToast();

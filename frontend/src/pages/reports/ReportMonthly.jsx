@@ -6,6 +6,7 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
+import { bookingNetRevenueUsd, sumAddonsLkr } from '@/lib/bookingNetLkr';
 import EmptyState from '@/components/EmptyState';
 
 const MONTHS = [
@@ -49,16 +50,6 @@ function formatCheckInDisplay(checkIn) {
   const d = parseCheckInLocal(checkIn);
   if (!d) return '—';
   return d.toLocaleDateString();
-}
-
-/** Sum add-on line amounts (LKR) for a booking. */
-function sumAddonsLkr(booking) {
-  const addons = Array.isArray(booking?.addons) ? booking.addons : [];
-  return addons.reduce((sum, a) => {
-    const u = Number(a.unitPrice) || 0;
-    const q = Number(a.quantity) || 1;
-    return sum + u * q;
-  }, 0);
 }
 
 export default function ReportMonthly() {
@@ -118,8 +109,7 @@ export default function ReportMonthly() {
           acc.bookingPrice += price;
           acc.bookingCom += bc;
           acc.subtotal += sub;
-          /* USD view: manager & add-ons stay LKR; TOTAL column stays USD subtotal (after Booking.com only). */
-          acc.total += sub;
+          acc.total += bookingNetRevenueUsd(b);
         } else {
           const price = Number(b.price) || 0;
           const bc = Number(b.bookingComCommission) || 0;
@@ -265,7 +255,7 @@ export default function ReportMonthly() {
                       price = Number(b.priceUsd) || 0;
                       bc = Number(b.bookingComCommissionUsd) || 0;
                       subtotal = price - bc;
-                      total = subtotal;
+                      total = bookingNetRevenueUsd(b);
                     } else {
                       price = Number(b.price) || 0;
                       bc = Number(b.bookingComCommission) || 0;
@@ -310,8 +300,8 @@ export default function ReportMonthly() {
         <p className="text-xs text-muted-foreground">
           {showUsd ? (
             <>
-              USD view uses saved booking USD amounts. Sub total (USD) is booking price minus Booking.com (both USD).
-              Manager commission and Add-ons stay in {settings.currency} (not converted). TOTAL (USD) is Sub total only; add-ons are shown in {settings.currency} for reference.
+              USD view uses saved booking USD amounts for price and Booking.com. Sub total (USD) is booking price minus Booking.com (both USD).
+              Manager commission and Add-ons are shown in {settings.currency}; TOTAL (USD) is the net in USD (same formula as LKR: Sub total minus manager plus add-ons), using the room’s implied rate (USD price ÷ LKR price) when both are set.
             </>
           ) : (
             <>
