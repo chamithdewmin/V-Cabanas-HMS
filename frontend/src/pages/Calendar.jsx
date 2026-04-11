@@ -1,6 +1,17 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, DollarSign, Receipt, FileText, TrendingUp, BedDouble } from 'lucide-react';
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Receipt,
+  FileText,
+  TrendingUp,
+  BedDouble,
+  LogIn,
+  LogOut,
+} from 'lucide-react';
 import { useFinance } from '@/contexts/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -55,6 +66,7 @@ const Calendar = () => {
         expenses: [],
         invoices: [],
         bookingsCheckIn: [],
+        bookingsCheckOut: [],
         bookingsRevenue: [],
       };
     }
@@ -63,6 +75,8 @@ const Calendar = () => {
       expenses: [],
       invoices: [],
       bookingsCheckIn: [],
+      /** Explicit check-out date (for calendar color / icons). */
+      bookingsCheckOut: [],
       /** Bookings whose net revenue is counted on this day (checkout when set, else check-in). */
       bookingsRevenue: [],
     };
@@ -91,6 +105,12 @@ const Calendar = () => {
       if (checkInStr === dateStr) {
         dayTransactions.bookingsCheckIn.push(booking);
       }
+      if (booking.checkOut) {
+        const checkOutStr = toLocalDateString(booking.checkOut);
+        if (checkOutStr === dateStr) {
+          dayTransactions.bookingsCheckOut.push(booking);
+        }
+      }
       const revStr = bookingRevenueDateStr(booking, toLocalDateString);
       if (revStr === dateStr) {
         dayTransactions.bookingsRevenue.push(booking);
@@ -118,6 +138,7 @@ const Calendar = () => {
       expenseTotal,
       invoiceTotal,
       bookingCheckInCount: transactions.bookingsCheckIn.length,
+      bookingCheckOutCount: transactions.bookingsCheckOut.length,
       bookingRevenueCount: transactions.bookingsRevenue.length,
       bookingNetCheckout,
       /** Income − expenses; booking stay revenue is shown separately as booking net (checkout). */
@@ -242,11 +263,14 @@ const Calendar = () => {
               }
 
               const totals = getDateTotals(date);
+              const hasCheckIn = totals.bookingCheckInCount > 0;
+              const hasCheckOut = totals.bookingCheckOutCount > 0;
               const hasTransactions =
                 totals.incomeTotal > 0 ||
                 totals.expenseTotal > 0 ||
                 totals.invoiceTotal > 0 ||
                 totals.bookingCheckInCount > 0 ||
+                totals.bookingCheckOutCount > 0 ||
                 totals.bookingRevenueCount > 0 ||
                 totals.bookingNetCheckout > 0;
               const isSelected = selectedDate && 
@@ -260,21 +284,48 @@ const Calendar = () => {
                   onClick={() => setSelectedDate(date)}
                   className={cn(
                     "aspect-square p-1 sm:p-2 rounded-lg border transition-all text-left",
-                    "hover:bg-secondary/50 focus:outline-none focus:ring-2 focus:ring-primary",
-                    isToday(date) && "border-primary border-2",
-                    isSelected && "bg-primary/10 border-primary",
+                    "hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-primary",
+                    isToday(date) && "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                    isSelected && "ring-2 ring-primary border-primary bg-primary/10",
+                    hasCheckIn &&
+                      !hasCheckOut &&
+                      "bg-sky-400/20 dark:bg-sky-500/15 border-sky-400/45",
+                    hasCheckOut &&
+                      !hasCheckIn &&
+                      "bg-zinc-300/35 dark:bg-zinc-600/25 border-zinc-400/55 dark:border-zinc-500/50",
+                    hasCheckIn &&
+                      hasCheckOut &&
+                      "border-sky-400/40 dark:border-sky-500/35 bg-gradient-to-br from-sky-400/25 to-zinc-400/25 dark:from-sky-500/15 dark:to-zinc-600/20",
                     !hasTransactions && "border-transparent"
                   )}
                 >
-                  <div className="flex flex-col h-full">
-                    <span className={cn(
-                      "text-sm font-semibold mb-1",
-                      isToday(date) ? "text-primary" : "text-foreground"
-                    )}>
-                      {date.getDate()}
-                    </span>
+                  <div className="flex flex-col h-full min-h-0">
+                    <div className="flex items-start justify-between gap-0.5 mb-0.5">
+                      <span
+                        className={cn(
+                          'text-sm font-semibold tabular-nums',
+                          isToday(date) ? 'text-primary' : 'text-foreground',
+                        )}
+                      >
+                        {date.getDate()}
+                      </span>
+                      <span className="flex items-center gap-0.5 shrink-0" aria-hidden>
+                        {hasCheckIn && (
+                          <LogIn
+                            className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400"
+                            strokeWidth={2.5}
+                          />
+                        )}
+                        {hasCheckOut && (
+                          <LogOut
+                            className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400"
+                            strokeWidth={2.5}
+                          />
+                        )}
+                      </span>
+                    </div>
                     {hasTransactions && (
-                      <div className="flex flex-col gap-0.5 text-xs">
+                      <div className="flex flex-col gap-0.5 text-xs min-h-0">
                         {totals.incomeTotal > 0 && (
                           <div className="text-green-500 flex items-center gap-1">
                             <DollarSign className="w-3 h-3" />
@@ -303,13 +354,20 @@ const Calendar = () => {
                         )}
                         {totals.bookingCheckInCount > 0 && (
                           <div
-                            className="text-sky-400/90 flex items-center gap-1 text-[10px]"
-                            title="Guest arrivals this day"
+                            className="text-sky-600 dark:text-sky-400 flex items-center gap-1 text-[10px] font-medium"
+                            title="Check-in"
                           >
-                            <BedDouble className="w-3 h-3 shrink-0" />
-                            <span className="truncate">
-                              {totals.bookingCheckInCount} check-in{totals.bookingCheckInCount !== 1 ? 's' : ''}
-                            </span>
+                            <LogIn className="w-3 h-3 shrink-0" strokeWidth={2.5} />
+                            <span className="truncate">{totals.bookingCheckInCount} in</span>
+                          </div>
+                        )}
+                        {totals.bookingCheckOutCount > 0 && (
+                          <div
+                            className="text-zinc-600 dark:text-zinc-400 flex items-center gap-1 text-[10px] font-medium"
+                            title="Check-out"
+                          >
+                            <LogOut className="w-3 h-3 shrink-0" strokeWidth={2.5} />
+                            <span className="truncate">{totals.bookingCheckOutCount} out</span>
                           </div>
                         )}
                       </div>
@@ -318,6 +376,21 @@ const Calendar = () => {
                 </button>
               );
             })}
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-muted-foreground">
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-sky-400/25 dark:bg-sky-500/20 border border-sky-400/40">
+                <LogIn className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" strokeWidth={2.5} />
+              </span>
+              Check-in day — light blue
+            </span>
+            <span className="inline-flex items-center gap-2">
+              <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-zinc-300/50 dark:bg-zinc-600/30 border border-zinc-400/50">
+                <LogOut className="w-3.5 h-3.5 text-zinc-600 dark:text-zinc-400" strokeWidth={2.5} />
+              </span>
+              Check-out day — light gray
+            </span>
           </div>
         </div>
 
@@ -504,11 +577,42 @@ const Calendar = () => {
                 </div>
               )}
 
+              {/* Check-outs (departures — explicit check-out date) */}
+              {selectedTransactions.bookingsCheckOut.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-zinc-600 dark:text-zinc-400 mb-2 flex items-center gap-2">
+                    <LogOut className="w-4 h-4" strokeWidth={2.5} />
+                    Check-outs ({selectedTransactions.bookingsCheckOut.length})
+                  </h4>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Departures on this date (light gray on the calendar).
+                  </p>
+                  <div className="space-y-2">
+                    {selectedTransactions.bookingsCheckOut.map((booking) => (
+                      <div
+                        key={`out-${booking.id}`}
+                        className="bg-secondary/30 rounded-lg p-3 flex items-center justify-between"
+                      >
+                        <div>
+                          <p className="font-medium">{booking.customerName || 'Unknown guest'}</p>
+                          <p className="text-sm text-muted-foreground">
+                            Room {booking.roomNumber || '—'}
+                            {booking.checkIn
+                              ? ` • In ${toLocalDateString(booking.checkIn)}`
+                              : ''}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* Check-ins (arrivals — no stay revenue on this day unless also checkout) */}
               {selectedTransactions.bookingsCheckIn.length > 0 && (
                 <div>
-                  <h4 className="text-sm font-semibold text-sky-400 mb-2 flex items-center gap-2">
-                    <BedDouble className="w-4 h-4" />
+                  <h4 className="text-sm font-semibold text-sky-500 dark:text-sky-400 mb-2 flex items-center gap-2">
+                    <LogIn className="w-4 h-4" strokeWidth={2.5} />
                     Check-ins ({selectedTransactions.bookingsCheckIn.length})
                   </h4>
                   <p className="text-xs text-muted-foreground mb-2">
@@ -539,6 +643,7 @@ const Calendar = () => {
                 selectedTransactions.expenses.length === 0 &&
                 selectedTransactions.invoices.length === 0 &&
                 selectedTransactions.bookingsRevenue.length === 0 &&
+                selectedTransactions.bookingsCheckOut.length === 0 &&
                 selectedTransactions.bookingsCheckIn.length === 0 && (
                   <p className="text-muted-foreground text-center py-8">
                     No transactions on this date
