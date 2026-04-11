@@ -287,9 +287,9 @@ const Calendar = () => {
                           </div>
                         )}
                         {totals.bookingNetCheckout > 0 && (
-                          <div className="text-emerald-400 flex items-center gap-1" title="Net booking revenue (checkout day)">
-                            <LogOut className="w-7 h-7 shrink-0" />
-                            <span className="truncate">
+                          <div className="flex items-center gap-1" title="Net booking revenue (checkout day)">
+                            <LogOut className="w-7 h-7 shrink-0 text-slate-400" />
+                            <span className="truncate text-emerald-400">
                               {totals.bookingNetCheckout.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </span>
                           </div>
@@ -453,7 +453,7 @@ const Calendar = () => {
               {selectedTransactions.bookingsRevenue.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-emerald-400 mb-1 flex items-center gap-2">
-                    <LogOut className="w-7 h-7 shrink-0" />
+                    <LogOut className="w-7 h-7 shrink-0 text-slate-400" />
                     Booking net (checkout){' '}
                     <span className="text-muted-foreground font-normal">
                       ({selectedTransactions.bookingsRevenue.length})
@@ -476,7 +476,11 @@ const Calendar = () => {
                             <p className="font-medium truncate">{booking.customerName || 'Unknown guest'}</p>
                             <p className="text-sm text-muted-foreground">
                               Room {booking.roomNumber || '—'} • In {cin}
-                              {cout ? ` → Out ${cout}` : ' • No check-out — net on check-in'}
+                              {cout ? (
+                                <span className="text-slate-400"> → Out {cout}</span>
+                              ) : (
+                                ' • No check-out — net on check-in'
+                              )}
                             </p>
                           </div>
                           <p className="font-bold text-emerald-400 shrink-0 tabular-nums">
@@ -513,7 +517,9 @@ const Calendar = () => {
                           <p className="font-medium">{booking.customerName || 'Unknown guest'}</p>
                           <p className="text-sm text-muted-foreground">
                             Room {booking.roomNumber || '—'}
-                            {booking.checkOut ? ` • Out ${toLocalYmd(booking.checkOut)}` : ''}
+                            {booking.checkOut ? (
+                              <span className="text-slate-400"> • Out {toLocalYmd(booking.checkOut)}</span>
+                            ) : null}
                           </p>
                         </div>
                       </div>
