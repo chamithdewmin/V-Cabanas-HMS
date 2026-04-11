@@ -110,6 +110,55 @@ async function loadUserCommissionFields(pool, userId) {
   };
 }
 
+/** Period value from Salary UI: "Every booking" → `always`. Picks linked manager/receptionist for commission. */
+const EVERY_BOOKING_PERIOD = 'always';
+
+async function pickLinkedStaffFromSalary(pool, filterBySalaryOwnerUserId) {
+  let rows;
+  if (filterBySalaryOwnerUserId != null) {
+    const r = await pool.query(
+      `SELECT s.linked_user_id
+       FROM salary s
+       INNER JOIN users u ON u.id = s.linked_user_id
+       WHERE LOWER(TRIM(COALESCE(s.period, ''))) = $2
+         AND s.linked_user_id IS NOT NULL
+         AND LOWER(COALESCE(u.role, '')) IN ('manager', 'receptionist')
+         AND s.user_id = $1
+       ORDER BY s.created_at DESC
+       LIMIT 1`,
+      [filterBySalaryOwnerUserId, EVERY_BOOKING_PERIOD]
+    );
+    rows = r.rows;
+  } else {
+    const r = await pool.query(
+      `SELECT s.linked_user_id
+       FROM salary s
+       INNER JOIN users u ON u.id = s.linked_user_id
+       WHERE LOWER(TRIM(COALESCE(s.period, ''))) = $1
+         AND s.linked_user_id IS NOT NULL
+         AND LOWER(COALESCE(u.role, '')) IN ('manager', 'receptionist')
+       ORDER BY s.created_at DESC
+       LIMIT 1`,
+      [EVERY_BOOKING_PERIOD]
+    );
+    rows = r.rows;
+  }
+  const lid = rows[0]?.linked_user_id;
+  if (lid == null) return null;
+  try {
+    return await assertValidCommissionStaffId(pool, lid);
+  } catch {
+    return null;
+  }
+}
+
+/** Staff to attribute admin bookings to: Salary rows (Every booking) created by this admin, else any such row. */
+async function resolveStaffFromSalaryEveryBooking(pool, adminUserId) {
+  let sid = await pickLinkedStaffFromSalary(pool, adminUserId);
+  if (sid == null) sid = await pickLinkedStaffFromSalary(pool, null);
+  return sid;
+}
+
 /** Find client by name (case-insensitive) for this user, or create one — used when saving a booking with a guest name. */
 async function ensureClientByName(pool, userId, nameTrim) {
   const name = (nameTrim || '').trim();
@@ -217,6 +266,14 @@ router.post('/', async (req, res) => {
         const u = await loadUserCommissionFields(pool, bookingUserId);
         role = (u.role || '').toLowerCase();
         ratePct = u.ratePct;
+      } else {
+        const autoStaffId = await resolveStaffFromSalaryEveryBooking(pool, req.user.id);
+        if (autoStaffId != null) {
+          bookingUserId = autoStaffId;
+          const u = await loadUserCommissionFields(pool, bookingUserId);
+          role = (u.role || '').toLowerCase();
+          ratePct = u.ratePct;
+        }
       }
     }
 
@@ -296,6 +353,9 @@ router.put('/:id', async (req, res) => {
     let ownerId = existing[0].user_id;
     if (adm && d.assignedStaffUserId !== undefined && d.assignedStaffUserId !== null && String(d.assignedStaffUserId).trim() !== '') {
       ownerId = await assertValidCommissionStaffId(pool, d.assignedStaffUserId);
+    } else if (adm && Number(existing[0].user_id) === Number(req.user.id)) {
+      const autoStaffId = await resolveStaffFromSalaryEveryBooking(pool, req.user.id);
+      if (autoStaffId != null) ownerId = autoStaffId;
     }
     if (adm && ownerId !== existing[0].user_id) {
       await pool.query('UPDATE bookings SET user_id = $2 WHERE id = $1', [id, ownerId]);

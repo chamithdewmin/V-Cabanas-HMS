@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { Helmet } from 'react-helmet';
 import {
   Plus,
@@ -119,6 +119,34 @@ const Booking = () => {
   const [addonDialogBooking, setAddonDialogBooking] = useState(null);
   const [addonRows, setAddonRows] = useState([]);
   const [addonSaving, setAddonSaving] = useState(false);
+  const pricingListRef = useRef([]);
+
+  useEffect(() => {
+    pricingListRef.current = pricingList;
+  }, [pricingList]);
+
+  const loadPricingCatalog = useCallback(
+    async (showToastOnError = false) => {
+      try {
+        const raw = await api.pricing.list();
+        const list = Array.isArray(raw) ? raw : [];
+        setPricingList(list);
+        return list;
+      } catch (err) {
+        console.error('pricing.list failed', err);
+        setPricingList([]);
+        if (showToastOnError) {
+          toast({
+            title: 'Could not load packages',
+            description: err.message || 'Try again or confirm the pricing API is deployed.',
+            variant: 'destructive',
+          });
+        }
+        return [];
+      }
+    },
+    [toast]
+  );
 
   const closeBookingDialog = () => {
     setForm(emptyForm());
@@ -150,8 +178,8 @@ const Booking = () => {
 
   useEffect(() => {
     api.clients.list().then((list) => setClients(Array.isArray(list) ? list : [])).catch(() => setClients([]));
-    api.pricing.list().then((list) => setPricingList(Array.isArray(list) ? list : [])).catch(() => setPricingList([]));
-  }, []);
+    void loadPricingCatalog(false);
+  }, [loadPricingCatalog]);
 
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
@@ -235,6 +263,7 @@ const Booking = () => {
   };
 
   const openAddonDialog = async (b) => {
+    await loadPricingCatalog(true);
     setAddonDialogBooking(b);
     setAddonRows(
       (b.addons || []).length > 0
@@ -246,12 +275,6 @@ const Booking = () => {
           }))
         : [{ pricingId: '', name: '', unitPrice: '', quantity: 1 }]
     );
-    try {
-      const list = await api.pricing.list();
-      setPricingList(Array.isArray(list) ? list : []);
-    } catch {
-      /* keep existing pricingList */
-    }
   };
 
   const addAddonRowPopup = () => {
@@ -270,7 +293,8 @@ const Booking = () => {
       if (!next[index]) return prev;
       next[index] = { ...next[index], [field]: value };
       if (field === 'pricingId') {
-        const p = findPricingById(value);
+        const id = String(value ?? '');
+        const p = pricingListRef.current.find((x) => String(x.id) === id) || null;
         if (p) {
           next[index] = {
             ...next[index],
@@ -347,9 +371,10 @@ const Booking = () => {
           <div>
             <h1 className="text-3xl font-bold">Booking</h1>
             <p className="text-muted-foreground">
-              Capture guest booking details for your rooms. Manager and receptionist staff commission uses each
-              user&apos;s rate from{' '}
-              <strong className="text-foreground font-medium">Salary Management</strong> (period: Every booking).
+              Capture guest booking details for your rooms. For admins, new bookings attach to the manager/receptionist
+              from <strong className="text-foreground font-medium">Salary Management</strong> with period{' '}
+              <strong className="text-foreground font-medium">Every booking</strong>; commission uses their saved rate on
+              subtotal (room − Booking.com).
             </p>
           </div>
           <div className="flex gap-3">

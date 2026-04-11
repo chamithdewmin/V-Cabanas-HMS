@@ -7,6 +7,7 @@ export const STAFF_ALLOWED_PATH_PREFIXES = [
   '/clients',
   '/booking',
   '/calendar',
+  '/pricing',
   '/daily-notes',
   '/settings',
   '/profile',

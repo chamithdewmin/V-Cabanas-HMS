@@ -193,6 +193,7 @@ export default function Sidebar() {
     '/clients',
     '/booking',
     '/calendar',
+    '/pricing',
     '/daily-notes',
     '/settings',
   ]);
