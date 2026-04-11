@@ -40,7 +40,7 @@ import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { sumAddonsLkr } from '@/lib/bookingNetLkr';
-import { toLocalYmd } from '@/lib/bookingRevenueDate';
+import { toLocalYmd, toDateInputValue } from '@/lib/bookingRevenueDate';
 
 const ALLOWED_ROOM_TYPES = ['double', 'triple'];
 const normalizeRoomTypeForForm = (v) => {
@@ -250,8 +250,8 @@ const Booking = () => {
       roomNumber: b.roomNumber || '',
       adults: b.adults ?? '',
       children: b.children ?? '',
-      checkIn: b.checkIn || '',
-      checkOut: b.checkOut || '',
+      checkIn: toDateInputValue(b.checkIn ?? b.check_in),
+      checkOut: toDateInputValue(b.checkOut ?? b.check_out),
       price: b.price ?? '',
       bookingComCommission: b.bookingComCommission ?? '',
       priceUsd: b.priceUsd ?? '',

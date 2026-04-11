@@ -11,6 +11,14 @@ export function toLocalYmd(val) {
   return `${y}-${m}-${day}`;
 }
 
+/** `value` for `<input type="date">` — must be `yyyy-mm-dd`; ISO datetimes are normalized. */
+export function toDateInputValue(val) {
+  if (val == null || val === '') return '';
+  const s = String(val).trim();
+  if (/^\d{4}-\d{2}-\d{2}$/.test(s)) return s;
+  return toLocalYmd(val) || '';
+}
+
 /**
  * Day used on the calendar for booking net revenue: checkout when set, else check-in only.
  */
