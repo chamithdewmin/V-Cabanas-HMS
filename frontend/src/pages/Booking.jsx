@@ -61,7 +61,7 @@ function DetailSection({ icon: Icon, title, children, className }) {
   );
 }
 
-function DetailRow({ icon: Icon, label, children, emphasize, mutedValue }) {
+function DetailRow({ icon: Icon, label, children, emphasize, mutedValue, iconClassName }) {
   return (
     <div
       className={cn(
@@ -70,7 +70,7 @@ function DetailRow({ icon: Icon, label, children, emphasize, mutedValue }) {
       )}
     >
       <div className="flex items-center gap-2 min-w-0 text-muted-foreground">
-        {Icon ? <Icon className="h-3.5 w-3.5 shrink-0 opacity-80" aria-hidden /> : null}
+        {Icon ? <Icon className={cn('h-3.5 w-3.5 shrink-0 opacity-80', iconClassName)} aria-hidden /> : null}
         <span className="text-sm leading-snug">{label}</span>
       </div>
       <div
@@ -484,13 +484,13 @@ const Booking = () => {
                       </td>
                       <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 text-sky-400">
-                          <LogIn className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
+                          <LogIn className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
                           {b.checkIn ? formatDateShort(b.checkIn) : '—'}
                         </span>
                       </td>
                       <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums whitespace-nowrap">
                         <span className="inline-flex items-center gap-1.5 text-slate-400">
-                          <LogOut className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
+                          <LogOut className="h-5 w-5 shrink-0 opacity-90" aria-hidden />
                           {b.checkOut ? formatDateShort(b.checkOut) : '—'}
                         </span>
                       </td>
@@ -828,12 +828,12 @@ const Booking = () => {
                         </div>
                         <div className="flex flex-col gap-2 rounded-lg bg-background/50 px-2.5 py-2 text-sm border border-secondary/80">
                           <div className="flex items-center gap-2 tabular-nums leading-snug">
-                            <LogIn className="h-4 w-4 shrink-0 text-sky-400" aria-hidden />
+                            <LogIn className="h-6 w-6 shrink-0 text-sky-400" aria-hidden />
                             <span className="text-muted-foreground">Check-in</span>
                             <span className="font-medium text-sky-400">{formatDateShort(d.checkIn)}</span>
                           </div>
                           <div className="flex items-center gap-2 tabular-nums leading-snug">
-                            <LogOut className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                            <LogOut className="h-6 w-6 shrink-0 text-slate-400" aria-hidden />
                             <span className="text-muted-foreground">Check-out</span>
                             <span className="font-medium text-slate-400">{formatDateShort(d.checkOut)}</span>
                           </div>
@@ -848,7 +848,7 @@ const Booking = () => {
                     <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-foreground">{fmtN(customerPayLkr)}</p>
                     <p className="text-xs text-muted-foreground mt-1">Room booking + add-ons (amount charged to the guest)</p>
                     <p className="text-xs text-muted-foreground mt-2 flex flex-wrap items-center gap-x-1 gap-y-0.5">
-                      <LogOut className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+                      <LogOut className="h-5 w-5 shrink-0 text-slate-400" aria-hidden />
                       <span>Booking net in Cash Flow and reports is dated on</span>
                       <span className="font-medium tabular-nums text-foreground">{formatDateShort(d.checkOut || d.checkIn)}</span>
                       {d.checkOut ? (
@@ -868,7 +868,7 @@ const Booking = () => {
                   )}
 
                   <DetailSection icon={Banknote} title="Guest payment (LKR)">
-                    <DetailRow icon={LogOut} label="Revenue date (Cash Flow)">
+                    <DetailRow icon={LogOut} iconClassName="h-5 w-5 opacity-90" label="Revenue date (Cash Flow)">
                       <span className="tabular-nums font-medium text-foreground">{formatDateShort(d.checkOut || d.checkIn)}</span>
                     </DetailRow>
                     <DetailRow icon={Banknote} label="Room booking price">

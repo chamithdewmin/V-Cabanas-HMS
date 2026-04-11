@@ -288,7 +288,7 @@ const Calendar = () => {
                         )}
                         {totals.bookingNetCheckout > 0 && (
                           <div className="text-emerald-400 flex items-center gap-1" title="Net booking revenue (checkout day)">
-                            <LogOut className="w-3 h-3" />
+                            <LogOut className="w-7 h-7 shrink-0" />
                             <span className="truncate">
                               {totals.bookingNetCheckout.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </span>
@@ -299,7 +299,7 @@ const Calendar = () => {
                             className="text-sky-400/90 flex items-center gap-1 text-[10px]"
                             title="Guest arrivals this day"
                           >
-                            <LogIn className="w-3 h-3 shrink-0" />
+                            <LogIn className="w-7 h-7 shrink-0" />
                             <span className="truncate">
                               {totals.bookingCheckInCount} check-in{totals.bookingCheckInCount !== 1 ? 's' : ''}
                             </span>
@@ -453,7 +453,7 @@ const Calendar = () => {
               {selectedTransactions.bookingsRevenue.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-emerald-400 mb-1 flex items-center gap-2">
-                    <LogOut className="w-4 h-4" />
+                    <LogOut className="w-7 h-7 shrink-0" />
                     Booking net (checkout){' '}
                     <span className="text-muted-foreground font-normal">
                       ({selectedTransactions.bookingsRevenue.length})
@@ -497,7 +497,7 @@ const Calendar = () => {
               {selectedTransactions.bookingsCheckIn.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-sky-400 mb-2 flex items-center gap-2">
-                    <LogIn className="w-4 h-4" />
+                    <LogIn className="w-7 h-7 shrink-0" />
                     Check-ins ({selectedTransactions.bookingsCheckIn.length})
                   </h4>
                   <p className="text-xs text-muted-foreground mb-2">
