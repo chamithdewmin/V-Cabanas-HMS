@@ -267,22 +267,22 @@ const Calendar = () => {
                       {date.getDate()}
                     </span>
                     {hasTransactions && (
-                      <div className="flex flex-col gap-0.5 text-xs">
+                      <div className="flex flex-col gap-0.5 text-sm leading-tight">
                         {totals.incomeTotal > 0 && (
                           <div className="text-green-500 flex items-center gap-1">
-                            <DollarSign className="w-3 h-3" />
+                            <DollarSign className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate">{totals.incomeTotal.toLocaleString()}</span>
                           </div>
                         )}
                         {totals.expenseTotal > 0 && (
                           <div className="text-red-500 flex items-center gap-1">
-                            <Receipt className="w-3 h-3" />
+                            <Receipt className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate">{totals.expenseTotal.toLocaleString()}</span>
                           </div>
                         )}
                         {totals.invoiceTotal > 0 && (
                           <div className="text-yellow-500 flex items-center gap-1">
-                            <FileText className="w-3 h-3" />
+                            <FileText className="w-3.5 h-3.5 shrink-0" />
                             <span className="truncate">{totals.invoiceTotal.toLocaleString()}</span>
                           </div>
                         )}
@@ -296,7 +296,7 @@ const Calendar = () => {
                         )}
                         {totals.bookingCheckInCount > 0 && (
                           <div
-                            className="text-sky-400/90 flex items-center gap-1 text-[10px]"
+                            className="text-sky-400/90 flex items-center gap-1"
                             title="Guest arrivals this day"
                           >
                             <LogIn className="w-7 h-7 shrink-0" />
