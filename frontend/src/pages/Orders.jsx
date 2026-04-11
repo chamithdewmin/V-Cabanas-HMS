@@ -80,6 +80,16 @@ const Orders = () => {
     });
   };
 
+  const handleBookingCheckInChange = (value) => {
+    setForm((prev) => {
+      const next = { ...prev, bookingCheckIn: value };
+      if (value && prev.bookingCheckOut && prev.bookingCheckOut < value) {
+        next.bookingCheckOut = '';
+      }
+      return next;
+    });
+  };
+
   const loadFromBooking = async () => {
     if (!form.clientId) {
       toast({ title: 'Select a client first', description: 'Choose a client to load their booking.', variant: 'destructive' });
@@ -629,6 +639,66 @@ const Orders = () => {
                     Load from booking
                   </Button>
                 )}
+              </div>
+            </div>
+
+            <div className="space-y-3 rounded-lg border border-secondary bg-secondary/20 px-3 py-3">
+              <p className="text-sm font-medium">Stay dates (optional)</p>
+              <p className="text-xs text-muted-foreground">
+                Shown on the invoice. Use the calendar or type YYYY-MM-DD. Check-out must be on or after check-in.
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="invoice-booking-check-in" className="text-xs text-muted-foreground">
+                    Check-in
+                  </Label>
+                  <Input
+                    id="invoice-booking-check-in"
+                    type="date"
+                    value={form.bookingCheckIn}
+                    onChange={(e) => handleBookingCheckInChange(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="invoice-booking-check-out" className="text-xs text-muted-foreground">
+                    Check-out
+                  </Label>
+                  <Input
+                    id="invoice-booking-check-out"
+                    type="date"
+                    value={form.bookingCheckOut}
+                    min={form.bookingCheckIn || undefined}
+                    onChange={(e) => handleChange('bookingCheckOut', e.target.value)}
+                  />
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div className="space-y-1.5">
+                  <Label htmlFor="invoice-booking-adults" className="text-xs text-muted-foreground">
+                    Adults (optional)
+                  </Label>
+                  <Input
+                    id="invoice-booking-adults"
+                    type="number"
+                    min="0"
+                    placeholder="—"
+                    value={form.bookingAdults}
+                    onChange={(e) => handleChange('bookingAdults', e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label htmlFor="invoice-booking-children" className="text-xs text-muted-foreground">
+                    Children (optional)
+                  </Label>
+                  <Input
+                    id="invoice-booking-children"
+                    type="number"
+                    min="0"
+                    placeholder="—"
+                    value={form.bookingChildren}
+                    onChange={(e) => handleChange('bookingChildren', e.target.value)}
+                  />
+                </div>
               </div>
             </div>
 

@@ -180,6 +180,16 @@ const Booking = () => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleCheckInChange = (value) => {
+    setForm((prev) => {
+      const next = { ...prev, checkIn: value };
+      if (value && prev.checkOut && prev.checkOut < value) {
+        next.checkOut = '';
+      }
+      return next;
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -646,7 +656,7 @@ const Booking = () => {
                     id="checkIn"
                     type="date"
                     value={form.checkIn}
-                    onChange={(e) => handleChange('checkIn', e.target.value)}
+                    onChange={(e) => handleCheckInChange(e.target.value)}
                   />
                 </div>
 
@@ -656,6 +666,7 @@ const Booking = () => {
                     id="checkOut"
                     type="date"
                     value={form.checkOut}
+                    min={form.checkIn || undefined}
                     onChange={(e) => handleChange('checkOut', e.target.value)}
                   />
                 </div>
