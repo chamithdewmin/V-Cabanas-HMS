@@ -3,12 +3,14 @@
  * Tailwind surfaces: `bg-report-card`, `border-report-border` (see tailwind.config.js).
  */
 export const REPORT_CHART_PALETTE = {
-  bg: '#030712',
-  bg2: '#0f172a',
-  /** Aligns with dashboard / Tailwind gray-900 card surfaces */
-  card: '#111827',
-  border: '#1f2937',
-  border2: '#374151',
+  /** Page canvas (full-bleed report backgrounds) */
+  bg: '#000000',
+  /** Inset strips, inputs, table chrome */
+  bg2: '#0a0a0a',
+  /** Primary card / panel surface (matches Tailwind `report-card`) */
+  card: '#0c0c0c',
+  border: '#1a1a1a',
+  border2: '#2a2a2a',
   text: '#ffffff',
   text2: '#d1d9e6',
   muted: '#8b9ab0',
@@ -21,10 +23,10 @@ export const REPORT_CHART_PALETTE = {
   purple: '#a78bfa',
   orange: '#f97316',
   /** Dark table row hover (semantic tables) */
-  rowHover: '#1f2937',
+  rowHover: '#141414',
   /** Toolbar buttons on full-page report UIs */
-  chromeBg: '#111827',
-  chromeBorder: '#1f2937',
+  chromeBg: '#0c0c0c',
+  chromeBorder: '#2a2a2a',
 };
 
 /** Short alias used in report pages */

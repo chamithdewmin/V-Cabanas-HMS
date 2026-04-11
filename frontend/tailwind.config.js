@@ -51,10 +51,10 @@ module.exports = {
           'active-bg': 'hsl(var(--sidebar-active-bg))',
           'active-accent': 'hsl(var(--sidebar-active-accent))',
         },
-        /** Matches ReportOverview / src/lib/reportTheme.js REPORT_CHART_PALETTE (card, border) */
+        /** Matches src/lib/reportTheme.js REPORT_CHART_PALETTE.card */
         report: {
-          card: '#111827',
-          border: '#1f2937',
+          card: '#0c0c0c',
+          border: '#1a1a1a',
         },
       },
       borderRadius: {
