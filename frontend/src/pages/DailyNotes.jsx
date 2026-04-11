@@ -131,6 +131,13 @@ const DailyNotes = () => {
     return s;
   };
 
+  const formatRoleLabel = (role) => {
+    if (!role) return '—';
+    return String(role)
+      .replace(/_/g, ' ')
+      .replace(/\b\w/g, (ch) => ch.toUpperCase());
+  };
+
   return (
     <>
       <Helmet>
@@ -159,11 +166,12 @@ const DailyNotes = () => {
 
         <div className="bg-card rounded-lg border border-secondary overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full min-w-[36rem] border-collapse table-auto">
+            <table className="w-full min-w-[44rem] border-collapse table-auto">
               <colgroup>
                 <col className="w-[9.5rem]" />
                 <col className="w-[7.5rem]" />
                 <col className="min-w-[12rem]" />
+                <col className="min-w-[10rem]" />
                 <col className="w-[6.5rem]" />
               </colgroup>
               <thead className="bg-secondary">
@@ -171,19 +179,20 @@ const DailyNotes = () => {
                   <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-left">Date</th>
                   <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-right">Amount</th>
                   <th className="px-4 py-2.5 text-sm font-semibold !text-left">Note</th>
+                  <th className="px-4 py-2.5 text-sm font-semibold !text-left">Added by</th>
                   <th className="px-4 py-2.5 text-sm font-semibold whitespace-nowrap !text-center">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {loading ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">
                       Loading...
                     </td>
                   </tr>
                 ) : notes.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-4 py-8 text-center text-muted-foreground text-sm">
+                    <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground text-sm">
                       No daily notes yet. Click &quot;Add Note&quot; to create one.
                     </td>
                   </tr>
@@ -198,6 +207,12 @@ const DailyNotes = () => {
                       </td>
                       <td className="px-4 py-2 text-sm !text-left align-middle text-foreground max-w-md truncate" title={n.note || ''}>
                         {n.note || '—'}
+                      </td>
+                      <td className="px-4 py-2 !text-left align-middle text-foreground">
+                        <div className="flex flex-col gap-0.5 max-w-[14rem]" title={n.addedByName ? `${formatRoleLabel(n.addedByRole)} · ${n.addedByName}` : ''}>
+                          <span className="text-xs text-muted-foreground">{formatRoleLabel(n.addedByRole)}</span>
+                          <span className="text-sm font-medium leading-tight">{n.addedByName || '—'}</span>
+                        </div>
                       </td>
                       <td className="px-4 py-2 !text-center align-middle">
                         <div className="inline-flex w-full items-center justify-center gap-1">

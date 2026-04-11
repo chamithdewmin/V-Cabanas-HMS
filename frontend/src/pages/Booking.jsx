@@ -275,7 +275,7 @@ const Booking = () => {
     setIsDialogOpen(true);
   };
 
-  const openAddonDialog = (b) => {
+  const openAddonDialog = async (b) => {
     setAddonDialogBooking(b);
     setAddonRows(
       (b.addons || []).length > 0
@@ -287,6 +287,12 @@ const Booking = () => {
           }))
         : [{ pricingId: '', name: '', unitPrice: '', quantity: 1 }]
     );
+    try {
+      const list = await api.pricing.list();
+      setPricingList(Array.isArray(list) ? list : []);
+    } catch {
+      /* keep existing pricingList */
+    }
   };
 
   const addAddonRowPopup = () => {

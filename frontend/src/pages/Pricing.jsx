@@ -18,10 +18,12 @@ import {
 import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Pricing = () => {
   const { toast } = useToast();
   const confirm = useConfirm();
+  const { user } = useAuth();
   const [items, setItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -127,6 +129,14 @@ const Pricing = () => {
     return i.name.toLowerCase().includes(q) || (i.notes || '').toLowerCase().includes(q);
   });
 
+  const canManageItem = (item) => {
+    const role = (user?.role || '').toLowerCase();
+    if (role === 'admin') return true;
+    const uid = user?.id != null ? Number(user.id) : NaN;
+    const owner = item.userId != null ? Number(item.userId) : NaN;
+    return Number.isFinite(uid) && Number.isFinite(owner) && uid === owner;
+  };
+
   return (
     <>
       <Helmet>
@@ -229,22 +239,30 @@ const Pricing = () => {
                       </td>
                       <td className="px-4 py-3 !text-center align-middle">
                         <div className="inline-flex w-full items-center justify-center gap-1">
-                          <button
-                            type="button"
-                            onClick={() => openEdit(item)}
-                            className="p-1.5 hover:bg-secondary rounded-md transition-colors text-green-500 hover:text-green-400"
-                            title="Edit"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleDelete(item)}
-                            className="p-1.5 hover:bg-secondary rounded-md transition-colors text-red-500 hover:text-red-400"
-                            title="Delete"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canManageItem(item) ? (
+                            <>
+                              <button
+                                type="button"
+                                onClick={() => openEdit(item)}
+                                className="p-1.5 hover:bg-secondary rounded-md transition-colors text-green-500 hover:text-green-400"
+                                title="Edit"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleDelete(item)}
+                                className="p-1.5 hover:bg-secondary rounded-md transition-colors text-red-500 hover:text-red-400"
+                                title="Delete"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </>
+                          ) : (
+                            <span className="text-xs text-muted-foreground px-2" title="Only the creator or an admin can edit this item">
+                              —
+                            </span>
+                          )}
                         </div>
                       </td>
                     </motion.tr>

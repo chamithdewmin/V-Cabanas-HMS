@@ -6,12 +6,19 @@ import { isAdmin } from '../lib/roleScope.js';
 const router = express.Router();
 router.use(authMiddleware);
 
+const noteSelect = `
+  dn.id, dn.user_id, dn.note_date, dn.amount, dn.note, dn.created_at,
+  u.name AS user_name, u.role AS user_role
+`;
+
 const toNote = (row) => ({
   id: row.id,
   noteDate: row.note_date,
   amount: row.amount != null ? parseFloat(row.amount) : null,
   note: row.note || '',
   createdAt: row.created_at,
+  addedByName: row.user_name ?? null,
+  addedByRole: row.user_role ?? null,
 });
 
 router.get('/', async (req, res) => {
@@ -20,8 +27,8 @@ router.get('/', async (req, res) => {
     const adm = isAdmin(req);
     const { rows } = await pool.query(
       adm
-        ? 'SELECT * FROM daily_notes ORDER BY note_date DESC, created_at DESC'
-        : 'SELECT * FROM daily_notes WHERE user_id = $1 ORDER BY note_date DESC, created_at DESC',
+        ? `SELECT ${noteSelect} FROM daily_notes dn LEFT JOIN users u ON u.id = dn.user_id ORDER BY dn.note_date DESC, dn.created_at DESC`
+        : `SELECT ${noteSelect} FROM daily_notes dn LEFT JOIN users u ON u.id = dn.user_id WHERE dn.user_id = $1 ORDER BY dn.note_date DESC, dn.created_at DESC`,
       adm ? [] : [uid]
     );
     res.json(rows.map(toNote));
@@ -47,7 +54,10 @@ router.post('/', async (req, res) => {
         (d.note || '').trim(),
       ]
     );
-    const { rows } = await pool.query('SELECT * FROM daily_notes WHERE id = $1', [id]);
+    const { rows } = await pool.query(
+      `SELECT ${noteSelect} FROM daily_notes dn LEFT JOIN users u ON u.id = dn.user_id WHERE dn.id = $1`,
+      [id]
+    );
     res.status(201).json(toNote(rows[0]));
   } catch (err) {
     console.error(err);
@@ -79,7 +89,9 @@ router.put('/:id', async (req, res) => {
       );
     }
     const { rows } = await pool.query(
-      adm ? 'SELECT * FROM daily_notes WHERE id = $1' : 'SELECT * FROM daily_notes WHERE id = $1 AND user_id = $2',
+      adm
+        ? `SELECT ${noteSelect} FROM daily_notes dn LEFT JOIN users u ON u.id = dn.user_id WHERE dn.id = $1`
+        : `SELECT ${noteSelect} FROM daily_notes dn LEFT JOIN users u ON u.id = dn.user_id WHERE dn.id = $1 AND dn.user_id = $2`,
       adm ? [id] : [id, uid]
     );
     if (!rows[0]) return res.status(404).json({ error: 'Not found' });

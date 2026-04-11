@@ -8,20 +8,17 @@ router.use(authMiddleware);
 
 const toPricing = (row) => ({
   id: row.id,
+  userId: row.user_id,
   name: row.name || '',
   price: parseFloat(row.price) || 0,
   notes: row.notes || '',
   createdAt: row.created_at,
 });
 
+/** Full catalog for all roles (booking add-ons, Pricing page). Mutations stay scoped per row. */
 router.get('/', async (req, res) => {
   try {
-    const uid = req.user.id;
-    const adm = isAdmin(req);
-    const { rows } = await pool.query(
-      adm ? 'SELECT * FROM pricing ORDER BY created_at DESC' : 'SELECT * FROM pricing WHERE user_id = $1 ORDER BY created_at DESC',
-      adm ? [] : [uid]
-    );
+    const { rows } = await pool.query('SELECT * FROM pricing ORDER BY created_at DESC');
     res.json(rows.map(toPricing));
   } catch (err) {
     console.error(err);
