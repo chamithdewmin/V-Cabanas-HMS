@@ -174,7 +174,7 @@ export default function ReportMonthly() {
           </div>
         </div>
 
-        <div className="rounded-lg border border-secondary bg-card p-4">
+        <div className="rounded-lg border border-secondary bg-card p-4 dark:border-report-border dark:bg-report-card">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:items-start sm:gap-x-10 sm:gap-y-0 sm:max-w-md">
             <div className="flex flex-col gap-1.5">
               <Label htmlFor="report-year" className="block">
@@ -213,7 +213,7 @@ export default function ReportMonthly() {
           </div>
         </div>
 
-        <div className="overflow-hidden rounded-lg border border-secondary bg-card">
+        <div className="overflow-hidden rounded-lg border border-secondary bg-card dark:border-report-border dark:bg-report-card">
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead className="bg-secondary">

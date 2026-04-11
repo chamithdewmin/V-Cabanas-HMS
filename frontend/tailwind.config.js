@@ -51,6 +51,11 @@ module.exports = {
           'active-bg': 'hsl(var(--sidebar-active-bg))',
           'active-accent': 'hsl(var(--sidebar-active-accent))',
         },
+        /** Matches ReportOverview / src/lib/reportTheme.js REPORT_CHART_PALETTE (card, border) */
+        report: {
+          card: '#13161e',
+          border: '#1e2433',
+        },
       },
       borderRadius: {
         lg: '0.75rem',

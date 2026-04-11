@@ -1,6 +1,6 @@
 /**
- * Report / chart hex palette — matches design tokens in src/index.css
- * (page bg, cards, borders, series colors, invoice accent orange).
+ * Report / chart hex palette — Business Overview & chart-heavy reports use these inline.
+ * Tailwind surfaces: `bg-report-card`, `border-report-border` (see tailwind.config.js).
  */
 export const REPORT_CHART_PALETTE = {
   bg: '#0c0e14',

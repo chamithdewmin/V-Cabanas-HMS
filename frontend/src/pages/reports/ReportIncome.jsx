@@ -186,7 +186,7 @@ const ReportIncome = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-card rounded-lg p-6 border border-secondary"
+            className="rounded-lg border border-secondary bg-card p-6 dark:border-report-border dark:bg-report-card"
           >
             <h2 className="text-xl font-bold mb-4">Income by Client</h2>
             {byClient.length > 0 ? (
@@ -195,7 +195,7 @@ const ReportIncome = () => {
                   <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
                   <XAxis type="number" />
                   <YAxis dataKey="name" type="category" width={80} />
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem' }} />
+                  <Tooltip contentStyle={{ backgroundColor: C.card, border: `1px solid ${C.border2}`, borderRadius: '0.5rem' }} />
                   <Bar dataKey="amount" name="Amount" fill="#22c55e" radius={[0, 4, 4, 0]} />
                 </BarChart>
               </ResponsiveContainer>
@@ -208,7 +208,7 @@ const ReportIncome = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-card rounded-lg p-6 border border-secondary"
+            className="rounded-lg border border-secondary bg-card p-6 dark:border-report-border dark:bg-report-card"
           >
             <h2 className="text-xl font-bold mb-4">Income by Service</h2>
             {byService.length > 0 ? (
@@ -227,7 +227,7 @@ const ReportIncome = () => {
                       <Cell key={i} fill={COLORS[i % COLORS.length]} />
                     ))}
                   </Pie>
-                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))', borderRadius: '0.5rem' }} />
+                  <Tooltip contentStyle={{ backgroundColor: C.card, border: `1px solid ${C.border2}`, borderRadius: '0.5rem' }} />
                 </PieChart>
               </ResponsiveContainer>
             ) : (
