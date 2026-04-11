@@ -1,18 +1,22 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, DollarSign, Receipt, FileText, TrendingUp, BedDouble } from 'lucide-react';
+import {
+  Calendar as CalendarIcon,
+  ChevronLeft,
+  ChevronRight,
+  DollarSign,
+  Receipt,
+  FileText,
+  TrendingUp,
+  LogIn,
+  LogOut,
+} from 'lucide-react';
 import { useFinance } from '@/contexts/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import { bookingNetRevenueLkr } from '@/lib/bookingNetLkr';
-
-/** Date when booking revenue is recognized: checkout (payment day); falls back to check-in if no checkout. */
-function bookingRevenueDateStr(booking, toLocalDateString) {
-  const raw = booking?.checkOut || booking?.checkIn;
-  if (!raw) return '';
-  return toLocalDateString(raw);
-}
+import { toLocalYmd, bookingCalendarRevenueYmd } from '@/lib/bookingRevenueDate';
 
 const Calendar = () => {
   const { incomes, expenses, invoices, settings, loadData } = useFinance();
@@ -35,20 +39,9 @@ const Calendar = () => {
 
   const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-  // Format any date (Date or string from API) as local YYYY-MM-DD so calendar matches DB dates correctly
-  const toLocalDateString = (val) => {
-    if (val == null) return '';
-    const d = val instanceof Date ? val : new Date(val);
-    if (Number.isNaN(d.getTime())) return '';
-    const y = d.getFullYear();
-    const m = String(d.getMonth() + 1).padStart(2, '0');
-    const day = String(d.getDate()).padStart(2, '0');
-    return `${y}-${m}-${day}`;
-  };
-
   // Get transactions for a specific date (compare local dates so timezone doesn't shift the day)
   const getTransactionsForDate = (date) => {
-    const dateStr = toLocalDateString(date);
+    const dateStr = toLocalYmd(date);
     if (!dateStr) {
       return {
         incomes: [],
@@ -68,30 +61,30 @@ const Calendar = () => {
     };
 
     incomes.forEach(income => {
-      if (toLocalDateString(income.date) === dateStr) {
+      if (toLocalYmd(income.date) === dateStr) {
         dayTransactions.incomes.push(income);
       }
     });
 
     expenses.forEach(expense => {
-      if (toLocalDateString(expense.date) === dateStr) {
+      if (toLocalYmd(expense.date) === dateStr) {
         dayTransactions.expenses.push(expense);
       }
     });
 
     invoices.forEach(invoice => {
       const invDate = invoice.dueDate ?? invoice.createdAt;
-      if (invDate && toLocalDateString(invDate) === dateStr) {
+      if (invDate && toLocalYmd(invDate) === dateStr) {
         dayTransactions.invoices.push(invoice);
       }
     });
 
     bookings.forEach((booking) => {
-      const checkInStr = booking.checkIn ? toLocalDateString(booking.checkIn) : '';
+      const checkInStr = booking.checkIn ? toLocalYmd(booking.checkIn) : '';
       if (checkInStr === dateStr) {
         dayTransactions.bookingsCheckIn.push(booking);
       }
-      const revStr = bookingRevenueDateStr(booking, toLocalDateString);
+      const revStr = bookingCalendarRevenueYmd(booking);
       if (revStr === dateStr) {
         dayTransactions.bookingsRevenue.push(booking);
       }
@@ -295,7 +288,7 @@ const Calendar = () => {
                         )}
                         {totals.bookingNetCheckout > 0 && (
                           <div className="text-emerald-400 flex items-center gap-1" title="Net booking revenue (checkout day)">
-                            <BedDouble className="w-3 h-3" />
+                            <LogOut className="w-3 h-3" />
                             <span className="truncate">
                               {totals.bookingNetCheckout.toLocaleString(undefined, { maximumFractionDigits: 0 })}
                             </span>
@@ -306,7 +299,7 @@ const Calendar = () => {
                             className="text-sky-400/90 flex items-center gap-1 text-[10px]"
                             title="Guest arrivals this day"
                           >
-                            <BedDouble className="w-3 h-3 shrink-0" />
+                            <LogIn className="w-3 h-3 shrink-0" />
                             <span className="truncate">
                               {totals.bookingCheckInCount} check-in{totals.bookingCheckInCount !== 1 ? 's' : ''}
                             </span>
@@ -460,7 +453,7 @@ const Calendar = () => {
               {selectedTransactions.bookingsRevenue.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-emerald-400 mb-1 flex items-center gap-2">
-                    <BedDouble className="w-4 h-4" />
+                    <LogOut className="w-4 h-4" />
                     Booking net (checkout){' '}
                     <span className="text-muted-foreground font-normal">
                       ({selectedTransactions.bookingsRevenue.length})
@@ -472,12 +465,8 @@ const Calendar = () => {
                   <div className="space-y-2">
                     {selectedTransactions.bookingsRevenue.map((booking) => {
                       const net = bookingNetRevenueLkr(booking);
-                      const cin = booking.checkIn
-                        ? toLocalDateString(booking.checkIn)
-                        : '—';
-                      const cout = booking.checkOut
-                        ? toLocalDateString(booking.checkOut)
-                        : null;
+                      const cin = booking.checkIn ? toLocalYmd(booking.checkIn) : '—';
+                      const cout = booking.checkOut ? toLocalYmd(booking.checkOut) : null;
                       return (
                         <div
                           key={booking.id}
@@ -508,7 +497,7 @@ const Calendar = () => {
               {selectedTransactions.bookingsCheckIn.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-sky-400 mb-2 flex items-center gap-2">
-                    <BedDouble className="w-4 h-4" />
+                    <LogIn className="w-4 h-4" />
                     Check-ins ({selectedTransactions.bookingsCheckIn.length})
                   </h4>
                   <p className="text-xs text-muted-foreground mb-2">
@@ -524,9 +513,7 @@ const Calendar = () => {
                           <p className="font-medium">{booking.customerName || 'Unknown guest'}</p>
                           <p className="text-sm text-muted-foreground">
                             Room {booking.roomNumber || '—'}
-                            {booking.checkOut
-                              ? ` • Out ${toLocalDateString(booking.checkOut)}`
-                              : ''}
+                            {booking.checkOut ? ` • Out ${toLocalYmd(booking.checkOut)}` : ''}
                           </p>
                         </div>
                       </div>

@@ -7,6 +7,11 @@ import { useToast } from '@/components/ui/use-toast';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
 import { bookingNetRevenueUsd, sumAddonsLkr } from '@/lib/bookingNetLkr';
+import {
+  bookingFinancialAttributionRaw,
+  bookingFinancialAttributionYmd,
+  toLocalYmd,
+} from '@/lib/bookingRevenueDate';
 import EmptyState from '@/components/EmptyState';
 
 const MONTHS = [
@@ -40,14 +45,19 @@ function parseCheckInLocal(checkIn) {
   return Number.isNaN(dt.getTime()) ? null : dt;
 }
 
-function isInSelectedMonth(checkIn, year, monthIndex) {
-  const d = parseCheckInLocal(checkIn);
-  if (!d) return false;
-  return d.getFullYear() === year && d.getMonth() === monthIndex;
+function isInSelectedRevenueMonth(booking, year, monthIndex) {
+  const ymd = bookingFinancialAttributionYmd(booking);
+  if (!ymd) return false;
+  const parts = ymd.split('-').map(Number);
+  return parts[0] === year && parts[1] - 1 === monthIndex;
 }
 
-function formatCheckInDisplay(checkIn) {
-  const d = parseCheckInLocal(checkIn);
+function formatBookingRevenueDateDisplay(booking) {
+  const raw = bookingFinancialAttributionRaw(booking);
+  if (!raw) return '—';
+  const ymd = toLocalYmd(raw);
+  if (!ymd) return '—';
+  const d = parseCheckInLocal(ymd);
   if (!d) return '—';
   return d.toLocaleDateString();
 }
@@ -91,7 +101,7 @@ export default function ReportMonthly() {
   }, []);
 
   const filtered = useMemo(
-    () => bookings.filter((b) => isInSelectedMonth(b.checkIn, year, month)),
+    () => bookings.filter((b) => isInSelectedRevenueMonth(b, year, month)),
     [bookings, year, month]
   );
 
@@ -136,7 +146,7 @@ export default function ReportMonthly() {
     <>
       <Helmet>
         <title>Monthly Report - V Cabanas HMS</title>
-        <meta name="description" content="Bookings by check-in month" />
+        <meta name="description" content="Bookings by checkout month (revenue date)" />
       </Helmet>
 
       <div className="space-y-6">
@@ -144,7 +154,7 @@ export default function ReportMonthly() {
           <div>
             <h1 className="text-3xl font-bold">Monthly Report</h1>
             <p className="text-muted-foreground">
-              Bookings filtered by check-in date for the selected month.
+              Bookings in the month of <strong className="text-foreground font-medium">check-out</strong> (or check-in if check-out is not set yet). Totals match Cash Flow booking inflows.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -210,7 +220,7 @@ export default function ReportMonthly() {
                 <tr>
                   <th className="px-4 py-3 text-sm font-semibold !text-left">No</th>
                   <th className="px-4 py-3 text-sm font-semibold !text-left">Name</th>
-                  <th className="px-4 py-3 text-sm font-semibold !text-left">Check in date</th>
+                  <th className="px-4 py-3 text-sm font-semibold !text-left">Checkout (revenue) date</th>
                   <th className="px-4 py-3 text-sm font-semibold !text-right">
                     Booking price{showUsd ? ' (USD)' : ''}
                   </th>
@@ -239,7 +249,7 @@ export default function ReportMonthly() {
                     <td colSpan={9} className="p-0 align-top">
                       <EmptyState
                         title="No bookings this month"
-                        description="No check-ins fall in the selected month. Try another year or month."
+                        description="No bookings have a checkout (or fallback check-in) in the selected month. Try another year or month."
                       />
                     </td>
                   </tr>
@@ -266,7 +276,7 @@ export default function ReportMonthly() {
                       <tr key={b.id} className="border-b border-secondary hover:bg-secondary/30">
                         <td className="px-4 py-3 text-sm tabular-nums">{idx + 1}</td>
                         <td className="px-4 py-3 text-sm">{b.customerName || '—'}</td>
-                        <td className="px-4 py-3 text-sm">{formatCheckInDisplay(b.checkIn)}</td>
+                        <td className="px-4 py-3 text-sm">{formatBookingRevenueDateDisplay(b)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(price)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(bc)}</td>
                         <td className="px-4 py-3 text-right text-sm tabular-nums">{fmtCell(subtotal)}</td>
@@ -305,7 +315,7 @@ export default function ReportMonthly() {
             </>
           ) : (
             <>
-              Sub total is booking price minus Booking.com price. Add-ons is the sum of add-on line items (LKR). TOTAL is Sub total minus manager commission plus add-ons — same amount as each booking inflow on Cash Flow.
+              Sub total is booking price minus Booking.com price. Add-ons is the sum of add-on line items (LKR). TOTAL is Sub total minus manager commission plus add-ons — same amount and month as each booking inflow on Cash Flow (dated on check-out when set).
             </>
           )}
         </p>

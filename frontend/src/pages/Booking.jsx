@@ -12,7 +12,8 @@ import {
   Building2,
   DoorOpen,
   BedDouble,
-  CalendarRange,
+  LogIn,
+  LogOut,
   Banknote,
   Receipt,
   Package,
@@ -40,6 +41,7 @@ import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { sumAddonsLkr } from '@/lib/bookingNetLkr';
+import { toLocalYmd } from '@/lib/bookingRevenueDate';
 
 const ALLOWED_ROOM_TYPES = ['double', 'triple'];
 const normalizeRoomTypeForForm = (v) => {
@@ -349,8 +351,8 @@ const Booking = () => {
 
   const formatDateShort = (v) => {
     if (!v) return '—';
-    if (typeof v === 'string' && v.includes('T')) return v.slice(0, 10);
-    return v;
+    const ymd = toLocalYmd(v);
+    return ymd || '—';
   };
 
   const handleDelete = async (b) => {
@@ -480,11 +482,17 @@ const Booking = () => {
                       <td className="px-4 py-3 text-sm !text-left align-middle whitespace-nowrap text-foreground">
                         {b.adults || 0} adults, {b.children || 0} children
                       </td>
-                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground whitespace-nowrap">
-                        {b.checkIn ? (typeof b.checkIn === 'string' && b.checkIn.includes('T') ? b.checkIn.slice(0, 10) : b.checkIn) : '—'}
+                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 text-sky-400">
+                          <LogIn className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
+                          {b.checkIn ? formatDateShort(b.checkIn) : '—'}
+                        </span>
                       </td>
-                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums text-foreground whitespace-nowrap">
-                        {b.checkOut ? (typeof b.checkOut === 'string' && b.checkOut.includes('T') ? b.checkOut.slice(0, 10) : b.checkOut) : '—'}
+                      <td className="px-4 py-3 text-sm !text-left align-middle tabular-nums whitespace-nowrap">
+                        <span className="inline-flex items-center gap-1.5 text-slate-400">
+                          <LogOut className="h-3.5 w-3.5 shrink-0 opacity-90" aria-hidden />
+                          {b.checkOut ? formatDateShort(b.checkOut) : '—'}
+                        </span>
                       </td>
                       <td className="px-4 py-3 text-sm tabular-nums !text-right align-middle text-foreground">
                         {b.price != null ? Number(b.price).toLocaleString() : '—'}
@@ -818,13 +826,16 @@ const Booking = () => {
                             {d.adults || 0} adults, {d.children || 0} children
                           </span>
                         </div>
-                        <div className="flex items-start gap-2 rounded-lg bg-background/50 px-2.5 py-2 text-sm border border-secondary/80">
-                          <CalendarRange className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                          <div className="tabular-nums leading-snug">
-                            <span className="text-muted-foreground">Stay</span>{' '}
-                            <span className="font-medium text-foreground">{formatDateShort(d.checkIn)}</span>
-                            <span className="text-muted-foreground"> → </span>
-                            <span className="font-medium text-foreground">{formatDateShort(d.checkOut)}</span>
+                        <div className="flex flex-col gap-2 rounded-lg bg-background/50 px-2.5 py-2 text-sm border border-secondary/80">
+                          <div className="flex items-center gap-2 tabular-nums leading-snug">
+                            <LogIn className="h-4 w-4 shrink-0 text-sky-400" aria-hidden />
+                            <span className="text-muted-foreground">Check-in</span>
+                            <span className="font-medium text-sky-400">{formatDateShort(d.checkIn)}</span>
+                          </div>
+                          <div className="flex items-center gap-2 tabular-nums leading-snug">
+                            <LogOut className="h-4 w-4 shrink-0 text-slate-400" aria-hidden />
+                            <span className="text-muted-foreground">Check-out</span>
+                            <span className="font-medium text-slate-400">{formatDateShort(d.checkOut)}</span>
                           </div>
                         </div>
                       </div>
@@ -836,6 +847,16 @@ const Booking = () => {
                     <p className="text-[10px] font-semibold uppercase tracking-wide text-primary">Total guest pays (LKR)</p>
                     <p className="mt-1 text-2xl font-bold tabular-nums tracking-tight text-foreground">{fmtN(customerPayLkr)}</p>
                     <p className="text-xs text-muted-foreground mt-1">Room booking + add-ons (amount charged to the guest)</p>
+                    <p className="text-xs text-muted-foreground mt-2 flex flex-wrap items-center gap-x-1 gap-y-0.5">
+                      <LogOut className="h-3.5 w-3.5 shrink-0 text-slate-400" aria-hidden />
+                      <span>Booking net in Cash Flow and reports is dated on</span>
+                      <span className="font-medium tabular-nums text-foreground">{formatDateShort(d.checkOut || d.checkIn)}</span>
+                      {d.checkOut ? (
+                        <span className="text-muted-foreground">(check-out)</span>
+                      ) : (
+                        <span className="text-muted-foreground">(check-in until check-out is set)</span>
+                      )}
+                    </p>
                   </div>
 
                   {clientLabel && (
@@ -847,6 +868,9 @@ const Booking = () => {
                   )}
 
                   <DetailSection icon={Banknote} title="Guest payment (LKR)">
+                    <DetailRow icon={LogOut} label="Revenue date (Cash Flow)">
+                      <span className="tabular-nums font-medium text-foreground">{formatDateShort(d.checkOut || d.checkIn)}</span>
+                    </DetailRow>
                     <DetailRow icon={Banknote} label="Room booking price">
                       {fmtN(priceLkr)}
                     </DetailRow>

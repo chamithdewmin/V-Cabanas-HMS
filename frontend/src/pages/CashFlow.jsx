@@ -21,6 +21,7 @@ import { useConfirm } from '@/contexts/ConfirmDialogContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
 import { bookingNetRevenueLkr } from '@/lib/bookingNetLkr';
+import { bookingFinancialAttributionRaw } from '@/lib/bookingRevenueDate';
 import {
   Dialog,
   DialogContent,
@@ -167,10 +168,11 @@ const CashFlow = () => {
 
     bookings.forEach((b) => {
       const bookingTotal = bookingNetRevenueLkr(b);
+      const revDate = bookingFinancialAttributionRaw(b);
       txList.push({
         id: b.id,
         type: 'inflow',
-        date: b.checkIn || b.createdAt || new Date().toISOString(),
+        date: revDate || new Date().toISOString(),
         source: b.customerName || b.clientName || 'Booking',
         category: 'Booking',
         amount: bookingTotal,

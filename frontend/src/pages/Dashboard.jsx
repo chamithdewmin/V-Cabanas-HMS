@@ -25,6 +25,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
 import { bookingNetRevenueLkr } from '@/lib/bookingNetLkr';
+import { bookingFinancialAttributionYmd, toLocalYmd } from '@/lib/bookingRevenueDate';
 import { cn } from '@/lib/utils';
 
 /** Matches app theme `--primary` / `--destructive` (see index.css) */
@@ -58,7 +59,7 @@ function formatAxisMoney(v) {
 function sumBookingRevenueForCalendarMonth(bookings, year, monthIndex) {
   let s = 0;
   bookings.forEach((b) => {
-    const ymd = bookingCheckInYmd(b.checkIn);
+    const ymd = bookingFinancialAttributionYmd(b);
     if (!ymd) return;
     const parts = ymd.split('-').map(Number);
     const yy = parts[0];
@@ -75,11 +76,6 @@ function localYmd(d) {
   return `${y}-${m}-${day}`;
 }
 
-function bookingCheckInYmd(checkIn) {
-  if (!checkIn) return '';
-  return String(checkIn).slice(0, 10);
-}
-
 function buildMonthlySeries(monthsBack, bookings, incomes, expenses) {
   const rows = [];
   const now = new Date();
@@ -91,7 +87,7 @@ function buildMonthlySeries(monthsBack, bookings, incomes, expenses) {
 
     let bookingCount = 0;
     bookings.forEach((b) => {
-      const ymd = bookingCheckInYmd(b.checkIn);
+      const ymd = bookingFinancialAttributionYmd(b);
       if (!ymd) return;
       const parts = ymd.split('-').map(Number);
       const yy = parts[0];
@@ -101,7 +97,7 @@ function buildMonthlySeries(monthsBack, bookings, incomes, expenses) {
 
     let revenue = 0;
     bookings.forEach((b) => {
-      const ymd = bookingCheckInYmd(b.checkIn);
+      const ymd = bookingFinancialAttributionYmd(b);
       if (!ymd) return;
       const parts = ymd.split('-').map(Number);
       const yy = parts[0];
@@ -154,7 +150,7 @@ function buildWeeklySeries(weeksBack, bookings, incomes, expenses) {
     let bookingCount = 0;
     let revenue = 0;
     bookings.forEach((b) => {
-      const ymd = bookingCheckInYmd(b.checkIn);
+      const ymd = bookingFinancialAttributionYmd(b);
       if (!ymd) return;
       const parts = ymd.split('-').map(Number);
       const cd = new Date(parts[0], parts[1] - 1, parts[2]);
@@ -331,8 +327,8 @@ export default function FinanceDashboard() {
     yest.setDate(yest.getDate() - 1);
     const yesterdayStr = localYmd(yest);
 
-    const todayBookings = bookings.filter((b) => bookingCheckInYmd(b.checkIn) === todayStr).length;
-    const yesterdayBookings = bookings.filter((b) => bookingCheckInYmd(b.checkIn) === yesterdayStr).length;
+    const todayBookings = bookings.filter((b) => (b.checkIn ? toLocalYmd(b.checkIn) : '') === todayStr).length;
+    const yesterdayBookings = bookings.filter((b) => (b.checkIn ? toLocalYmd(b.checkIn) : '') === yesterdayStr).length;
     const bookingsTrend = pctChange(todayBookings, yesterdayBookings);
 
     const totalRevenue =
