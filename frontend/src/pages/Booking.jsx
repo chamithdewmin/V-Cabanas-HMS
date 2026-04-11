@@ -370,12 +370,6 @@ const Booking = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Booking</h1>
-            <p className="text-muted-foreground">
-              Capture guest booking details for your rooms. For admins, new bookings attach to the manager/receptionist
-              from <strong className="text-foreground font-medium">Salary Management</strong> with period{' '}
-              <strong className="text-foreground font-medium">Every booking</strong>; commission uses their saved rate on
-              subtotal (room − Booking.com).
-            </p>
           </div>
           <div className="flex gap-3">
             <Button variant="outline" onClick={loadBookings} disabled={loading}>
