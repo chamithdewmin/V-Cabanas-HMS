@@ -19,6 +19,7 @@ import EmptyState from '@/components/EmptyState';
 import { Label } from '@/components/ui/label';
 import { api } from '@/lib/api';
 import { useAuth } from '@/contexts/AuthContext';
+import { isStaffRestrictedRole } from '@/lib/navAccess';
 
 const Pricing = () => {
   const { toast } = useToast();
@@ -71,6 +72,15 @@ const Pricing = () => {
       toast({
         title: 'Missing details',
         description: 'Please enter a name and price.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    if (!editingItem && hideAddPricing) {
+      toast({
+        title: 'Not allowed',
+        description: 'Managers and receptionists cannot add new pricing items.',
         variant: 'destructive',
       });
       return;
@@ -137,6 +147,8 @@ const Pricing = () => {
     return Number.isFinite(uid) && Number.isFinite(owner) && uid === owner;
   };
 
+  const hideAddPricing = isStaffRestrictedRole(user?.role);
+
   return (
     <>
       <Helmet>
@@ -157,16 +169,18 @@ const Pricing = () => {
               <RefreshCw className="w-4 h-4 mr-2" />
               Refresh
             </Button>
-            <Button
-              onClick={() => {
-                setEditingItem(null);
-                setForm({ name: '', price: '', notes: '' });
-                setIsDialogOpen(true);
-              }}
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Pricing
-            </Button>
+            {!hideAddPricing && (
+              <Button
+                onClick={() => {
+                  setEditingItem(null);
+                  setForm({ name: '', price: '', notes: '' });
+                  setIsDialogOpen(true);
+                }}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Pricing
+              </Button>
+            )}
           </div>
         </div>
 
@@ -211,13 +225,21 @@ const Pricing = () => {
                     <td colSpan={4} className="p-0 align-top">
                       <EmptyState
                         title="No pricing items yet"
-                        description="Add breakfast, lunch, tours, or other add-ons from Pricing."
-                        actionLabel="Add Pricing"
-                        onAction={() => {
-                          setForm({ name: '', price: '', notes: '' });
-                          setEditingItem(null);
-                          setIsDialogOpen(true);
-                        }}
+                        description={
+                          hideAddPricing
+                            ? 'No catalog entries match your search, or the list is empty.'
+                            : 'Add breakfast, lunch, tours, or other add-ons from Pricing.'
+                        }
+                        actionLabel={hideAddPricing ? undefined : 'Add Pricing'}
+                        onAction={
+                          hideAddPricing
+                            ? undefined
+                            : () => {
+                                setForm({ name: '', price: '', notes: '' });
+                                setEditingItem(null);
+                                setIsDialogOpen(true);
+                              }
+                        }
                       />
                     </td>
                   </tr>
