@@ -5,6 +5,14 @@ import { useFinance } from '@/contexts/FinanceContext';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
+import { bookingNetRevenueLkr } from '@/lib/bookingNetLkr';
+
+/** Date when booking revenue is recognized: checkout (payment day); falls back to check-in if no checkout. */
+function bookingRevenueDateStr(booking, toLocalDateString) {
+  const raw = booking?.checkOut || booking?.checkIn;
+  if (!raw) return '';
+  return toLocalDateString(raw);
+}
 
 const Calendar = () => {
   const { incomes, expenses, invoices, settings, loadData } = useFinance();
@@ -41,12 +49,22 @@ const Calendar = () => {
   // Get transactions for a specific date (compare local dates so timezone doesn't shift the day)
   const getTransactionsForDate = (date) => {
     const dateStr = toLocalDateString(date);
-    if (!dateStr) return { incomes: [], expenses: [], invoices: [], bookings: [] };
+    if (!dateStr) {
+      return {
+        incomes: [],
+        expenses: [],
+        invoices: [],
+        bookingsCheckIn: [],
+        bookingsRevenue: [],
+      };
+    }
     const dayTransactions = {
       incomes: [],
       expenses: [],
       invoices: [],
-      bookings: [],
+      bookingsCheckIn: [],
+      /** Bookings whose net revenue is counted on this day (checkout when set, else check-in). */
+      bookingsRevenue: [],
     };
 
     incomes.forEach(income => {
@@ -69,8 +87,13 @@ const Calendar = () => {
     });
 
     bookings.forEach((booking) => {
-      if (booking.checkIn && toLocalDateString(booking.checkIn) === dateStr) {
-        dayTransactions.bookings.push(booking);
+      const checkInStr = booking.checkIn ? toLocalDateString(booking.checkIn) : '';
+      if (checkInStr === dateStr) {
+        dayTransactions.bookingsCheckIn.push(booking);
+      }
+      const revStr = bookingRevenueDateStr(booking, toLocalDateString);
+      if (revStr === dateStr) {
+        dayTransactions.bookingsRevenue.push(booking);
       }
     });
 
@@ -85,12 +108,19 @@ const Calendar = () => {
     const invoiceTotal = transactions.invoices
       .filter(inv => inv.status !== 'paid')
       .reduce((sum, inv) => sum + (inv.total || 0), 0);
-    
+    const bookingNetCheckout = transactions.bookingsRevenue.reduce(
+      (sum, b) => sum + bookingNetRevenueLkr(b),
+      0
+    );
+
     return {
       incomeTotal,
       expenseTotal,
       invoiceTotal,
-      bookingCount: transactions.bookings.length,
+      bookingCheckInCount: transactions.bookingsCheckIn.length,
+      bookingRevenueCount: transactions.bookingsRevenue.length,
+      bookingNetCheckout,
+      /** Income − expenses; booking stay revenue is shown separately as booking net (checkout). */
       net: incomeTotal - expenseTotal,
     };
   };
@@ -143,7 +173,7 @@ const Calendar = () => {
     <>
       <Helmet>
         <title>Calendar - V Cabanas HMS</title>
-        <meta name="description" content="View your financial transactions in a calendar view" />
+        <meta name="description" content="Calendar: income, expenses, invoices, check-ins, and booking net on check-out" />
       </Helmet>
 
       <div className="space-y-4 sm:space-y-6 min-w-0">
@@ -155,7 +185,7 @@ const Calendar = () => {
               Calendar
             </h1>
             <p className="text-muted-foreground mt-1 text-sm sm:text-base">
-              View your income, expenses, invoices, and bookings by date
+              Booking net revenue is counted on <strong className="text-foreground font-medium">check-out</strong> (payment day), same as Cash Flow. Check-ins show arrivals only.
             </p>
           </div>
         </div>
@@ -216,7 +246,9 @@ const Calendar = () => {
                 totals.incomeTotal > 0 ||
                 totals.expenseTotal > 0 ||
                 totals.invoiceTotal > 0 ||
-                totals.bookingCount > 0;
+                totals.bookingCheckInCount > 0 ||
+                totals.bookingRevenueCount > 0 ||
+                totals.bookingNetCheckout > 0;
               const isSelected = selectedDate && 
                 date.getDate() === selectedDate.getDate() &&
                 date.getMonth() === selectedDate.getMonth() &&
@@ -261,10 +293,23 @@ const Calendar = () => {
                             <span className="truncate">{totals.invoiceTotal.toLocaleString()}</span>
                           </div>
                         )}
-                        {totals.bookingCount > 0 && (
-                          <div className="text-sky-400 flex items-center gap-1">
+                        {totals.bookingNetCheckout > 0 && (
+                          <div className="text-emerald-400 flex items-center gap-1" title="Net booking revenue (checkout day)">
                             <BedDouble className="w-3 h-3" />
-                            <span className="truncate">{totals.bookingCount} booking{totals.bookingCount > 1 ? 's' : ''}</span>
+                            <span className="truncate">
+                              {totals.bookingNetCheckout.toLocaleString(undefined, { maximumFractionDigits: 0 })}
+                            </span>
+                          </div>
+                        )}
+                        {totals.bookingCheckInCount > 0 && (
+                          <div
+                            className="text-sky-400/90 flex items-center gap-1 text-[10px]"
+                            title="Guest arrivals this day"
+                          >
+                            <BedDouble className="w-3 h-3 shrink-0" />
+                            <span className="truncate">
+                              {totals.bookingCheckInCount} check-in{totals.bookingCheckInCount !== 1 ? 's' : ''}
+                            </span>
                           </div>
                         )}
                       </div>
@@ -289,7 +334,7 @@ const Calendar = () => {
             </h3>
 
             {selectedTotals && (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 mb-6">
                 <div className="bg-secondary/30 rounded-lg p-3">
                   <p className="text-xs text-muted-foreground mb-1">Income</p>
                   <p className="text-lg font-bold text-green-500">
@@ -309,7 +354,17 @@ const Calendar = () => {
                   </p>
                 </div>
                 <div className="bg-secondary/30 rounded-lg p-3">
-                  <p className="text-xs text-muted-foreground mb-1">Net</p>
+                  <p className="text-xs text-muted-foreground mb-1">Booking net (checkout)</p>
+                  <p className="text-lg font-bold text-emerald-400">
+                    {currency}{' '}
+                    {selectedTotals.bookingNetCheckout.toLocaleString(undefined, {
+                      minimumFractionDigits: 2,
+                      maximumFractionDigits: 2,
+                    })}
+                  </p>
+                </div>
+                <div className="bg-secondary/30 rounded-lg p-3 col-span-2 sm:col-span-1">
+                  <p className="text-xs text-muted-foreground mb-1">Net (income − expenses)</p>
                   <p className={cn(
                     "text-lg font-bold",
                     selectedTotals.net >= 0 ? "text-green-500" : "text-red-500"
@@ -401,28 +456,79 @@ const Calendar = () => {
                 </div>
               )}
 
-              {/* Bookings */}
-              {selectedTransactions.bookings.length > 0 && (
+              {/* Booking revenue (checkout day — net after Booking.com, staff, + add-ons) */}
+              {selectedTransactions.bookingsRevenue.length > 0 && (
+                <div>
+                  <h4 className="text-sm font-semibold text-emerald-400 mb-1 flex items-center gap-2">
+                    <BedDouble className="w-4 h-4" />
+                    Booking net (checkout){' '}
+                    <span className="text-muted-foreground font-normal">
+                      ({selectedTransactions.bookingsRevenue.length})
+                    </span>
+                  </h4>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Same net as Monthly Report / Cash Flow: room − Booking.com − manager commission + add-ons (LKR).
+                  </p>
+                  <div className="space-y-2">
+                    {selectedTransactions.bookingsRevenue.map((booking) => {
+                      const net = bookingNetRevenueLkr(booking);
+                      const cin = booking.checkIn
+                        ? toLocalDateString(booking.checkIn)
+                        : '—';
+                      const cout = booking.checkOut
+                        ? toLocalDateString(booking.checkOut)
+                        : null;
+                      return (
+                        <div
+                          key={booking.id}
+                          className="bg-secondary/30 rounded-lg p-3 flex items-center justify-between gap-3"
+                        >
+                          <div className="min-w-0">
+                            <p className="font-medium truncate">{booking.customerName || 'Unknown guest'}</p>
+                            <p className="text-sm text-muted-foreground">
+                              Room {booking.roomNumber || '—'} • In {cin}
+                              {cout ? ` → Out ${cout}` : ' • No check-out — net on check-in'}
+                            </p>
+                          </div>
+                          <p className="font-bold text-emerald-400 shrink-0 tabular-nums">
+                            {currency}{' '}
+                            {net.toLocaleString(undefined, {
+                              minimumFractionDigits: 2,
+                              maximumFractionDigits: 2,
+                            })}
+                          </p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Check-ins (arrivals — no stay revenue on this day unless also checkout) */}
+              {selectedTransactions.bookingsCheckIn.length > 0 && (
                 <div>
                   <h4 className="text-sm font-semibold text-sky-400 mb-2 flex items-center gap-2">
                     <BedDouble className="w-4 h-4" />
-                    Bookings ({selectedTransactions.bookings.length})
+                    Check-ins ({selectedTransactions.bookingsCheckIn.length})
                   </h4>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Guest arrivals. Net revenue for the stay is shown on check-out (or on check-in if check-out is not set).
+                  </p>
                   <div className="space-y-2">
-                    {selectedTransactions.bookings.map((booking) => (
+                    {selectedTransactions.bookingsCheckIn.map((booking) => (
                       <div
-                        key={booking.id}
+                        key={`in-${booking.id}`}
                         className="bg-secondary/30 rounded-lg p-3 flex items-center justify-between"
                       >
                         <div>
                           <p className="font-medium">{booking.customerName || 'Unknown guest'}</p>
                           <p className="text-sm text-muted-foreground">
-                            Room {booking.roomNumber || '—'} • Check-in
+                            Room {booking.roomNumber || '—'}
+                            {booking.checkOut
+                              ? ` • Out ${toLocalDateString(booking.checkOut)}`
+                              : ''}
                           </p>
                         </div>
-                        <p className="font-bold text-sky-400">
-                          {currency} {(Number(booking.price) || 0).toLocaleString()}
-                        </p>
                       </div>
                     ))}
                   </div>
@@ -432,7 +538,8 @@ const Calendar = () => {
               {selectedTransactions.incomes.length === 0 &&
                 selectedTransactions.expenses.length === 0 &&
                 selectedTransactions.invoices.length === 0 &&
-                selectedTransactions.bookings.length === 0 && (
+                selectedTransactions.bookingsRevenue.length === 0 &&
+                selectedTransactions.bookingsCheckIn.length === 0 && (
                   <p className="text-muted-foreground text-center py-8">
                     No transactions on this date
                   </p>
