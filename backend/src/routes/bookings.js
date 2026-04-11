@@ -205,22 +205,19 @@ router.post('/', async (req, res) => {
     const bookingComCommission = d.bookingComCommission != null ? Number(d.bookingComCommission) : 0;
     const commissionBaseSubtotal = computeCommissionBaseFromSubtotal(price, bookingComCommission);
 
+    /** Booking owner: staff use their own id (commission from users.commission_rate_pct, set in Salary → Every booking). Admins use their id with no staff commission. */
     let bookingUserId = req.user.id;
     let role = (req.user.role || '').toLowerCase();
     let ratePct = req.user.commission_rate_pct;
 
     if (isAdmin(req)) {
       const raw = d.assignedStaffUserId;
-      if (raw == null || String(raw).trim() === '') {
-        return res.status(400).json({
-          error:
-            'Select which staff member this booking is for. Their commission rate (e.g. 10%) applies to subtotal (booking price - Booking.com). Admins do not earn booking commission.',
-        });
+      if (raw != null && String(raw).trim() !== '') {
+        bookingUserId = await assertValidCommissionStaffId(pool, raw);
+        const u = await loadUserCommissionFields(pool, bookingUserId);
+        role = (u.role || '').toLowerCase();
+        ratePct = u.ratePct;
       }
-      bookingUserId = await assertValidCommissionStaffId(pool, raw);
-      const u = await loadUserCommissionFields(pool, bookingUserId);
-      role = (u.role || '').toLowerCase();
-      ratePct = u.ratePct;
     }
 
     const staffCommissionAmount = computeStaffCommission(role, ratePct, commissionBaseSubtotal);

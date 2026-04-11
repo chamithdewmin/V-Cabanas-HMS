@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import {
   Plus,
@@ -38,7 +38,6 @@ import {
 } from '@/components/ui/dialog';
 import EmptyState from '@/components/EmptyState';
 import { api } from '@/lib/api';
-import { useAuth } from '@/contexts/AuthContext';
 import { cn } from '@/lib/utils';
 import { sumAddonsLkr } from '@/lib/bookingNetLkr';
 import { toLocalYmd } from '@/lib/bookingRevenueDate';
@@ -101,19 +100,15 @@ const emptyForm = () => ({
   bookingComCommissionUsd: '',
   roomFeature: 'ac',
   roomType: 'double',
-  assignedStaffUserId: '',
 });
 
 const Booking = () => {
   const { toast } = useToast();
   const confirm = useConfirm();
   const { loadData } = useFinance();
-  const { user } = useAuth();
-  const isAdmin = (user?.role || '').toLowerCase() === 'admin';
   const tableColSpan = 12;
   const [bookings, setBookings] = useState([]);
   const [clients, setClients] = useState([]);
-  const [staffUsers, setStaffUsers] = useState([]);
   const [pricingList, setPricingList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -158,26 +153,6 @@ const Booking = () => {
     api.pricing.list().then((list) => setPricingList(Array.isArray(list) ? list : [])).catch(() => setPricingList([]));
   }, []);
 
-  useEffect(() => {
-    if (!isAdmin) {
-      setStaffUsers([]);
-      return;
-    }
-    api.users
-      .list()
-      .then((list) => setStaffUsers(Array.isArray(list) ? list : []))
-      .catch(() => setStaffUsers([]));
-  }, [isAdmin]);
-
-  const commissionStaffOptions = useMemo(
-    () =>
-      staffUsers.filter((u) => {
-        const r = (u.role || '').toLowerCase();
-        return r === 'manager' || r === 'receptionist';
-      }),
-    [staffUsers]
-  );
-
   const handleChange = (field, value) => {
     setForm((prev) => ({ ...prev, [field]: value }));
   };
@@ -203,15 +178,6 @@ const Booking = () => {
       });
       return;
     }
-    if (isAdmin && !String(form.assignedStaffUserId || '').trim()) {
-      toast({
-        title: 'Select staff',
-        description: 'Choose which manager or receptionist earns commission on this booking (room + add-ons).',
-        variant: 'destructive',
-      });
-      return;
-    }
-
     setSaving(true);
     try {
       const payload = {
@@ -229,9 +195,6 @@ const Booking = () => {
         priceUsd: form.priceUsd ? Number(form.priceUsd) : 0,
         bookingComCommissionUsd: form.bookingComCommissionUsd ? Number(form.bookingComCommissionUsd) : 0,
       };
-      if (isAdmin) {
-        payload.assignedStaffUserId = Number(form.assignedStaffUserId);
-      }
       if (editingBooking) {
         await api.bookings.update(editingBooking.id, payload);
         toast({ title: 'Booking updated', description: 'Booking has been updated.' });
@@ -253,9 +216,6 @@ const Booking = () => {
 
   const openEdit = (b) => {
     setEditingBooking(b);
-    const sid = b.staffUserId != null ? Number(b.staffUserId) : NaN;
-    const staffOk =
-      Number.isFinite(sid) && commissionStaffOptions.some((u) => Number(u.id) === sid);
     setForm({
       clientId: b.clientId || '',
       customerName: b.customerName || '',
@@ -270,7 +230,6 @@ const Booking = () => {
       bookingComCommissionUsd: b.bookingComCommissionUsd ?? '',
       roomFeature: b.roomFeature || 'ac',
       roomType: normalizeRoomTypeForForm(b.roomType),
-      assignedStaffUserId: staffOk ? String(sid) : '',
     });
     setIsDialogOpen(true);
   };
@@ -388,7 +347,9 @@ const Booking = () => {
           <div>
             <h1 className="text-3xl font-bold">Booking</h1>
             <p className="text-muted-foreground">
-              Capture guest booking details for your rooms.
+              Capture guest booking details for your rooms. Manager and receptionist staff commission uses each
+              user&apos;s rate from{' '}
+              <strong className="text-foreground font-medium">Salary Management</strong> (period: Every booking).
             </p>
           </div>
           <div className="flex gap-3">
@@ -552,29 +513,6 @@ const Booking = () => {
             <DialogTitle>{editingBooking ? 'Edit Booking' : 'New Booking'}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-6">
-            {isAdmin && (
-              <div className="space-y-1.5">
-                <Label htmlFor="assignedStaffUserId">Staff (commission / booking for)</Label>
-                <select
-                  id="assignedStaffUserId"
-                  value={form.assignedStaffUserId}
-                  onChange={(e) => handleChange('assignedStaffUserId', e.target.value)}
-                  required={isAdmin}
-                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-md text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                >
-                  <option value="">Select manager or receptionist</option>
-                  {commissionStaffOptions.map((u) => (
-                    <option key={u.id} value={String(u.id)}>
-                      {u.name || u.email || `User ${u.id}`}
-                    </option>
-                  ))}
-                </select>
-                <p className="text-xs text-muted-foreground">
-                  Commission is calculated from this staff member&apos;s rate on room price plus add-ons (LKR).
-                </p>
-              </div>
-            )}
-
             <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
               {/* Left column */}
               <div className="space-y-4">
