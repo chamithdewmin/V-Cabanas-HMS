@@ -53,8 +53,8 @@ module.exports = {
         },
         /** Matches ReportOverview / src/lib/reportTheme.js REPORT_CHART_PALETTE (card, border) */
         report: {
-          card: '#13161e',
-          border: '#1e2433',
+          card: '#111827',
+          border: '#1f2937',
         },
       },
       borderRadius: {

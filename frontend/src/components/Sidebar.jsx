@@ -55,7 +55,6 @@ const reportSubItems = [
   { to: '/reports/monthly', label: 'Monthly Report' },
   { to: '/reports/profit-loss', label: 'Profit & Loss' },
   { to: '/reports/cash-flow', label: 'Cash Flow' },
-  { to: '/reports/tax', label: 'Tax Reports' },
 ];
 
 /** Nav config with dividers (demo-style). Use href for links, items[] for expandable sections. */

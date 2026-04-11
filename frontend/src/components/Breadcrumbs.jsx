@@ -9,7 +9,6 @@ const REPORT_LABELS = {
   'cash-flow': 'Cash Flow',
   income: 'Income',
   expense: 'Expense',
-  tax: 'Tax',
 };
 
 const toTitle = (segment) => segment && REPORT_LABELS[segment]

@@ -288,15 +288,6 @@ export default function OverviewReports() {
   const equity = useMemo(() => totalAssets - totalLiab, [totalAssets, totalLiab]);
   const debtRatio = useMemo(() => totalAssets > 0 ? ((totalLiab / totalAssets) * 100).toFixed(1) : '0.0', [totalLiab, totalAssets]);
   const cashBalance = useMemo(() => totals.cashInHand || 0, [totals]);
-  const totalTax = useMemo(() => {
-    if (!settings.taxEnabled) return 0;
-    return plMonthly.reduce((sum, m) => {
-      const profit = m.income - m.expenses;
-      return sum + (profit > 0 ? (profit * (settings.taxRate || 0) / 100) : 0);
-    }, 0);
-  }, [plMonthly, settings]);
-  const paidTax = useMemo(() => Math.max(0, totalTax * 0.7), [totalTax]); // Estimate 70% paid
-  const pendingTax = useMemo(() => totalTax - paidTax, [totalTax, paidTax]);
   const bestMonth = useMemo(() => plMonthly.reduce((a, b) => a.profit > b.profit ? a : b, plMonthly[0] || { month: 'N/A', profit: 0 }), [plMonthly]);
   const worstMonth = useMemo(() => plMonthly.reduce((a, b) => a.profit < b.profit ? a : b, plMonthly[0] || { month: 'N/A', profit: 0 }), [plMonthly]);
   const healthScore = useMemo(() => {
@@ -347,7 +338,7 @@ export default function OverviewReports() {
               {new Date().toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} · Fiscal Year {new Date().getFullYear()}
             </p>
             <h1 style={{ color:C.text, fontSize:28, fontWeight:900, margin:0, letterSpacing:"-0.03em" }}>Business Overview</h1>
-            <p style={{ color:C.muted, fontSize:14, margin:"6px 0 0" }}>Unified snapshot across P&L, Cash Flow, Balance Sheet &amp; Tax reports.</p>
+            <p style={{ color:C.muted, fontSize:14, margin:"6px 0 0" }}>Unified snapshot across P&amp;L, Cash Flow, and Balance Sheet reports.</p>
           </div>
           <div style={{ display:"flex", gap:10, alignItems:"center", justifyContent:"flex-end" }}>
             {/* Action buttons */}
@@ -513,14 +504,13 @@ export default function OverviewReports() {
           <div style={{ display:"flex", flexDirection:"column", gap:16 }}>
 
             {/* HEALTH SCORE */}
-            <Card title="Business Health Score" sub="Composite from all 4 reports">
+            <Card title="Business Health Score" sub="Composite from profit, debt, and cash metrics">
               <HealthRing score={healthScore} />
               <div style={{ marginTop:16 }}>
                 {[
                   { label:"Profit Margin",  value:`${profitMargin}%`,             color:parseFloat(profitMargin)>20?C.green:C.yellow, Icon:I.TrendingUp   },
                   { label:"Debt Ratio",     value:`${debtRatio}%`,                color:parseFloat(debtRatio)<40?C.green:C.red,       Icon:I.Scale        },
                   { label:"Cash Buffer",    value:`LKR ${cashBalance.toLocaleString()}`,  color:C.blue,                               Icon:I.Wallet       },
-                  { label:"Tax Compliance", value:"3 / 4 Quarters Filed",         color:C.yellow,                                     Icon:I.Receipt      },
                 ].map((m,i) => <MiniRow key={i} {...m} />)}
               </div>
             </Card>
@@ -567,16 +557,6 @@ export default function OverviewReports() {
                 <p style={{ color:C.text2,  fontSize:12, margin:0 }}>LKR {worstMonth.profit.toLocaleString()} profit</p>
               </div>
             </div>
-
-            {/* TAX SUMMARY */}
-            <Card title="Tax Summary" sub="From Tax Reports">
-              {[
-                { label:"Total Tax Owed",    value:`LKR ${totalTax.toLocaleString()}`,   color:C.red,    Icon:I.Receipt      },
-                { label:"Tax Paid (Q1–Q3)",  value:`LKR ${paidTax.toLocaleString()}`,    color:C.green,  Icon:I.CheckCircle  },
-                { label:"Pending (Q4)",      value:`LKR ${pendingTax.toLocaleString()}`,  color:C.yellow, Icon:I.Clock, sub:"Due soon" },
-                { label:"Effective Rate",    value:"20%",                                 color:C.muted,  Icon:I.Info         },
-              ].map((m,i) => <MiniRow key={i} {...m} />)}
-            </Card>
           </div>
         </div>
 

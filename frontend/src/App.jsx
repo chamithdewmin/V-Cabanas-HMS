@@ -10,7 +10,6 @@ import Customers from './pages/Customers';
 import ReportOverview from './pages/reports/ReportOverview';
 import ReportIncome from './pages/reports/ReportIncome';
 import ReportExpense from './pages/reports/ReportExpense';
-import ReportTax from './pages/reports/ReportTax';
 import ReportProfitLoss from './pages/reports/ReportProfitLoss';
 import ReportCashFlow from './pages/reports/ReportCashFlow';
 import ReportMonthly from './pages/reports/ReportMonthly';
@@ -105,7 +104,6 @@ function App() {
         <Route path="reports/cash-flow" element={<ReportCashFlow />} />
         <Route path="reports/income" element={<ReportIncome />} />
         <Route path="reports/expense" element={<ReportExpense />} />
-        <Route path="reports/tax" element={<ReportTax />} />
         <Route path="reports/monthly" element={<ReportMonthly />} />
         <Route path="users" element={<Users />} />
         <Route path="login-activity" element={<LoginActivity />} />
