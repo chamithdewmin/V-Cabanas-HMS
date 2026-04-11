@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
-import { Search, Plus, Download, RefreshCw, Trash2, Eye, Printer, Loader2 } from 'lucide-react';
+import { Search, Plus, Download, RefreshCw, Trash2, Eye, Printer, Loader2, FileText } from 'lucide-react';
 import { useFinance } from '@/contexts/FinanceContext';
 import { api } from '@/lib/api';
 import { Input } from '@/components/ui/input';
@@ -21,7 +21,7 @@ import {
 import EmptyState from '@/components/EmptyState';
 import InvoiceTemplate from '@/components/InvoiceTemplate';
 import { countNightsBetween } from '@/lib/invoiceNights';
-import { FileText } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 const Orders = () => {
   const [orders, setOrders] = useState([]);
@@ -56,12 +56,61 @@ const Orders = () => {
   });
 
   const [form, setForm] = useState(createInvoiceFormInitial);
+  const [clientSuggestOpen, setClientSuggestOpen] = useState(false);
+  const clientSearchWrapRef = useRef(null);
+
+  const filteredClients = useMemo(() => {
+    const q = (form.clientName || '').trim().toLowerCase();
+    if (!q) return [];
+    return clients.filter((c) => (c.name || '').toLowerCase().includes(q));
+  }, [clients, form.clientName]);
 
   const closeCreateInvoiceDialog = () => {
     setForm(createInvoiceFormInitial());
     setLastLoadedFromBookingCount(0);
+    setClientSuggestOpen(false);
     setIsCreateOpen(false);
   };
+
+  const handleClientNameInput = (value) => {
+    setForm((prev) => {
+      const next = { ...prev, clientName: value };
+      setLastLoadedFromBookingCount(0);
+      if (prev.clientId) {
+        const c = clients.find((x) => x.id === prev.clientId);
+        if (!c || (c.name || '').trim() !== value.trim()) {
+          next.clientId = '';
+          next.clientEmail = '';
+          next.clientPhone = '';
+        }
+      }
+      return next;
+    });
+    setClientSuggestOpen(true);
+  };
+
+  const selectClientForInvoice = (c) => {
+    if (!c) return;
+    setLastLoadedFromBookingCount(0);
+    setForm((prev) => ({
+      ...prev,
+      clientId: c.id,
+      clientName: c.name || '',
+      clientEmail: c.email || '',
+      clientPhone: c.phone || '',
+    }));
+    setClientSuggestOpen(false);
+  };
+
+  useEffect(() => {
+    const onDocMouseDown = (e) => {
+      if (!clientSearchWrapRef.current?.contains(e.target)) {
+        setClientSuggestOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', onDocMouseDown);
+    return () => document.removeEventListener('mousedown', onDocMouseDown);
+  }, []);
   const handleChange = (field, value) => {
     setForm((prev) => {
       const next = { ...prev, [field]: value };
@@ -608,26 +657,53 @@ const Orders = () => {
           </DialogHeader>
           <form onSubmit={handleCreateInvoice} className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label className="text-sm font-medium">Client</Label>
-                <select
-                  className="w-full px-3 py-2 bg-secondary border border-secondary rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                  value={form.clientId}
-                  onChange={(e) => handleChange('clientId', e.target.value)}
-                >
-                  <option value="">Select existing client (optional)</option>
-                  {clients.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
-                    </option>
-                  ))}
-                </select>
+              <div className="space-y-2 relative" ref={clientSearchWrapRef}>
+                <Label htmlFor="invoice-client-search" className="text-sm font-medium">
+                  Client
+                </Label>
                 <Input
-                  placeholder="Or type client name"
+                  id="invoice-client-search"
+                  autoComplete="off"
+                  placeholder="Type to search by name (add letters to narrow the list)"
                   value={form.clientName}
-                  onChange={(e) => handleChange('clientName', e.target.value)}
-                  className="mt-2"
+                  onChange={(e) => handleClientNameInput(e.target.value)}
+                  onFocus={() => {
+                    if ((form.clientName || '').trim().length > 0) setClientSuggestOpen(true);
+                  }}
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={clientSuggestOpen && (form.clientName || '').trim().length > 0}
+                  aria-controls="invoice-client-suggestions"
                 />
+                {clientSuggestOpen && (form.clientName || '').trim().length > 0 && (
+                  <ul
+                    id="invoice-client-suggestions"
+                    role="listbox"
+                    className="absolute z-50 mt-1 max-h-48 w-full overflow-auto rounded-md border border-secondary bg-card py-1 shadow-md"
+                  >
+                    {filteredClients.length === 0 ? (
+                      <li className="px-3 py-2 text-sm text-muted-foreground">No matching clients</li>
+                    ) : (
+                      filteredClients.map((c) => (
+                        <li key={c.id} role="option">
+                          <button
+                            type="button"
+                            className={cn(
+                              'w-full px-3 py-2 text-left text-sm hover:bg-secondary/80 focus:bg-secondary/80 focus:outline-none',
+                              form.clientId === c.id && 'bg-secondary/50',
+                            )}
+                            onMouseDown={(e) => {
+                              e.preventDefault();
+                              selectClientForInvoice(c);
+                            }}
+                          >
+                            {c.name}
+                          </button>
+                        </li>
+                      ))
+                    )}
+                  </ul>
+                )}
                 {form.clientId && (
                   <Button
                     type="button"
