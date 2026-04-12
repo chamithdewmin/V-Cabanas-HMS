@@ -235,12 +235,12 @@ export default function Sidebar() {
           )}
           {...(collapsed && { onClick: (e) => { if (e.target.closest('button')) return; toggleCollapsed(); } })}
         >
-          <div className={cn('flex items-center gap-2.5 min-w-0 flex-1', collapsed && 'justify-center')}>
+          <div className={cn('flex items-center gap-2 min-w-0 flex-1', collapsed && 'justify-center')}>
             <Link
               to={staffHomePath(user?.role)}
               onClick={() => setOpen(false)}
               className={cn(
-                'flex min-w-0 items-center gap-2.5 rounded-lg text-foreground no-underline outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                'flex min-w-0 items-center gap-2 rounded-lg text-foreground no-underline outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
                 collapsed && 'justify-center'
               )}
               aria-label="LogozoPOS — Home"
@@ -248,12 +248,12 @@ export default function Sidebar() {
               <img
                 src={logozopos}
                 alt=""
-                className={cn('block h-auto w-11 max-h-10 shrink-0', collapsed && 'w-8 max-h-8')}
-                width={44}
-                height={44}
+                className={cn('block h-auto w-9 max-h-9 shrink-0', collapsed && 'w-7 max-h-7')}
+                width={36}
+                height={36}
               />
               {!collapsed && (
-                <span className="sidebar-label inline-flex min-w-0 items-baseline gap-0.5 text-2xl leading-none tracking-tight">
+                <span className="sidebar-label inline-flex min-w-0 items-baseline gap-0.5 text-lg leading-none tracking-tight sm:text-xl">
                   <strong className="font-bold">Logozo</strong>
                   <span className="font-normal uppercase tracking-wide">POS</span>
                 </span>
