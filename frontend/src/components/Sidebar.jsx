@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
 import {
   Receipt,
   FileText,
@@ -48,7 +47,8 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { AvatarLabelGroup, AvatarWithStatus, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { isStaffRestrictedRole } from '@/lib/navAccess';
+import logozopos from '@/assets/logozopos.png';
+import { isStaffRestrictedRole, staffHomePath } from '@/lib/navAccess';
 
 const reportSubItems = [
   { to: '/reports/overview', label: 'Overview Reports' },
@@ -76,6 +76,21 @@ const NAV_ITEMS_WITH_DIVIDERS = [
   { label: 'Login Activity', href: '/login-activity', icon: History, adminOnly: true },
   { label: 'Settings', href: '/settings', icon: Settings },
 ];
+
+/** Manager / receptionist: sidebar link order (icons/labels resolved from NAV_ITEMS_WITH_DIVIDERS). */
+const STAFF_NAV_HREF_ORDER = [
+  '/booking',
+  '/invoices',
+  '/clients',
+  '/calendar',
+  '/pricing',
+  '/daily-notes',
+  '/settings',
+];
+
+const NAV_ITEM_BY_HREF = new Map(
+  NAV_ITEMS_WITH_DIVIDERS.filter((e) => e?.href && !e.divider).map((e) => [e.href, e])
+);
 
 function NavItem({ item }) {
   const { setOpen, collapsed } = useSidebar();
@@ -188,18 +203,8 @@ export default function Sidebar() {
   const userRole = (user?.role || '').toLowerCase();
   const canManageUsers = userRole === 'admin';
 
-  const staffAllowedHrefs = new Set([
-    '/invoices',
-    '/clients',
-    '/booking',
-    '/calendar',
-    '/pricing',
-    '/daily-notes',
-    '/settings',
-  ]);
-
   const navEntries = isStaffRestrictedRole(userRole)
-    ? NAV_ITEMS_WITH_DIVIDERS.filter((e) => !e.divider && e.href && staffAllowedHrefs.has(e.href))
+    ? STAFF_NAV_HREF_ORDER.map((href) => NAV_ITEM_BY_HREF.get(href)).filter(Boolean)
     : NAV_ITEMS_WITH_DIVIDERS;
 
   const handleLogout = async () => {
@@ -231,9 +236,29 @@ export default function Sidebar() {
           {...(collapsed && { onClick: (e) => { if (e.target.closest('button')) return; toggleCollapsed(); } })}
         >
           <div className={cn('flex items-center gap-2.5 min-w-0 flex-1', collapsed && 'justify-center')}>
-            {!collapsed && (
-              <span className="sidebar-label text-base font-semibold text-foreground truncate">V Cabanas HMS</span>
-            )}
+            <Link
+              to={staffHomePath(user?.role)}
+              onClick={() => setOpen(false)}
+              className={cn(
+                'flex min-w-0 items-center gap-2.5 rounded-lg text-foreground no-underline outline-none transition-opacity hover:opacity-90 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background',
+                collapsed && 'justify-center'
+              )}
+              aria-label="LogozoPOS — Home"
+            >
+              <img
+                src={logozopos}
+                alt=""
+                className={cn('block h-auto w-11 max-h-10 shrink-0', collapsed && 'w-8 max-h-8')}
+                width={44}
+                height={44}
+              />
+              {!collapsed && (
+                <span className="sidebar-label inline-flex min-w-0 items-baseline gap-0.5 text-2xl leading-none tracking-tight">
+                  <strong className="font-bold">Logozo</strong>
+                  <span className="font-normal uppercase tracking-wide">POS</span>
+                </span>
+              )}
+            </Link>
           </div>
           {!collapsed && (
             <button
